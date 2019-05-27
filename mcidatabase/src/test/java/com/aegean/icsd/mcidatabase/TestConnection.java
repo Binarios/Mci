@@ -14,12 +14,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb.TDBFactory;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
-
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestConnection {
 
   private String datasetDir;
@@ -29,7 +24,6 @@ class TestConnection {
   private Connection conn;
   private String ns;
 
-  @BeforeAll
   void setup() {
     this.datasetDir = "D:\\WorkBench\\Diplomatiki\\dataset";
     this.ontologyDir = "D:\\WorkBench\\Diplomatiki\\MciOntology\\games.owl";
@@ -38,19 +32,7 @@ class TestConnection {
     this.ns = "http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games";
   }
 
-  @Test
-  void testConnect() throws FileNotFoundException, SQLException {
-    setupDataset();
-    try {
-      this.conn = DriverManager.getConnection("jdbc:jena:tdb:location=" + datasetDir);
-    } finally {
-      if(conn!=null) {
-        conn.close();
-      }
-    }
-  }
 
-  @Test
   void testInsertDeleteData() throws FileNotFoundException, SQLException {
     setupDataset();
     String result = null;
@@ -88,5 +70,6 @@ class TestConnection {
     dataset.addNamedModel("games", model);
     dataset.commit();
     dataset.end() ;
+
   }
 }

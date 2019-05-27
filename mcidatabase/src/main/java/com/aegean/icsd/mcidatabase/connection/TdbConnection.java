@@ -7,11 +7,14 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.springframework.stereotype.Service;
+
 import com.aegean.icsd.mcidatabase.MciDatabaseException;
 
-public class TbdConnection implements ITbdConnection {
+@Service
+public class TdbConnection implements ITdbConnection {
 
-  private Properties appProps;
+  private Properties dbProps;
   private Connection connection;
 
   @Override
@@ -29,22 +32,31 @@ public class TbdConnection implements ITbdConnection {
   @Override
   public String getConnectionString() throws MciDatabaseException {
     try {
-      String driver = getPropertyValue("driver");
-      String dataSetLocation = getPropertyValue("datasetDir");
+      String driver = getDatabasePropertyValue("driver");
+      String dataSetLocation = getDatabasePropertyValue("datasetDir");
       return driver + "=" + dataSetLocation;
     } catch (IOException e) {
       throw new MciDatabaseException("tdb.2", "Cannot retrieve connection string", e);
     }
   }
 
-
-  String getPropertyValue(String key) throws IOException {
-    String rootPath = TbdConnection.class.getResource("").getPath();
-    String appConfigPath = rootPath + "/database.properties";
-    if (appProps == null) {
-      appProps = new Properties();
+  @Override
+  public String getLocation() throws MciDatabaseException {
+    try {
+      return getDatabasePropertyValue("datasetDir");
+    } catch (IOException e) {
+      throw new MciDatabaseException("tdb.3", "Cannot retrieve location", e);
     }
-    appProps.load(new FileInputStream(appConfigPath));
-    return appProps.getProperty(key);
+  }
+
+
+  String getDatabasePropertyValue(String key) throws IOException {
+    if (dbProps == null) {
+      String rootPath = TdbConnection.class.getResource("").getPath();
+      String configPath = rootPath + "/database.properties";
+      dbProps = new Properties();
+      dbProps.load(new FileInputStream(configPath));
+    }
+    return dbProps.getProperty(key);
   }
 }
