@@ -12,11 +12,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jena.version>3.11.0</jena.version>
   </properties>
 
   <modules>
     <module>mci</module>
-    <module>mciserver</module>
+    <module>mcidatabase</module>
   </modules>
 
   <dependencyManagement>
