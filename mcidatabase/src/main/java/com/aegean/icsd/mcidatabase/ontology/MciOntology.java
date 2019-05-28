@@ -10,7 +10,6 @@ import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb.TDBFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.mcidatabase.MciDatabaseException;
@@ -20,7 +19,6 @@ import com.aegean.icsd.mcidatabase.connection.TdbConnection;
 @Service
 public class MciOntology implements IMciOntology {
 
-  @Autowired
   private ITdbConnection tdbSvc;
 
   private Dataset dataset;
@@ -34,6 +32,12 @@ public class MciOntology implements IMciOntology {
       throw new MciDatabaseException("ont.1", "Cannot retrieve entity full URI", e);
     }
   }
+
+  @Override
+  public String getQueryEntityUri(String entity) throws IOException {
+    return "<" + getOntologyPropertyValue("namespace") + "#" + entity + ">";
+  }
+
 
   @PostConstruct
   void setupDataset() throws IOException, MciDatabaseException {
@@ -49,10 +53,6 @@ public class MciOntology implements IMciOntology {
       dataset.commit();
       dataset.end();
     }
-  }
-
-  String getQueryEntityUri(String entity) throws IOException {
-    return "<" + getOntologyPropertyValue("namespace") + "#" + entity + ">";
   }
 
   String getOntologyPropertyValue(String key) throws IOException {
