@@ -10,6 +10,7 @@ import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb.TDBFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.mcidatabase.MciDatabaseException;
@@ -19,6 +20,7 @@ import com.aegean.icsd.mcidatabase.connection.TdbConnection;
 @Service
 public class MciOntology implements IMciOntology {
 
+  @Autowired
   private ITdbConnection tdbSvc;
 
   private Dataset dataset;
@@ -27,15 +29,28 @@ public class MciOntology implements IMciOntology {
   @Override
   public String getEntityUri(String entityName) throws MciDatabaseException {
     try {
-      return getOntologyPropertyValue("namespace") + "#" + entityName;
+      return getOntologyPropertyValue("namespace") + entityName;
     } catch (IOException e) {
       throw new MciDatabaseException("ont.1", "Cannot retrieve entity full URI", e);
     }
   }
 
   @Override
-  public String getQueryEntityUri(String entity) throws IOException {
-    return "<" + getOntologyPropertyValue("namespace") + "#" + entity + ">";
+  public String getNamespace() throws MciDatabaseException {
+    try {
+      return getOntologyPropertyValue("namespace");
+    } catch (IOException e) {
+      throw new MciDatabaseException("ont.2", "Cannot retrieve ontology namespace", e);
+    }
+  }
+
+  @Override
+  public String getPrefix() throws MciDatabaseException {
+    try {
+      return getOntologyPropertyValue("prefix");
+    } catch (IOException e) {
+      throw new MciDatabaseException("ont.3", "Cannot retrieve ontology prefix", e);
+    }
   }
 
 

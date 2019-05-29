@@ -1,5 +1,7 @@
 package com.aegean.icsd.mci.common.beans;
 
+import java.util.List;
+
 public class GameDescription {
 
   private String nameOfGame;
@@ -7,6 +9,7 @@ public class GameDescription {
   private Difficulty difficulty;
   private Double maxCompletionTime;
   private String level;
+  private List<String> triplets;
 
   public String getId() {
     return id;
@@ -46,5 +49,13 @@ public class GameDescription {
 
   public void setNameOfGame(String nameOfGame) {
     this.nameOfGame = nameOfGame;
+  }
+
+  public List<String> getTriplets() {
+    return triplets;
+  }
+
+  public void setTriplets(List<String> triplets) {
+    this.triplets = triplets;
   }
 }

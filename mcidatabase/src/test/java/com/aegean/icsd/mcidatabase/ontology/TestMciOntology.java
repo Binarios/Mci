@@ -3,6 +3,7 @@ package com.aegean.icsd.mcidatabase.ontology;
 import java.io.IOException;
 
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.tdb.TDBFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,6 @@ import com.aegean.icsd.mcidatabase.Utils;
 import com.aegean.icsd.mcidatabase.connection.ITdbConnection;
 
 import static org.mockito.BDDMockito.given;
-
 
 @ExtendWith(MockitoExtension.class)
 public class TestMciOntology {
@@ -32,7 +32,12 @@ public class TestMciOntology {
     given(tdb.getLocation()).willReturn(Utils.getDatabasePropertyValue("datasetDir"));
     svc.setupDataset();
     Dataset dataset = TDBFactory.createDataset(Utils.getDatabasePropertyValue("datasetDir"));
-    Assertions.assertTrue(dataset.containsNamedModel(Utils.getOntologyPropertyValue("ontologyName")));
+    try {
+      dataset.begin(ReadWrite.READ);
+      Assertions.assertTrue(dataset.containsNamedModel(Utils.getOntologyPropertyValue("ontologyName")));
+    } finally {
+      dataset.end();
+    }
   }
 
   @Test
@@ -42,8 +47,14 @@ public class TestMciOntology {
   }
 
   @Test
-  public void testGetQueryEntityUri() throws IOException {
-    String result = svc.getQueryEntityUri("test");
-    Assertions.assertEquals("<http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#test>", result);
+  public void testGetNamespace() throws MciDatabaseException {
+    String result = svc.getNamespace();
+    Assertions.assertEquals("http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#", result);
+  }
+
+  @Test
+  public void testGetPrefix() throws MciDatabaseException {
+    String result = svc.getPrefix();
+    Assertions.assertEquals("mci", result);
   }
 }
