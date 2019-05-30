@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.mci.common.beans.Difficulty;
 import com.aegean.icsd.mci.common.beans.GameDescription;
-import com.aegean.icsd.mcidatabase.connection.ITdbConnection;
-import com.aegean.icsd.mcidatabase.ontology.IMciOntology;
+import com.aegean.icsd.mci.connection.ITdbConnection;
+import com.aegean.icsd.mci.ontology.IMciOntology;
 
 @Service
 public class ObservationSvc implements IObservationSvc{

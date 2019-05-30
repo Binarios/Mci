@@ -13,10 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.aegean.icsd.mcidatabase.MciDatabaseException;
-import com.aegean.icsd.mcidatabase.connection.ITdbConnection;
-import com.aegean.icsd.mcidatabase.connection.TdbConnection;
-import com.aegean.icsd.mcidatabase.ontology.IMciOntology;
+import com.aegean.icsd.mci.common.beans.MciOntologyException;
+import com.aegean.icsd.mci.connection.ITdbConnection;
+import com.aegean.icsd.mci.connection.TdbConnection;
+import com.aegean.icsd.mci.ontology.IMciOntology;
 
 @ExtendWith(MockitoExtension.class)
 public class TestObservation {
@@ -32,11 +32,11 @@ public class TestObservation {
 
 
   @Test
-  public void testSelect() throws SQLException, MciDatabaseException {
+  public void testSelect() throws SQLException, MciOntologyException {
     Connection con = null;
     try {
       String ns = "http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games";
-      con = new TdbConnection().getConnection();
+      con = new TdbConnection().connect("../../dataset");
 
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setCommandText("SELECT ?s WHERE { ?s ?p ?o }");
@@ -61,11 +61,11 @@ public class TestObservation {
   }
 
   @Test
-  public void testInsert() throws SQLException, MciDatabaseException {
+  public void testInsert() throws SQLException, MciOntologyException {
     Connection con = null;
     try {
       String ns = "http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#";
-      con = new TdbConnection().getConnection();
+      con = new TdbConnection().connect("../../dataset");
 
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setCommandText("INSERT DATA { ?s ?p ?o }");
@@ -86,11 +86,11 @@ public class TestObservation {
   }
 
   @Test
-  public void testDelete() throws SQLException, MciDatabaseException {
+  public void testDelete() throws SQLException, MciOntologyException {
     Connection con = null;
     try {
       String ns = "http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#";
-      con = new TdbConnection().getConnection();
+      con = new TdbConnection().connect("../../dataset");
 
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setCommandText("DELETE { ?s ?p ?o } WHERE {}");

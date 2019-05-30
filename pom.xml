@@ -17,11 +17,21 @@
 
   <modules>
     <module>mci</module>
-    <module>mcidatabase</module>
+<!--    <module>mcidatabase</module>-->
   </modules>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-jdbc-driver-tdb</artifactId>
+        <version>${jena.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.annotation</groupId>
+        <artifactId>jsr250-api</artifactId>
+        <version>1.0</version>
+      </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-beans</artifactId>
