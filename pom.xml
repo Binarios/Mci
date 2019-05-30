@@ -26,13 +26,11 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-beans</artifactId>
         <version>5.1.7.RELEASE</version>
-        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
         <version>5.1.7.RELEASE</version>
-        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -67,7 +65,9 @@
 		  <artifactId>maven-compiler-plugin</artifactId>
 		  <version>3.8.0</version>
 		  <configuration>
-		    <release>12</release>
+            <source>12</source>
+            <target>12</target>
+<!--		    <release>12</release>-->
 		</configuration>
 		</plugin>
         <plugin>

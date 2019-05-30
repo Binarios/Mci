@@ -32,13 +32,13 @@ public class TestTdbConnection {
   void testConnectionString() throws MciDatabaseException {
     String result = svc.getConnectionString();
     Assertions.assertNotNull(result);
-    Assertions.assertEquals("jdbc:jena:tdb:location=D:\\WorkBench\\Diplomatiki\\dataset", result);
+    Assertions.assertEquals("jdbc:jena:tdb:location=..\\..\\ontology", result);
   }
 
   @Test
   void testGetLocation() throws MciDatabaseException {
     String result = svc.getLocation();
     Assertions.assertNotNull(result);
-    Assertions.assertEquals("D:\\WorkBench\\Diplomatiki\\dataset", result);
+    Assertions.assertEquals("..\\..\\ontology", result);
   }
 }

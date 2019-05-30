@@ -60,7 +60,11 @@ public class MciOntology implements IMciOntology {
     if (dataset == null) {
       dataset = TDBFactory.createDataset(tdbSvc.getLocation());
     }
-    if (!dataset.containsNamedModel(ontologyName) || dataset.isEmpty()) {
+    dataset.begin(ReadWrite.READ);
+    boolean init = !dataset.containsNamedModel(ontologyName) || dataset.isEmpty();
+    dataset.end();
+
+    if (init) {
       Model model = ModelFactory.createDefaultModel();
       model.read(new FileInputStream(getOntologyPropertyValue("ontologyDir")), null, getOntologyPropertyValue("ontologyType"));
       dataset.begin(ReadWrite.WRITE);

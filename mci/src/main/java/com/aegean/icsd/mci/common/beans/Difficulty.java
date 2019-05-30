@@ -16,11 +16,16 @@ public enum Difficulty {
   public String getName() { return this.name; }
 
   public static Difficulty fromName(String name) {
-    return switch (name) {
-      case "easy", "EASY" -> Difficulty.EASY;
-      case "medium","MEDIUM" -> Difficulty.MEDIUM;
-      case "hard","HARD" -> Difficulty.HARD;
-      default -> throw new IllegalArgumentException("No difficulty defined with the name: " + name);
-    };
+    Difficulty res;
+    if ("easy".equals(name.toLowerCase())) {
+      res = Difficulty.EASY;
+    } else if ("medium".equals(name.toLowerCase())) {
+      res = Difficulty.MEDIUM;
+    } else if ("hard".equals(name.toLowerCase())) {
+      res = Difficulty.HARD;
+    } else {
+      throw new IllegalArgumentException("No difficulty defined with the name: " + name);
+    }
+    return res;
   }
 }

@@ -3,6 +3,7 @@ package com.aegean.icsd.mcidatabase;
 import java.io.IOException;
 
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.tdb.TDBFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,8 @@ public class TestSpring {
     Dataset dataset = TDBFactory.createDataset(Utils.getDatabasePropertyValue("datasetDir"));
     Assertions.assertNotNull(tbd);
     Assertions.assertNotNull(ont);
+    dataset.begin(ReadWrite.READ);
     Assertions.assertTrue(dataset.containsNamedModel(Utils.getOntologyPropertyValue("ontologyName")));
+    dataset.end();
   }
 }
