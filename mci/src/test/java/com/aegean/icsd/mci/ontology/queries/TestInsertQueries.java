@@ -10,7 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.aegean.icsd.mci.common.beans.MciOntologyException;
+import com.aegean.icsd.mci.ontology.MciOntologyException;
 import com.aegean.icsd.mci.ontology.IMciOntology;
 
 import static org.mockito.BDDMockito.given;

@@ -1,15 +1,13 @@
 package com.aegean.icsd.mci.ontology.queries;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.aegean.icsd.mci.common.beans.MciOntologyException;
+import com.aegean.icsd.mci.ontology.MciOntologyException;
 import com.aegean.icsd.mci.ontology.IMciOntology;
-import com.aegean.icsd.mci.ontology.beans.TriplesBlock;
 
 
 public class QueryProvider {

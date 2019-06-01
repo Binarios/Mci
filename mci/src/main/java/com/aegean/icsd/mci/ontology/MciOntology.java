@@ -8,8 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.jena.ontology.OntClass;
+import org.apache.jena.ontology.OntModel;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.ReadWrite;
@@ -19,7 +20,6 @@ import org.apache.jena.tdb.TDBFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.mci.common.beans.MciOntologyException;
 import com.aegean.icsd.mci.connection.ITdbConnection;
 import com.aegean.icsd.mci.ontology.beans.DatasetProperties;
 
@@ -36,6 +36,10 @@ public class MciOntology implements IMciOntology {
   private ITdbConnection conProvider;
 
   private Dataset dataset;
+
+  private final String SEPARATOR = ":";
+
+  private Model model;
 
   @Override
   public String getNamespace() {
@@ -99,21 +103,41 @@ public class MciOntology implements IMciOntology {
     }
   }
 
+  @Override
+  public String getPrefixedEntity(String entityName) {
+    return ontologyProps.getPrefix() + SEPARATOR + entityName;
+  }
+
+  @Override
+  public OntClass getOntClass(String className) throws MciOntologyException {
+    OntModel model = ModelFactory.createOntologyModel();
+    try {
+      model.read(new FileInputStream(ontologyProps.getOntologyLocation()), null, this.ontologyProps.getOntologyType());
+    } catch (FileNotFoundException e) {
+      throw new MciOntologyException("ONT.GETCLASS.1", "Cannot load ontology model", e);
+    }
+    OntClass result = model.getOntClass(ontologyProps.getNamespace() + className);
+    return  result;
+  }
+
 
   @PostConstruct
-  void setupDataset() throws FileNotFoundException {
-    String ontologyName = ontologyProps.getOntologyName();
-    if (dataset == null) {
-      dataset = TDBFactory.createDataset(ontologyProps.getDatasetLocation());
+  void setupDataset() throws MciOntologyException {
+    String ontologyName = this.ontologyProps.getOntologyName();
+    if (this.dataset == null) {
+      this.dataset = TDBFactory.createDataset(this.ontologyProps.getDatasetLocation());
     }
-    dataset.begin(ReadWrite.READ);
-    boolean init = !dataset.containsNamedModel(ontologyName) || dataset.isEmpty();
-    dataset.end();
-
+    this.dataset.begin(ReadWrite.READ);
+    boolean init = !this.dataset.containsNamedModel(ontologyName) || this.dataset.isEmpty();
+    this.dataset.end();
     if (init) {
-      Model model = ModelFactory.createDefaultModel();
-      model.read(new FileInputStream(ontologyProps.getOntologyLocation()), null, ontologyProps.getOntologyType());
-      dataset.begin(ReadWrite.WRITE);
+      this.dataset.begin(ReadWrite.WRITE);
+      OntModel model = ModelFactory.createOntologyModel();
+      try {
+        model.read(new FileInputStream(this.ontologyProps.getOntologyLocation()), null, this.ontologyProps.getOntologyType());
+      } catch (FileNotFoundException e) {
+        throw new MciOntologyException("ONT.LOAD.1", "Cannot load ontology model", e);
+      }
       dataset.addNamedModel(ontologyName, model);
       dataset.commit();
       dataset.end();

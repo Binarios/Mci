@@ -1,4 +1,4 @@
-package com.aegean.icsd.mci.common.beans;
+package com.aegean.icsd.mci.ontology.beans;
 
 public enum Difficulty {
 

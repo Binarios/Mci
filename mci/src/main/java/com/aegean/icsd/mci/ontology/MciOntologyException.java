@@ -1,4 +1,4 @@
-package com.aegean.icsd.mci.common.beans;
+package com.aegean.icsd.mci.ontology;
 
 public class MciOntologyException extends Throwable {
   private String code;

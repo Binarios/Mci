@@ -2,6 +2,8 @@ package com.aegean.icsd.mci.common.beans;
 
 import java.util.List;
 
+import com.aegean.icsd.mci.ontology.beans.Difficulty;
+
 public class GameDescription {
 
   private String nameOfGame;

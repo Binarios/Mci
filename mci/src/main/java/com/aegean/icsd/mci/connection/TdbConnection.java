@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.mci.common.beans.MciOntologyException;
+import com.aegean.icsd.mci.ontology.MciOntologyException;
 
 @Service
 public class TdbConnection implements ITdbConnection {
