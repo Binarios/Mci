@@ -1,7 +1,7 @@
-package com.aegean.icsd.mci.ontology.beans;
+package com.aegean.icsd.mci.generator.beans;
 
 public enum Difficulty {
-
+  NONE("none"),
   EASY("easy"),
   MEDIUM("medium"),
   HARD("hard");
@@ -17,7 +17,9 @@ public enum Difficulty {
 
   public static Difficulty fromName(String name) {
     Difficulty res;
-    if ("easy".equals(name.toLowerCase())) {
+    if ("none".equals(name.toLowerCase())) {
+      res = Difficulty.NONE;
+    }else if ("easy".equals(name.toLowerCase())) {
       res = Difficulty.EASY;
     } else if ("medium".equals(name.toLowerCase())) {
       res = Difficulty.MEDIUM;

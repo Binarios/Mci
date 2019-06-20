@@ -1,16 +1,14 @@
 package com.aegean.icsd.mci;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.commons.codec.language.bm.Rule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import com.aegean.icsd.mci.ontology.beans.DatasetProperties;
+import com.aegean.icsd.mci.generator.beans.DatasetProperties;
 
 @Configuration
 @ComponentScan("com.aegean.icsd.mci")

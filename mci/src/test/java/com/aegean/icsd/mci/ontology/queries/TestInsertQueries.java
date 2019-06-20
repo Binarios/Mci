@@ -26,8 +26,8 @@ public class TestInsertQueries {
 
   @Test
   public void testCreateInsertStmOneRelation() throws MciOntologyException {
-    given(ont.getPrefix()).willReturn("mci");
-    given(ont.getNamespace()).willReturn("http://ontology");
+    given(ont.getMciPrefix()).willReturn("mci");
+    given(ont.getMciNamespace()).willReturn("http://ontology");
     String result = qp.insertSubjectRelationsCommand("mci:testSub",generateLiteralRelations(1));
 
     Assertions.assertNotNull(result);
@@ -40,8 +40,8 @@ public class TestInsertQueries {
 
   @Test
   public void testCreateInsertStmManyRelations() throws MciOntologyException {
-    given(ont.getPrefix()).willReturn("mci");
-    given(ont.getNamespace()).willReturn("http://ontology");
+    given(ont.getMciPrefix()).willReturn("mci");
+    given(ont.getMciNamespace()).willReturn("http://ontology");
     String result = qp.insertSubjectRelationsCommand("mci:testSub",generateLiteralRelations(2));
 
     Assertions.assertNotNull(result);

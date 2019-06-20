@@ -6,12 +6,12 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.mci.ontology.beans.Difficulty;
+import com.aegean.icsd.mci.generator.beans.Difficulty;
 import com.aegean.icsd.mci.common.beans.GameDescription;
 import com.aegean.icsd.mci.connection.ITdbConnection;
 import com.aegean.icsd.mci.observations.dao.IObservationsDao;
 import com.aegean.icsd.mci.ontology.IMciOntology;
-import com.aegean.icsd.mci.ontology.beans.TriplesBlock;
+import com.aegean.icsd.mci.generator.beans.TriplesBlock;
 
 @Service
 public class ObservationSvc implements IObservationSvc{

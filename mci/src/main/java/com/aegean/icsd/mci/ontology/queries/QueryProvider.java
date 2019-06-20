@@ -17,7 +17,7 @@ public class QueryProvider {
 
   public String insertSubjectRelationsCommand(String subject, Map<String,String> relations) throws MciOntologyException {
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
-    pss.setNsPrefix(ont.getPrefix(), ont.getNamespace());
+    pss.setNsPrefix(ont.getMciPrefix(), ont.getMciNamespace());
     StringBuilder sb = new StringBuilder("INSERT DATA { ?s");
     setParameter(pss,"?s", subject);
     Iterator<Map.Entry<String, String>> it = relations.entrySet().iterator();
@@ -42,7 +42,7 @@ public class QueryProvider {
 
   public String deleteSubjectRelationsCommand(String subject, Map<String,String> relations) throws MciOntologyException {
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
-    pss.setNsPrefix(ont.getPrefix(), ont.getNamespace());
+    pss.setNsPrefix(ont.getMciPrefix(), ont.getMciNamespace());
     StringBuilder sb = new StringBuilder("DELETE DATA { ?s");
     setParameter(pss,"?s", subject);
     Iterator<Map.Entry<String, String>> it = relations.entrySet().iterator();

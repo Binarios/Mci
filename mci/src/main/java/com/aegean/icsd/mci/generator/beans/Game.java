@@ -1,5 +1,6 @@
-package com.aegean.icsd.mci.ontology.beans;
+package com.aegean.icsd.mci.generator.beans;
 
+//TODO make this dynamic
 public enum Game {
   ChronologicalOrder,
   Observations,

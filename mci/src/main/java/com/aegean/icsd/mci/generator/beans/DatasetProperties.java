@@ -1,4 +1,4 @@
-package com.aegean.icsd.mci.ontology.beans;
+package com.aegean.icsd.mci.generator.beans;
 
 public class DatasetProperties {
   private String ontologyLocation;

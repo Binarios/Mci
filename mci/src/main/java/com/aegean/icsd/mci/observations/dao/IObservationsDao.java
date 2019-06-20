@@ -3,7 +3,7 @@ package com.aegean.icsd.mci.observations.dao;
 import java.util.List;
 
 import com.aegean.icsd.mci.ontology.MciOntologyException;
-import com.aegean.icsd.mci.ontology.beans.TriplesBlock;
+import com.aegean.icsd.mci.generator.beans.TriplesBlock;
 
 public interface IObservationsDao {
 

@@ -14,14 +14,13 @@ import org.apache.jena.ontology.OntModel;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.ReadWrite;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb.TDBFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.mci.connection.ITdbConnection;
-import com.aegean.icsd.mci.ontology.beans.DatasetProperties;
+import com.aegean.icsd.mci.generator.beans.DatasetProperties;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -39,15 +38,23 @@ public class MciOntology implements IMciOntology {
 
   private final String SEPARATOR = ":";
 
-  private Model model;
+  @Override
+  public String getRdfNamespace() {
+    return "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+  }
 
   @Override
-  public String getNamespace() {
+  public String getRdfPrefix() {
+    return "rdf";
+  }
+
+  @Override
+  public String getMciNamespace() {
     return ontologyProps.getNamespace();
   }
 
   @Override
-  public String getPrefix() {
+  public String getMciPrefix() {
     return ontologyProps.getPrefix();
   }
 
@@ -62,7 +69,7 @@ public class MciOntology implements IMciOntology {
       while (raw.next()) {
         JsonObject row = new JsonObject();
         for(String col : colNames) {
-          row.addProperty(col, raw.getString("s"));
+          row.addProperty(col, raw.getString(col));
         }
       }
       raw.close();
