@@ -1,0 +1,12 @@
+{
+  "ontologies": [
+    {
+      "location": "../../MciOntology/games.owl",
+      "datasetLocation" : "../../dataset",
+      "type" : "ttl",
+      "name" : "games",
+      "namespace" : "http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#",
+      "prefix" : "mci"
+    }
+  ]
+}
