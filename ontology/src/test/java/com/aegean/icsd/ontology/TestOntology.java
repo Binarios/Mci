@@ -18,27 +18,34 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.aegean.icsd.ontology.beans.Cardinality;
+import com.aegean.icsd.ontology.beans.DataRangeRestrinction;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
+import com.aegean.icsd.ontology.beans.Individual;
+import com.aegean.icsd.ontology.beans.IndividualProperty;
+import com.aegean.icsd.ontology.beans.IndividualRestriction;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 
 @ExtendWith(MockitoExtension.class)
+@Execution(ExecutionMode.CONCURRENT)
 public class TestOntology {
 
   @InjectMocks
@@ -87,13 +94,12 @@ public class TestOntology {
     given(resourceMock.asClass()).willReturn(ontClassMock);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
 
-    JsonObject prop = ont.generateProperty(objectPropertyMock);
+    IndividualProperty prop = ont.generateProperty(objectPropertyMock);
 
     Assertions.assertNotNull(prop);
-    Assertions.assertFalse(prop.isJsonNull());
-    Assertions.assertEquals(objectPropertyMockName, prop.get("name").getAsString());
-    Assertions.assertEquals("ObjectProperty", prop.get("type").getAsString());
-    Assertions.assertEquals(rangeMockName, prop.get("range").getAsString());
+    Assertions.assertEquals(objectPropertyMockName, prop.getName());
+    Assertions.assertEquals("ObjectProperty", prop.getType());
+    Assertions.assertEquals(rangeMockName, prop.getRange());
   }
 
   @Test
@@ -111,13 +117,12 @@ public class TestOntology {
     given(resourceMock.asClass()).willReturn(ontClassMock);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
 
-    JsonObject prop = ont.generateProperty(objectPropertyMock);
+    IndividualProperty prop = ont.generateProperty(objectPropertyMock);
 
     Assertions.assertNotNull(prop);
-    Assertions.assertFalse(prop.isJsonNull());
-    Assertions.assertEquals(propertyMockName, prop.get("name").getAsString());
-    Assertions.assertEquals("DataTypeProperty", prop.get("type").getAsString());
-    Assertions.assertEquals(rangeMockName, prop.get("range").getAsString());
+    Assertions.assertEquals(propertyMockName, prop.getName());
+    Assertions.assertEquals("DataTypeProperty", prop.getType());
+    Assertions.assertEquals(rangeMockName, prop.getRange());
   }
 
   @Test
@@ -142,32 +147,32 @@ public class TestOntology {
 
     Mockito.doReturn(statementsMock).when(ont).readDataRangeRestrictions(ontClassMock);
 
-    JsonArray res = ont.generateDataRangeRestrictions(ontClassMock);
+    List<DataRangeRestrinction> res = ont.generateDataRangeRestrictions(ontClassMock);
 
     Assertions.assertNotNull(res);
     Assertions.assertEquals(1,res.size() );
     Assertions.assertNotNull(res.get(0));
-    Assertions.assertEquals(predicate, res.get(0).getAsJsonObject().get("predicate").getAsString());
-    Assertions.assertEquals(value, res.get(0).getAsJsonObject().get("value").getAsString());
+    Assertions.assertEquals(predicate, res.get(0).getPredicate());
+    Assertions.assertEquals(value, res.get(0).getValue());
   }
 
   @Test
-  public void testGenerateAllValuesRestrictions() {
+  public void testGenerateAllValuesRestrictions() throws OntologyException {
     Restriction resMock = mock(Restriction.class);
     OntProperty onPropMock = mock(OntProperty.class);
 
     given(resMock.getOnProperty()).willReturn(onPropMock);
     given(resMock.isAllValuesFromRestriction()).willReturn(true);
 
-    Mockito.doReturn(new JsonObject()).when(ont).generateProperty(onPropMock);
+    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
 
-    JsonObject res = ont.generateRestriction(resMock);
+    IndividualRestriction res = ont.generateRestriction(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("only", res.get("restrictionType").getAsString());
+    Assertions.assertEquals("only", res.getType());
   }
 
   @Test
-  public void testGenerateHasValuesRestrictions() {
+  public void testGenerateHasValuesRestrictions() throws OntologyException {
     String value = "5";
 
     Restriction resMock = mock(Restriction.class);
@@ -183,31 +188,31 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new JsonObject()).when(ont).generateProperty(onPropMock);
+    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
 
-    JsonObject res = ont.generateRestriction(resMock);
+    IndividualRestriction res = ont.generateRestriction(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("value", res.get("restrictionType").getAsString());
-    Assertions.assertEquals(value, res.get("restrictionCardinality").getAsString());
+    Assertions.assertEquals("value", res.getType());
+    Assertions.assertEquals(value, res.getExactValue());
   }
 
   @Test
-  public void testGenerateSomeValuesRestrictions() {
+  public void testGenerateSomeValuesRestrictions() throws OntologyException {
     Restriction resMock = mock(Restriction.class);
     OntProperty onPropMock = mock(OntProperty.class);
 
     given(resMock.getOnProperty()).willReturn(onPropMock);
     given(resMock.isSomeValuesFromRestriction()).willReturn(true);
 
-    Mockito.doReturn(new JsonObject()).when(ont).generateProperty(onPropMock);
+    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
 
-    JsonObject res = ont.generateRestriction(resMock);
+    IndividualRestriction res = ont.generateRestriction(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("some", res.get("restrictionType").getAsString());
+    Assertions.assertEquals("some", res.getType());
   }
 
   @Test
-  public void testGenerateCardinalityRestrictions() {
+  public void testGenerateCardinalityRestrictions() throws OntologyException {
     Restriction resMock = mock(Restriction.class);
     OntProperty onPropMock = mock(OntProperty.class);
 
@@ -216,16 +221,16 @@ public class TestOntology {
     given(resMock.isSomeValuesFromRestriction()).willReturn(false);
     given(resMock.isAllValuesFromRestriction()).willReturn(false);
 
-    Mockito.doReturn(new JsonObject()).when(ont).generateProperty(onPropMock);
-    Mockito.doReturn(new JsonObject()).when(ont).generateOwl2Cardinality(resMock);
+    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
+    Mockito.doReturn(new Cardinality()).when(ont).generateOwl2Cardinality(resMock);
 
-    JsonObject res = ont.generateRestriction(resMock);
+    IndividualRestriction res = ont.generateRestriction(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("cardinality", res.get("restrictionType").getAsString());
+    Assertions.assertEquals("cardinality", res.getType());
   }
 
   @Test
-  public void testGenerateMaxCardinality() {
+  public void testGenerateMaxCardinality() throws OntologyException {
     String value = "5";
     Restriction resMock = mock(Restriction.class);
     RDFNode nodeMock = mock(RDFNode.class);
@@ -237,16 +242,16 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new JsonArray()).when(ont).generateDataRangeRestrictions(resMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
 
-    JsonObject res = ont.generateOwl2Cardinality(resMock);
+    Cardinality res = ont.generateOwl2Cardinality(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("max", res.get("type").getAsString());
-    Assertions.assertEquals(value, res.get("occurrences").getAsString());
+    Assertions.assertEquals("max", res.getType());
+    Assertions.assertEquals(value, res.getOccurrence());
   }
 
   @Test
-  public void testGenerateMinCardinality() {
+  public void testGenerateMinCardinality() throws OntologyException {
     String value = "5";
     Restriction resMock = mock(Restriction.class);
     RDFNode nodeMock = mock(RDFNode.class);
@@ -258,16 +263,16 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new JsonArray()).when(ont).generateDataRangeRestrictions(resMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
 
-    JsonObject res = ont.generateOwl2Cardinality(resMock);
+    Cardinality res = ont.generateOwl2Cardinality(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("min", res.get("type").getAsString());
-    Assertions.assertEquals(value, res.get("occurrences").getAsString());
+    Assertions.assertEquals("min", res.getType());
+    Assertions.assertEquals(value, res.getOccurrence());
   }
 
   @Test
-  public void testGenerateExactlyCardinality() {
+  public void testGenerateExactlyCardinality() throws OntologyException {
     String value = "5";
     Restriction resMock = mock(Restriction.class);
     RDFNode nodeMock = mock(RDFNode.class);
@@ -279,12 +284,12 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new JsonArray()).when(ont).generateDataRangeRestrictions(resMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
 
-    JsonObject res = ont.generateOwl2Cardinality(resMock);
+    Cardinality res = ont.generateOwl2Cardinality(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("exactly", res.get("type").getAsString());
-    Assertions.assertEquals(value, res.get("occurrences").getAsString());
+    Assertions.assertEquals("exactly", res.getType());
+    Assertions.assertEquals(value, res.getOccurrence());
   }
 
   @Test
@@ -293,27 +298,24 @@ public class TestOntology {
     String propertyMockName = "hasAssetPath";
 
     OntClass ontClassMock = mock(OntClass.class);
-    OntProperty propertyMock = mock(OntProperty.class);
-    ExtendedIterator<OntProperty> propItMock = mock(ExtendedIterator.class);
-    ExtendedIterator<OntClass> classItMock = mock(ExtendedIterator.class);
 
-    given(ontClassMock.listDeclaredProperties()).willReturn(propItMock);
-    given(propItMock.hasNext()).willReturn(true,false);
-    given(propItMock.next()).willReturn(propertyMock);
-    given(ontClassMock.listSuperClasses()).willReturn(classItMock);
-    given(classItMock.hasNext()).willReturn( false);
-
-    JsonObject prop = generateDataProperty(propertyMockName, "asdf");
+    List<IndividualProperty> props = new ArrayList<>();
+    IndividualProperty prop = generateDataProperty(propertyMockName, "asdf");
+    props.add(prop);
 
     Mockito.doReturn(ontClassMock).when(ont).getOntClass(ontClassMockName);
-    Mockito.doReturn(prop).when(ont).generateProperty(propertyMock);
+    Mockito.doReturn(props).when(ont).generateDeclaredProperties(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).generateRestrictions(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).generateEqualityRestrictions(ontClassMock);
 
-    JsonObject result = ont.generateIndividual(ontClassMockName);
+    Individual result = ont.generateIndividual(ontClassMockName);
+
     Assertions.assertNotNull(result);
-    Assertions.assertEquals(ontClassMockName, result.get("class").getAsString());
-    JsonArray props = result.get("properties").getAsJsonArray();
-    Assertions.assertEquals(1, props.size());
-    Assertions.assertEquals(propertyMockName, props.get(0).getAsJsonObject().get("name").getAsString());
+    Assertions.assertEquals(ontClassMockName, result.getClassName());
+    List<IndividualProperty> propResults = result.getProperties();
+    Assertions.assertEquals(1, propResults.size());
+    Assertions.assertEquals(propertyMockName, propResults.get(0).getName());
+
   }
 
   @Test
@@ -322,36 +324,91 @@ public class TestOntology {
     String propertyMockName = "hasAssetPath";
 
     OntClass ontClassMock = mock(OntClass.class);
-    OntClass superClassMock = mock(OntClass.class);
-    OntProperty propertyMock = mock(OntProperty.class);
-    Restriction resClassMock = mock(Restriction.class);
 
-    ExtendedIterator<OntProperty> propItMock = mock(ExtendedIterator.class);
-    ExtendedIterator<OntClass> classItMock = mock(ExtendedIterator.class);
+    IndividualProperty prop = generateDataProperty(propertyMockName, "asdf");
+    List<IndividualProperty> props = new ArrayList<>();
+    props.add(prop);
 
-    given(ontClassMock.listDeclaredProperties()).willReturn(propItMock);
-    given(propItMock.hasNext()).willReturn(true,false);
-    given(propItMock.next()).willReturn(propertyMock);
-
-    given(ontClassMock.listSuperClasses()).willReturn(classItMock);
-    given(classItMock.hasNext()).willReturn( true,false);
-    given(classItMock.next()).willReturn(superClassMock);
-    given(superClassMock.isRestriction()).willReturn(true);
-    given(superClassMock.asRestriction()).willReturn(resClassMock);
-
-    JsonObject prop = generateDataProperty(propertyMockName, "asdf");
+    IndividualProperty objProp = generateObjectProperty("restriction", "className");
+    IndividualRestriction res = new IndividualRestriction();
+    res.setOnIndividualProperty(objProp);
+    List<IndividualRestriction> restrictions = new ArrayList<>();
+    restrictions.add(res);
 
     Mockito.doReturn(ontClassMock).when(ont).getOntClass(ontClassMockName);
-    Mockito.doReturn(prop).when(ont).generateProperty(propertyMock);
-    Mockito.doReturn(prop).when(ont).generateRestriction(resClassMock);
+    Mockito.doReturn(props).when(ont).generateDeclaredProperties(ontClassMock);
+    Mockito.doReturn(restrictions).when(ont).generateRestrictions(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).generateEqualityRestrictions(ontClassMock);
 
-    JsonObject result = ont.generateIndividual(ontClassMockName);
+    Individual result = ont.generateIndividual(ontClassMockName);
     Assertions.assertNotNull(result);
-    Assertions.assertEquals(ontClassMockName, result.get("class").getAsString());
-    JsonArray props = result.get("properties").getAsJsonArray();
-    Assertions.assertEquals(1, props.size());
-    Assertions.assertEquals(propertyMockName, props.get(0).getAsJsonObject().get("name").getAsString());
+    Assertions.assertEquals(ontClassMockName, result.getClassName());
+    List<IndividualProperty> propsRes = result.getProperties();
+    Assertions.assertEquals(1, propsRes.size());
+    Assertions.assertEquals(propertyMockName, propsRes.get(0).getName());
   }
+
+  @Test
+  public void testNonRecursiveGenerateEqualityRestriction() throws OntologyException {
+    List<IndividualRestriction> result = new ArrayList<>();
+
+    IndividualRestriction test = new IndividualRestriction();
+    test.setType("some");
+
+    Resource intersectionOf = mock(Resource.class);
+    Resource first = mock(Resource.class);
+    OntClass firstClass = mock(OntClass.class);
+    Restriction res = mock(Restriction.class);
+
+    given(intersectionOf.getPropertyResourceValue(eq(RDF.first))).willReturn(first);
+    given(first.canAs(OntClass.class)).willReturn(true);
+    given(first.as(OntClass.class)).willReturn(firstClass);
+    given(firstClass.isRestriction()).willReturn(true);
+    given(firstClass.asRestriction()).willReturn(res);
+    given(first.getPropertyResourceValue(eq(RDF.rest))).willReturn(null);
+
+    Mockito.doReturn(test).when(ont).generateRestriction(res);
+
+    ont.generateEqualityRestriction(intersectionOf, result);
+
+    Assertions.assertEquals(1, result.size());
+    Assertions.assertEquals(test.getType(), result.get(0).getType());
+  }
+
+  @Test
+  public void testRecursiveGenerateEqualityRestriction() throws OntologyException {
+    List<IndividualRestriction> result = new ArrayList<>();
+
+    IndividualRestriction test = new IndividualRestriction();
+    test.setType("some");
+
+    Resource intersectionOf = mock(Resource.class);
+    Resource first = mock(Resource.class);
+    OntClass firstClass = mock(OntClass.class);
+    Resource second = mock(Resource.class);
+    OntClass secondClass = mock(OntClass.class);
+    Restriction res = mock(Restriction.class);
+
+    given(intersectionOf.getPropertyResourceValue(eq(RDF.first))).willReturn(first);
+    given(first.canAs(OntClass.class)).willReturn(true);
+    given(first.as(OntClass.class)).willReturn(firstClass);
+    given(firstClass.isRestriction()).willReturn(true);
+    given(firstClass.asRestriction()).willReturn(res);
+    given(first.getPropertyResourceValue(eq(RDF.rest))).willReturn(second);
+    given(second.getPropertyResourceValue(eq(RDF.first))).willReturn(second);
+    given(second.canAs(OntClass.class)).willReturn(true);
+    given(second.as(OntClass.class)).willReturn(secondClass);
+    given(secondClass.isRestriction()).willReturn(true);
+    given(secondClass.asRestriction()).willReturn(res);
+
+    Mockito.doReturn(test).when(ont).generateRestriction(res);
+
+    ont.generateEqualityRestriction(intersectionOf, result);
+
+    Assertions.assertEquals(2, result.size());
+    Assertions.assertEquals(test.getType(), result.get(0).getType());
+  }
+
 
   @Test
   @Disabled("Exploring the Jena API")
@@ -363,30 +420,19 @@ public class TestOntology {
 
   }
 
-  private JsonObject generateDataProperty (String name, String className) {
-    JsonObject obj = new JsonObject();
-    obj.addProperty("name", name);
-    obj.addProperty("type", "DataTypeProperty");
-    obj.addProperty("range", className);
+  private IndividualProperty generateDataProperty (String name, String className) {
+    IndividualProperty obj = new IndividualProperty();
+    obj.setName(name);
+    obj.setType("DataTypeProperty");
+    obj.setRange(className);
     return obj;
   }
 
-  private JsonObject generateObjectProperty (String name, String className) {
-    JsonObject obj = new JsonObject();
-    obj.addProperty("name", name);
-    obj.addProperty("type", "ObjectProperty");
-    obj.addProperty("range", className);
-    return obj;
-  }
-
-  private JsonObject generateIndividual (String name, int nbOfProps) {
-    JsonObject obj = new JsonObject();
-    obj.addProperty("class", name);
-    JsonArray properties = new JsonArray();
-    for(int i = 0; i < nbOfProps; i++) {
-      properties.add(generateDataProperty("prop" + i, "value" + i));
-    }
-    obj.add("properties", properties);
+  private IndividualProperty generateObjectProperty (String name, String className) {
+    IndividualProperty obj = new IndividualProperty();
+    obj.setName(name);
+    obj.setType("ObjectProperty");
+    obj.setRange(className);
     return obj;
   }
 }

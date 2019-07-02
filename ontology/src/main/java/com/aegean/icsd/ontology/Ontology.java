@@ -10,14 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.ontology.AllValuesFromRestriction;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.Restriction;
-import org.apache.jena.ontology.SomeValuesFromRestriction;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.ReadWrite;
@@ -34,7 +31,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.aegean.icsd.connection.ConnectionException;
 import com.aegean.icsd.connection.ITdbConnection;
+import com.aegean.icsd.ontology.beans.Cardinality;
+import com.aegean.icsd.ontology.beans.DataRangeRestrinction;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
+import com.aegean.icsd.ontology.beans.Individual;
+import com.aegean.icsd.ontology.beans.IndividualRestriction;
+import com.aegean.icsd.ontology.beans.IndividualProperty;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -102,77 +104,110 @@ public class Ontology implements IOntology {
   }
 
   @Override
-  public JsonObject generateIndividual(String className) throws OntologyException {
-    JsonObject result = new JsonObject();
-    String id = UUID.randomUUID().toString();
-    result.addProperty("class", className);
-    result.addProperty("id", id);
+  public Individual generateIndividual(String className) throws OntologyException {
+    Individual result = new Individual();
+    result.setClassName(className);
+    result.setId(UUID.randomUUID());
     OntClass entity = getOntClass(className);
 
-    JsonArray properties = new JsonArray();
-    JsonArray restrictions = new JsonArray();
+    List<IndividualProperty> properties = generateDeclaredProperties(entity);
+    List<IndividualRestriction> restrictions = generateRestrictions(entity);
+    List<IndividualRestriction> equalityRestrictions = generateEqualityRestrictions(entity);
 
-    //entity.getEquivalentClass().getPropertyResourceValue(OWL2.intersectionOf).getPropertyResourceValue(RDF.rest).getPropertyResourceValue(RDF.first).listProperties().toList()
-    //entity.getEquivalentClass().getPropertyResourceValue(OWL2.intersectionOf).getPropertyResourceValue(RDF.rest).getPropertyResourceValue(RDF.rest).listProperties().toList()
+    result.setProperties(properties);
+    result.setRestrictions(restrictions);
+    result.setEqualityRestrictions(equalityRestrictions);
+    return result;
+  }
 
-
-    ExtendedIterator<OntProperty> propIt = entity.listDeclaredProperties();
+  List<IndividualProperty> generateDeclaredProperties(OntClass ontClass) {
+    List<IndividualProperty> properties = new ArrayList<>();
+    ExtendedIterator<OntProperty> propIt = ontClass.listDeclaredProperties();
     while (propIt.hasNext()) {
-      JsonObject propertyDesc = generateProperty(propIt.next());
+      IndividualProperty propertyDesc = generateProperty(propIt.next());
       properties.add(propertyDesc);
     }
+    return properties;
+  }
 
-    ExtendedIterator<OntClass> superClassesIt = entity.listSuperClasses();
+  List<IndividualRestriction> generateRestrictions(OntClass ontClass) throws OntologyException {
+    List<IndividualRestriction> restrictions = new ArrayList<>();
+    ExtendedIterator<OntClass> superClassesIt = ontClass.listSuperClasses();
     while (superClassesIt.hasNext()) {
       OntClass superClass = superClassesIt.next();
       if (superClass.isRestriction()) {
         Restriction resClass = superClass.asRestriction();
-        JsonObject restriction = generateRestriction(resClass);
+        IndividualRestriction restriction = generateRestriction(resClass);
         restrictions.add(restriction);
       }
     }
+    return restrictions;
+  }
 
-    result.add("properties", properties);
-    result.add("restrictions", restrictions);
+  List<IndividualRestriction> generateEqualityRestrictions(OntClass entity) throws OntologyException {
+    List<IndividualRestriction> equalityRestrictions = new ArrayList<>();
+    OntClass equivalentClass = entity.getEquivalentClass();
+    Resource intersectionOf = equivalentClass.getPropertyResourceValue(OWL2.intersectionOf);
+    generateEqualityRestriction(intersectionOf, equalityRestrictions);
+    return equalityRestrictions;
+  }
+
+  void generateEqualityRestriction(Resource intersectionOf, List<IndividualRestriction> equalityRestrictions)
+          throws OntologyException {
+    Resource first = intersectionOf.getPropertyResourceValue(RDF.first);
+    if (first != null ) {
+      if (first.canAs(OntClass.class)) {
+        OntClass firstAsClass = first.as(OntClass.class);
+        if (firstAsClass.isRestriction()) {
+          Restriction restriction = firstAsClass.asRestriction();
+          IndividualRestriction eqRestriction = generateRestriction(restriction);
+          equalityRestrictions.add(eqRestriction);
+        }
+      }
+      Resource rest = first.getPropertyResourceValue(RDF.rest);
+      if (rest != null) {
+        generateEqualityRestriction(rest, equalityRestrictions);
+      }
+    }
+  }
+
+
+  IndividualRestriction generateRestriction(Restriction restriction) throws OntologyException {
+    IndividualRestriction result = new IndividualRestriction();
+    OntProperty resProp = restriction.getOnProperty();
+    result.setOnIndividualProperty(generateProperty(resProp));
+
+    if (restriction.isAllValuesFromRestriction()) {
+      result.setType("only");
+    } else if (restriction.isHasValueRestriction()) {
+      result.setType("value");
+      HasValueRestriction valueRes = restriction.asHasValueRestriction();
+      result.setExactValue(valueRes.getHasValue().asLiteral().getString());
+    } else if (restriction.isSomeValuesFromRestriction()) {
+      result.setType("some");
+    } else {
+      result.setType("cardinality");
+      result.setCardinality(generateOwl2Cardinality(restriction));
+    }
     return result;
   }
 
-
-  JsonObject generateRestriction(Restriction restriction) {
-    JsonObject obj = new JsonObject();
-    OntProperty resProp = restriction.getOnProperty();
-    obj.add("restrictionProperty", generateProperty(resProp));
-
-    if (restriction.isAllValuesFromRestriction()) {
-      obj.addProperty("restrictionType", "only");
-    } else if (restriction.isHasValueRestriction()) {
-      obj.addProperty("restrictionType", "value");
-      HasValueRestriction valueRes = restriction.asHasValueRestriction();
-      obj.addProperty("restrictionCardinality", valueRes.getHasValue().asLiteral().getString());
-    } else if (restriction.isSomeValuesFromRestriction()) {
-      obj.addProperty("restrictionType", "some");
-    } else {
-      obj.addProperty("restrictionType", "cardinality");
-      obj.add("restrictionCardinality", generateOwl2Cardinality(restriction));
-    }
-    return obj;
-  }
-
-  JsonObject generateProperty(OntProperty property) {
-    JsonObject descriptor = new JsonObject();
-    descriptor.addProperty("name", property.getLocalName());
-    descriptor.addProperty("type", property.isObjectProperty()? "ObjectProperty": "DataTypeProperty");
-    descriptor.addProperty("range", property.getRange().asClass().getLocalName());
+  IndividualProperty generateProperty(OntProperty property) {
+    IndividualProperty descriptor = new IndividualProperty();
+    descriptor.setName(property.getLocalName());
+    descriptor.setType(property.isObjectProperty()? "ObjectProperty": "DataTypeProperty");
+    descriptor.setRange(property.getRange().asClass().getLocalName());
     return descriptor;
   }
 
-  JsonObject generateOwl2Cardinality(Restriction restriction) {
+  Cardinality generateOwl2Cardinality(Restriction restriction) throws OntologyException {
     RDFNode qualifiedCardinality = restriction.getPropertyValue(OWL2.qualifiedCardinality);
     RDFNode maxQualifiedCardinality = restriction.getPropertyValue(OWL2.maxQualifiedCardinality);
     RDFNode minQualifiedCardinality = restriction.getPropertyValue(OWL2.minQualifiedCardinality);
-    JsonObject cardinality = new JsonObject();
     String type = null;
     String occurrences = null;
+
+    Cardinality cardinality = new Cardinality();
 
     if (qualifiedCardinality != null) {
       type = "exactly";
@@ -183,23 +218,25 @@ public class Ontology implements IOntology {
     } else if (minQualifiedCardinality !=null) {
       type = "min";
       occurrences = minQualifiedCardinality.asLiteral().getString();
+    } else {
+      throw new OntologyException("CRDL.1", "Cannot calculate cardinality");
     }
-    cardinality.addProperty("type", type);
-    cardinality.addProperty("occurrences", occurrences);
-    cardinality.add("dataRangeRestrictions", generateDataRangeRestrictions(restriction));
+    cardinality.setType(type);
+    cardinality.setOccurrence(occurrences);
+    cardinality.setDataRangeRestrictions(generateDataRangeRestrictions(restriction));
 
     return cardinality;
   }
 
-  JsonArray generateDataRangeRestrictions(OntClass ont) {
-    JsonArray dataRanges = new JsonArray();
+  List<DataRangeRestrinction> generateDataRangeRestrictions(OntClass ont) {
+    List<DataRangeRestrinction> dataRanges = new ArrayList<>();
     List<Statement> ranges = readDataRangeRestrictions(ont);
     for(Statement stmt : ranges) {
-      JsonObject dataRange = new JsonObject();
-      dataRange.addProperty("predicate", stmt.getPredicate().getLocalName());
+      DataRangeRestrinction dataRange = new DataRangeRestrinction();
+      dataRange.setPredicate(stmt.getPredicate().getLocalName());
       Literal value = stmt.getLiteral();
-      dataRange.addProperty("value", value.getString());
-      dataRange.addProperty("dataType",  value.getDatatypeURI());
+      dataRange.setValue(value.getString());
+      dataRange.setDatatype(value.getDatatypeURI());
       dataRanges.add(dataRange);
     }
 

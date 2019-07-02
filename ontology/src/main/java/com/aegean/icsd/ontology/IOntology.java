@@ -5,6 +5,8 @@ import java.util.List;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.query.ParameterizedSparqlString;
 
+import com.aegean.icsd.ontology.beans.Individual;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -14,5 +16,5 @@ public interface IOntology {
 
   boolean executeUpdate(ParameterizedSparqlString sparql) throws OntologyException;
 
-  JsonObject generateIndividual(String className) throws OntologyException;
+  Individual generateIndividual(String className) throws OntologyException;
 }
