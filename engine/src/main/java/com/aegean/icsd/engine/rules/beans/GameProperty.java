@@ -1,40 +1,36 @@
-package com.aegean.icsd.ontology.beans;
+package com.aegean.icsd.engine.rules.beans;
 
-public class IndividualProperty {
+public class GameProperty {
   /**
    * The name of the property
    */
   private String name;
 
   /**
-   * The type of the property. Either ObjectProperty or DataTypeProperty
-   */
-  private String type;
-
-  /**
-   * The class name that is the range of the property values
+   * The type of the values this property is associated with
    */
   private String range;
 
   /**
-   * If this property marked as functional
+   * Is this property mandatory
    */
   private boolean mandatory;
 
   /**
-   * If this property marked as symmetric
+   * Is it symmetric
    */
   private boolean symmetric;
 
   /**
-   * If this property marked as reflexive
+   * Is it reflexive
    */
   private boolean reflexive;
 
   /**
-   * If this property marked as irreflexive
+   * Is it irreflexive
    */
   private boolean irreflexive;
+
 
   public String getName() {
     return name;
@@ -42,14 +38,6 @@ public class IndividualProperty {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
   }
 
   public String getRange() {

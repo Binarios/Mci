@@ -2,21 +2,20 @@ package com.aegean.icsd.ontology;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
-import org.apache.jena.ontology.AllValuesFromRestriction;
+import org.apache.jena.ontology.EnumeratedClass;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
-import org.apache.jena.ontology.SomeValuesFromRestriction;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.tdb.TDBFactory;
-import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.Assertions;
@@ -38,6 +37,7 @@ import com.aegean.icsd.ontology.beans.DatasetProperties;
 import com.aegean.icsd.ontology.beans.Individual;
 import com.aegean.icsd.ontology.beans.IndividualProperty;
 import com.aegean.icsd.ontology.beans.IndividualRestriction;
+import com.aegean.icsd.ontology.beans.OntologyException;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -55,7 +55,6 @@ public class TestOntology {
   @Mock(lenient = true)
   private DatasetProperties ds;
 
-
   @BeforeEach
   public void setup() {
     given(ds.getOntologyName()).willReturn("games");
@@ -63,20 +62,6 @@ public class TestOntology {
     given(ds.getOntologyLocation()).willReturn("../../MciOntology/games.owl");
     given(ds.getOntologyType()).willReturn("ttl");
     given(ds.getNamespace()).willReturn("http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#");
-  }
-
-  @Test
-  public void testSetupDataset() throws OntologyException {
-    ont.setupDataset();
-    Assertions.assertTrue(TDBFactory.inUseLocation("../../dataset"));
-  }
-
-  @Test
-  public void testGetOntClass() throws OntologyException {
-    String ontClassName = "Questions";
-    OntClass ontClass = ont.getOntClass(ontClassName);
-    Assertions.assertNotNull(ontClass);
-    Assertions.assertEquals(ontClassName, ontClass.getLocalName());
   }
 
   @Test
@@ -92,6 +77,7 @@ public class TestOntology {
     given(objectPropertyMock.isObjectProperty()).willReturn(true);
     given(objectPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
+    given(ontClassMock.isEnumeratedClass()).willReturn(false);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
 
     IndividualProperty prop = ont.generateProperty(objectPropertyMock);
@@ -115,7 +101,44 @@ public class TestOntology {
     given(objectPropertyMock.isObjectProperty()).willReturn(false);
     given(objectPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
+    given(ontClassMock.isEnumeratedClass()).willReturn(false);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
+
+    IndividualProperty prop = ont.generateProperty(objectPropertyMock);
+
+    Assertions.assertNotNull(prop);
+    Assertions.assertEquals(propertyMockName, prop.getName());
+    Assertions.assertEquals("DataTypeProperty", prop.getType());
+    Assertions.assertEquals(rangeMockName, prop.getRange());
+  }
+  @Test
+  public void testGenerateEnumeratedDataTypeProperty() {
+    OntProperty objectPropertyMock = mock(OntProperty.class);
+    OntResource resourceMock = mock(OntResource.class);
+    OntClass ontClassMock = mock(OntClass.class);
+    EnumeratedClass enumMock = mock(EnumeratedClass.class);
+    RDFList rdfListMock = mock(RDFList.class);
+    List<RDFNode> listMock = mock(List.class);
+    ListIterator<RDFNode> itMock = mock(ListIterator.class);
+    RDFNode nodeMock = mock(RDFNode.class);
+    Literal literalMock = mock(Literal.class);
+
+    String propertyMockName = "testPropName";
+    String rangeMockName = "testEnum";
+
+    given(objectPropertyMock.getLocalName()).willReturn(propertyMockName);
+    given(objectPropertyMock.isObjectProperty()).willReturn(false);
+    given(objectPropertyMock.getRange()).willReturn(resourceMock);
+    given(resourceMock.asClass()).willReturn(ontClassMock);
+    given(ontClassMock.isEnumeratedClass()).willReturn(true);
+    given(ontClassMock.asEnumeratedClass()).willReturn(enumMock);
+    given(enumMock.getOneOf()).willReturn(rdfListMock);
+    given(rdfListMock.asJavaList()).willReturn(listMock);
+    given(listMock.listIterator()).willReturn(itMock);
+    given(itMock.hasNext()).willReturn(true, false, false);
+    given(itMock.next()).willReturn(nodeMock);
+    given(nodeMock.asLiteral()).willReturn(literalMock);
+    given(literalMock.getString()).willReturn(rangeMockName);
 
     IndividualProperty prop = ont.generateProperty(objectPropertyMock);
 
@@ -365,7 +388,7 @@ public class TestOntology {
     given(first.as(OntClass.class)).willReturn(firstClass);
     given(firstClass.isRestriction()).willReturn(true);
     given(firstClass.asRestriction()).willReturn(res);
-    given(first.getPropertyResourceValue(eq(RDF.rest))).willReturn(null);
+    given(intersectionOf.getPropertyResourceValue(eq(RDF.rest))).willReturn(null);
 
     Mockito.doReturn(test).when(ont).generateRestriction(res);
 
@@ -394,7 +417,7 @@ public class TestOntology {
     given(first.as(OntClass.class)).willReturn(firstClass);
     given(firstClass.isRestriction()).willReturn(true);
     given(firstClass.asRestriction()).willReturn(res);
-    given(first.getPropertyResourceValue(eq(RDF.rest))).willReturn(second);
+    given(intersectionOf.getPropertyResourceValue(eq(RDF.rest))).willReturn(second);
     given(second.getPropertyResourceValue(eq(RDF.first))).willReturn(second);
     given(second.canAs(OntClass.class)).willReturn(true);
     given(second.as(OntClass.class)).willReturn(secondClass);
@@ -413,7 +436,7 @@ public class TestOntology {
   @Test
   @Disabled("Exploring the Jena API")
   public void test() throws OntologyException {
-    ont.setupDataset();
+    ont.setupModel();
     String className = "EasyFindTheSound";
 
     ont.generateIndividual(className);

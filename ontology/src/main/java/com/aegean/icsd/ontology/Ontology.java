@@ -7,27 +7,35 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.UUID;
 
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
+import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.OntProperty;
+import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.util.FileManager;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.connection.ConnectionException;
 import com.aegean.icsd.connection.ITdbConnection;
@@ -37,10 +45,12 @@ import com.aegean.icsd.ontology.beans.DatasetProperties;
 import com.aegean.icsd.ontology.beans.Individual;
 import com.aegean.icsd.ontology.beans.IndividualRestriction;
 import com.aegean.icsd.ontology.beans.IndividualProperty;
+import com.aegean.icsd.ontology.beans.OntologyException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+@Service
 public class Ontology implements IOntology {
 
   @Autowired
@@ -49,7 +59,7 @@ public class Ontology implements IOntology {
   @Autowired
   private ITdbConnection conProvider;
 
-  private Dataset dataset;
+  private OntModel model;
 
   @Override
   public JsonArray executeSelect(ParameterizedSparqlString sparql, List<String> colNames) throws OntologyException {
@@ -122,10 +132,13 @@ public class Ontology implements IOntology {
 
   List<IndividualProperty> generateDeclaredProperties(OntClass ontClass) {
     List<IndividualProperty> properties = new ArrayList<>();
+
     ExtendedIterator<OntProperty> propIt = ontClass.listDeclaredProperties();
     while (propIt.hasNext()) {
       IndividualProperty propertyDesc = generateProperty(propIt.next());
-      properties.add(propertyDesc);
+      if(propertyDesc.getName() != null) {
+        properties.add(propertyDesc);
+      }
     }
     return properties;
   }
@@ -163,10 +176,10 @@ public class Ontology implements IOntology {
           IndividualRestriction eqRestriction = generateRestriction(restriction);
           equalityRestrictions.add(eqRestriction);
         }
-      }
-      Resource rest = first.getPropertyResourceValue(RDF.rest);
-      if (rest != null) {
-        generateEqualityRestriction(rest, equalityRestrictions);
+        Resource rest = intersectionOf.getPropertyResourceValue(RDF.rest);
+        if (rest != null) {
+          generateEqualityRestriction(rest, equalityRestrictions);
+        }
       }
     }
   }
@@ -194,9 +207,30 @@ public class Ontology implements IOntology {
 
   IndividualProperty generateProperty(OntProperty property) {
     IndividualProperty descriptor = new IndividualProperty();
+    if (property.isOntLanguageTerm()) {
+      return descriptor;
+    }
     descriptor.setName(property.getLocalName());
     descriptor.setType(property.isObjectProperty()? "ObjectProperty": "DataTypeProperty");
-    descriptor.setRange(property.getRange().asClass().getLocalName());
+    OntResource rangeResource = property.getRange();
+    OntClass rangeClass = rangeResource.asClass();
+    if (rangeClass.isEnumeratedClass()) {
+      ListIterator<RDFNode> possibleValues = rangeClass.asEnumeratedClass().getOneOf().asJavaList().listIterator();
+      String possibleValue = "";
+      while (possibleValues.hasNext()) {
+        possibleValue += possibleValues.next().asLiteral().getString();
+        if (possibleValues.hasNext()) {
+          possibleValue += ";";
+        }
+      }
+      descriptor.setRange(possibleValue);
+    } else {
+      descriptor.setRange(rangeClass.getLocalName());
+    }
+    descriptor.setMandatory(property.isFunctionalProperty());
+    descriptor.setSymmetric(property.isSymmetricProperty());
+    descriptor.setReflexive(property.hasRDFType(OWL2.ReflexiveProperty));
+    descriptor.setIrreflexive(property.hasRDFType(OWL2.IrreflexiveProperty));
     return descriptor;
   }
 
@@ -204,8 +238,8 @@ public class Ontology implements IOntology {
     RDFNode qualifiedCardinality = restriction.getPropertyValue(OWL2.qualifiedCardinality);
     RDFNode maxQualifiedCardinality = restriction.getPropertyValue(OWL2.maxQualifiedCardinality);
     RDFNode minQualifiedCardinality = restriction.getPropertyValue(OWL2.minQualifiedCardinality);
-    String type = null;
-    String occurrences = null;
+    String type;
+    String occurrences;
 
     Cardinality cardinality = new Cardinality();
 
@@ -257,39 +291,23 @@ public class Ontology implements IOntology {
     return new ArrayList<>();
   }
 
-  OntClass getOntClass(String className) throws OntologyException {
-    OntModel model = ModelFactory.createOntologyModel();
-    try {
-      FileInputStream inputStream = new FileInputStream(ontologyProps.getOntologyLocation());
-      model.read(inputStream, null, this.ontologyProps.getOntologyType());
-      return  model.getOntClass(ontologyProps.getNamespace() + className);
-    } catch (FileNotFoundException e) {
-      throw new OntologyException("ONT.GETCLASS.1", "Cannot load ontology model", e);
-    }
+  OntClass getOntClass(String className) {
+    OntClass result = this.model.getOntClass(ontologyProps.getNamespace() + className);
+    return result;
   }
 
   @PostConstruct
-  void setupDataset() throws OntologyException {
+  void setupModel () {
     String ontologyName = this.ontologyProps.getOntologyName();
-    if (this.dataset == null) {
-      this.dataset = TDBFactory.createDataset(this.ontologyProps.getDatasetLocation());
-    }
-    this.dataset.begin(ReadWrite.READ);
-    boolean init = !this.dataset.containsNamedModel(ontologyName) || this.dataset.isEmpty();
-    this.dataset.end();
-    if (init) {
-      this.dataset.begin(ReadWrite.WRITE);
-      OntModel model = ModelFactory.createOntologyModel();
-      try {
-        FileInputStream is = new FileInputStream(this.ontologyProps.getOntologyLocation());
-        model.read(is, null, this.ontologyProps.getOntologyType());
-      } catch (FileNotFoundException e) {
-        throw new OntologyException("ONT.LOAD.1", "Cannot load ontology model", e);
-      }
-      dataset.addNamedModel(ontologyName, model);
-      dataset.commit();
-      dataset.end();
-    }
+
+    ModelMaker maker= ModelFactory.createMemModelMaker();
+    OntModelSpec spec = new OntModelSpec(OntModelSpec.OWL_DL_MEM_RULE_INF);
+    spec.setBaseModelMaker(maker);
+    spec.setImportModelMaker(maker);
+    Model base = maker.createModel( ontologyName );
+
+    this.model = ModelFactory.createOntologyModel(spec, base);
+    this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
   }
 
 }

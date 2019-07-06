@@ -14,13 +14,13 @@ public class TestSpringConfig {
 
   @Test
   public void testConfig() {
-    ApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfiguration.class);
+    ApplicationContext ctx = new AnnotationConfigApplicationContext(OntologyConfiguration.class);
     DatasetProperties props = ctx.getBean(DatasetProperties.class);
 
     Assertions.assertNotNull(props);
     Assertions.assertEquals("../../MciOntology/games.owl", props.getOntologyLocation());
     Assertions.assertEquals("../../dataset", props.getDatasetLocation());
-    Assertions.assertEquals("ttl", props.getOntologyType());
+    Assertions.assertEquals("TURTLE", props.getOntologyType());
     Assertions.assertEquals("games", props.getOntologyName());
     Assertions.assertEquals("http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#", props.getNamespace());
     Assertions.assertEquals("mci", props.getPrefix());
