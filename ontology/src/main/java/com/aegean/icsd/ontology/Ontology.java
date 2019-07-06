@@ -1,16 +1,12 @@
 package com.aegean.icsd.ontology;
 
 import javax.annotation.PostConstruct;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.UUID;
 
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
@@ -19,9 +15,7 @@ import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -29,11 +23,10 @@ import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.tdb.TDBFactory;
-import org.apache.jena.util.FileManager;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -49,9 +42,12 @@ import com.aegean.icsd.ontology.beans.OntologyException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import openllet.jena.PelletReasonerFactory;
 
 @Service
 public class Ontology implements IOntology {
+
+  private static Logger LOGGER = Logger.getLogger(Ontology.class);
 
   @Autowired
   private DatasetProperties ontologyProps;
@@ -117,7 +113,6 @@ public class Ontology implements IOntology {
   public Individual generateIndividual(String className) throws OntologyException {
     Individual result = new Individual();
     result.setClassName(className);
-    result.setId(UUID.randomUUID());
     OntClass entity = getOntClass(className);
 
     List<IndividualProperty> properties = generateDeclaredProperties(entity);
@@ -301,11 +296,10 @@ public class Ontology implements IOntology {
     String ontologyName = this.ontologyProps.getOntologyName();
 
     ModelMaker maker= ModelFactory.createMemModelMaker();
-    OntModelSpec spec = new OntModelSpec(OntModelSpec.OWL_DL_MEM_RULE_INF);
+    OntModelSpec spec = new OntModelSpec(PelletReasonerFactory.THE_SPEC);
     spec.setBaseModelMaker(maker);
     spec.setImportModelMaker(maker);
     Model base = maker.createModel( ontologyName );
-
     this.model = ModelFactory.createOntologyModel(spec, base);
     this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
   }

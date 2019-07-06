@@ -1,7 +1,9 @@
 package com.aegean.icsd.engine.rules;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +27,8 @@ import com.aegean.icsd.ontology.Ontology;
 @Execution(ExecutionMode.CONCURRENT)
 public class TestIntegration {
 
+  private static Logger LOGGER = Logger.getLogger(TestIntegration.class);
+
   @Test
   public void testSpring() {
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EngineConfiguration.class,
@@ -39,9 +43,15 @@ public class TestIntegration {
 
   @Test
   public void testRulesGeneration() throws RulesException {
+    long startTime = System.nanoTime();
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EngineConfiguration.class,
             OntologyConfiguration.class);
+    long endTime = System.nanoTime();
+    long durationInNano = (endTime - startTime);
+    long seconds = TimeUnit.NANOSECONDS.toSeconds(durationInNano);  //
+    System.out.println("Elapsed: " + seconds + " s");
 
+    // Total execution time in nano seconds
     IRules r = ctx.getBean(Rules.class);
 
     String gameName = "Observation";
