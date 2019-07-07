@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ..
+
 export WORKING_DIR=`pwd`
 echo "> Working dir: $WORKING_DIR"
 
