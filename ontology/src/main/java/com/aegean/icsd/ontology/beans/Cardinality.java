@@ -3,17 +3,9 @@ package com.aegean.icsd.ontology.beans;
 import java.util.List;
 
 public class Cardinality {
-  private String type;
+
   private String occurrence;
   private List<DataRangeRestrinction> dataRangeRestrictions;
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
 
   public String getOccurrence() {
     return occurrence;

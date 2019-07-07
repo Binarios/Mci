@@ -15,9 +15,10 @@
   <dependencies>
     <dependency>
       <groupId>com.aegean.icsd</groupId>
-      <artifactId>ontology</artifactId>
+      <artifactId>engine</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
+
 
   </dependencies>
 
