@@ -11,8 +11,8 @@
 
   <modules>
     <module>ontology</module>
-    <module>mciwebapp</module>
     <module>engine</module>
+    <module>mciwebapp</module>
   </modules>
 
   <properties>
