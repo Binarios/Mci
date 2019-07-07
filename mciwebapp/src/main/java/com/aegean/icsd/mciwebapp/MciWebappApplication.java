@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MciwebappApplication {
+public class MciWebappApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(MciwebappApplication.class, args);
+    SpringApplication.run(MciWebappApplication.class, args);
   }
 
 }
