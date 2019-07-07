@@ -2,6 +2,8 @@ language: java
 jdk:
     - openjdk12
 before_script:
+    - sudo chown -R travis ./clone-games-ontology.sh
+    - sudo chmod +x ./clone-games-ontology.sh
     - ./clone-games-ontology.sh
 script:
     - mvn clean install -DskipTests=true -B
