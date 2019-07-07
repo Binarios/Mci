@@ -1,6 +1,8 @@
 # MCI
 
 [![Build Status](https://travis-ci.com/Binarios/Mci.svg?branch=master)](https://travis-ci.com/Binarios/Mci)
+[![Code Grade](https://www.code-inspector.com/project/145/status/svg)](https://www.code-inspector.com/project/145/status/svg) 
+
 
 MCI is a web app based on Java that generates automatically games using an Ontology.
 
