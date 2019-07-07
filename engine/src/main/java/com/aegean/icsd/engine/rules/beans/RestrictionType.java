@@ -2,23 +2,24 @@ package com.aegean.icsd.engine.rules.beans;
 
 import org.apache.commons.lang3.StringUtils;
 
-public enum CardinalityType {
+public enum RestrictionType {
 
   ONLY("only", 1),
   VALUE("value", 2),
   EXACTLY("exactly", 3),
   MIN("min",4),
-  MAX("max",5);
+  MAX("max",5),
+  SOME("some", 6);
 
   private String name;
   private int order;
 
-  CardinalityType(String name, int order) {
+  RestrictionType(String name, int order) {
     this.name = name;
     this.order = order;
   }
 
-  public static CardinalityType fromString(String name) {
+  public static RestrictionType fromString(String name) {
     if (StringUtils.equalsIgnoreCase(MIN.getName(), name)) {
       return MIN;
     } else if (StringUtils.equalsIgnoreCase(MAX.getName(), name)) {
@@ -27,6 +28,8 @@ public enum CardinalityType {
       return EXACTLY;
     } else if (StringUtils.equalsIgnoreCase(ONLY.getName(), name)) {
       return ONLY;
+    } else if (StringUtils.equalsIgnoreCase(SOME.getName(), name)) {
+      return SOME;
     } else {
       return VALUE;
     }

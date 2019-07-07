@@ -1,5 +1,7 @@
 package com.aegean.icsd.engine.rules.beans;
 
+import java.util.List;
+
 public class GameRestriction {
   /**
    * The name of the property the restriction is on
@@ -12,14 +14,19 @@ public class GameRestriction {
   private String range;
 
   /**
-   * The priority order of the restriction
+   * The type of restriction
    */
-  private int order;
+  private RestrictionType type;
 
   /**
-   * The cardinality of the restriction
+   * The cardinality value
    */
-  private RestrictionCardinality restrictionCardinality;
+  private int cardinality;
+
+  /**
+   * The acceptable range of values that must be given, if any
+   */
+  private List<ValueRangeRestriction> dataRange;
 
   public String getOnProperty() {
     return onProperty;
@@ -37,19 +44,27 @@ public class GameRestriction {
     this.range = range;
   }
 
-  public int getOrder() {
-    return order;
+  public RestrictionType getType() {
+    return type;
   }
 
-  public void setOrder(int order) {
-    this.order = order;
+  public void setType(RestrictionType type) {
+    this.type = type;
   }
 
-  public RestrictionCardinality getRestrictionCardinality() {
-    return restrictionCardinality;
+  public int getCardinality() {
+    return cardinality;
   }
 
-  public void setRestrictionCardinality(RestrictionCardinality restrictionCardinality) {
-    this.restrictionCardinality = restrictionCardinality;
+  public void setCardinality(int cardinality) {
+    this.cardinality = cardinality;
+  }
+
+  public List<ValueRangeRestriction> getDataRange() {
+    return dataRange;
+  }
+
+  public void setDataRange(List<ValueRangeRestriction> dataRange) {
+    this.dataRange = dataRange;
   }
 }

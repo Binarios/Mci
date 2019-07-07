@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -23,6 +24,7 @@ import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -156,7 +158,9 @@ public class Ontology implements IOntology {
     List<IndividualRestriction> equalityRestrictions = new ArrayList<>();
     OntClass equivalentClass = entity.getEquivalentClass();
     Resource intersectionOf = equivalentClass.getPropertyResourceValue(OWL2.intersectionOf);
-    generateEqualityRestriction(intersectionOf, equalityRestrictions);
+    if (intersectionOf != null) {
+      generateEqualityRestriction(intersectionOf, equalityRestrictions);
+    }
     return equalityRestrictions;
   }
 
@@ -186,15 +190,15 @@ public class Ontology implements IOntology {
     result.setOnIndividualProperty(generateProperty(resProp));
 
     if (restriction.isAllValuesFromRestriction()) {
-      result.setType("only");
+      result.setType(IndividualRestriction.ONLY_TYPE);
     } else if (restriction.isHasValueRestriction()) {
-      result.setType("value");
+      result.setType(IndividualRestriction.VALUE_TYPE);
       HasValueRestriction valueRes = restriction.asHasValueRestriction();
       result.setExactValue(valueRes.getHasValue().asLiteral().getString());
     } else if (restriction.isSomeValuesFromRestriction()) {
-      result.setType("some");
+      result.setType(IndividualRestriction.SOME_TYPE);
     } else {
-      result.setType("cardinality");
+      result.setType(generateOwl2RestrictionType(restriction));
       result.setCardinality(generateOwl2Cardinality(restriction));
     }
     return result;
@@ -233,28 +237,42 @@ public class Ontology implements IOntology {
     RDFNode qualifiedCardinality = restriction.getPropertyValue(OWL2.qualifiedCardinality);
     RDFNode maxQualifiedCardinality = restriction.getPropertyValue(OWL2.maxQualifiedCardinality);
     RDFNode minQualifiedCardinality = restriction.getPropertyValue(OWL2.minQualifiedCardinality);
-    String type;
     String occurrences;
 
     Cardinality cardinality = new Cardinality();
 
     if (qualifiedCardinality != null) {
-      type = "exactly";
       occurrences = qualifiedCardinality.asLiteral().getString();
     } else if (maxQualifiedCardinality != null) {
-      type = "max";
       occurrences = maxQualifiedCardinality.asLiteral().getString();
     } else if (minQualifiedCardinality !=null) {
-      type = "min";
       occurrences = minQualifiedCardinality.asLiteral().getString();
     } else {
       throw new OntologyException("CRDL.1", "Cannot calculate cardinality");
     }
-    cardinality.setType(type);
+
     cardinality.setOccurrence(occurrences);
     cardinality.setDataRangeRestrictions(generateDataRangeRestrictions(restriction));
 
     return cardinality;
+  }
+
+  String generateOwl2RestrictionType(Restriction restriction) throws OntologyException {
+    RDFNode qualifiedCardinality = restriction.getPropertyValue(OWL2.qualifiedCardinality);
+    RDFNode maxQualifiedCardinality = restriction.getPropertyValue(OWL2.maxQualifiedCardinality);
+    RDFNode minQualifiedCardinality = restriction.getPropertyValue(OWL2.minQualifiedCardinality);
+    String type;
+    if (qualifiedCardinality != null) {
+      type = IndividualRestriction.EXACTLY_TYPE;
+    } else if (maxQualifiedCardinality != null) {
+      type = IndividualRestriction.MAX_TYPE;
+    } else if (minQualifiedCardinality !=null) {
+      type = IndividualRestriction.MIN_TYPE;
+    } else {
+      throw new OntologyException("RESTYP.1", "Cannot calculate restriction type");
+    }
+
+    return type;
   }
 
   List<DataRangeRestrinction> generateDataRangeRestrictions(OntClass ont) {
@@ -292,7 +310,7 @@ public class Ontology implements IOntology {
   }
 
   @PostConstruct
-  void setupModel () {
+  void setupModel () throws OntologyException {
     String ontologyName = this.ontologyProps.getOntologyName();
 
     ModelMaker maker= ModelFactory.createMemModelMaker();
@@ -302,6 +320,22 @@ public class Ontology implements IOntology {
     Model base = maker.createModel( ontologyName );
     this.model = ModelFactory.createOntologyModel(spec, base);
     this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
+    this.model.prepare();
+    ValidityReport report = this.model.validate();
+    if (!report.isValid()) {
+      StringBuilder msg = new StringBuilder();
+      msg.append("Model is not valid:").append("\n");
+      Iterator<ValidityReport.Report> it = report.getReports();
+      while (it.hasNext()) {
+        ValidityReport.Report validity = it.next();
+        msg.append("=============================")
+                .append("Type: ").append(validity.type).append("\n")
+                .append("Is it Error: ").append(validity.isError()).append("\n")
+                .append("Description: ").append(validity.description).append("\n");
+      }
+
+      throw new OntologyException("MODEL.1", msg.toString());
+    }
   }
 
 }

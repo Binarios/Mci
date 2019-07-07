@@ -1,19 +1,21 @@
 package com.aegean.icsd.engine.rules.implementations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.engine.rules.beans.CardinalityType;
+import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.GameProperty;
 import com.aegean.icsd.engine.rules.beans.GameRestriction;
 import com.aegean.icsd.engine.rules.beans.GameRules;
-import com.aegean.icsd.engine.rules.beans.RestrictionCardinality;
 import com.aegean.icsd.engine.rules.beans.RulesException;
+import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.ontology.IOntology;
+import com.aegean.icsd.ontology.beans.DataRangeRestrinction;
 import com.aegean.icsd.ontology.beans.Individual;
 import com.aegean.icsd.ontology.beans.IndividualProperty;
 import com.aegean.icsd.ontology.beans.IndividualRestriction;
@@ -80,6 +82,17 @@ public class Rules implements IRules {
       GameRestriction gameRes = generateGameRestriction(res);
       gameRestrictions.add(gameRes);
     }
+
+    Collections.sort(gameRestrictions, (i, k) -> {
+      if (i.getType().getOrder() == k.getType().getOrder()) {
+        return 0;
+      } else if (i.getType().getOrder() > k.getType().getOrder()) {
+        return 1;
+      } else {
+        return -1;
+      }
+    });
+
     return gameRestrictions;
   }
 
@@ -88,33 +101,60 @@ public class Rules implements IRules {
 
     gameRes.setOnProperty(res.getOnIndividualProperty().getName());
     gameRes.setRange(res.getOnIndividualProperty().getRange());
-    RestrictionCardinality cardinality = generateCardinalityRule(res);
-    gameRes.setRestrictionCardinality(cardinality);
-    gameRes.setOrder(cardinality.getType().getOrder());
+    gameRes.setType(RestrictionType.fromString(res.getType()));
+    gameRes.setCardinality(getRestrictionCardinality(res));
+    gameRes.setDataRange(getDataRanges(res));
 
     return gameRes;
   }
 
-  RestrictionCardinality generateCardinalityRule(IndividualRestriction res) {
-    RestrictionCardinality rule = new RestrictionCardinality();
-    CardinalityType type = CardinalityType.fromString(res.getType());
-    rule.setType(type);
+  List<ValueRangeRestriction> getDataRanges(IndividualRestriction res) {
+    List<ValueRangeRestriction> dataRanges = new ArrayList<>();
+
+    if (res.getCardinality() != null) {
+      List<DataRangeRestrinction> dataRestrictions = res.getCardinality().getDataRangeRestrictions();
+      for (DataRangeRestrinction dataRestriction : dataRestrictions) {
+        ValueRangeRestriction valueRange = toValueRangeRestriction(dataRestriction);
+        if (valueRange != null) {
+          dataRanges.add(valueRange);
+        }
+      }
+    }
+    return dataRanges;
+  }
+
+  int getRestrictionCardinality(IndividualRestriction res) {
+    RestrictionType type = RestrictionType.fromString(res.getType());
+    int cardinality = -1;
     switch (type) {
-      case VALUE:
-        rule.setValue(Integer.parseInt(res.getExactValue()));
-        break;
       case EXACTLY:
-      case MAX:
       case MIN:
-        rule.setValue(Integer.parseInt(res.getCardinality().getOccurrence()));
+      case MAX:
+        cardinality = Integer.parseInt(res.getCardinality().getOccurrence());
+        break;
+      case VALUE:
+        cardinality = Integer.parseInt(res.getExactValue());
         break;
       case ONLY:
+      case SOME:
       default:
-        rule.setValue(-1);
         break;
     }
 
-    return rule;
+    return cardinality;
+  }
+
+  ValueRangeRestriction toValueRangeRestriction(DataRangeRestrinction dataRestriction) {
+    if (dataRestriction == null) {
+      return  null;
+    }
+
+    ValueRangeRestriction res = new ValueRangeRestriction();
+    res.setPredicate(dataRestriction.getPredicate());
+    res.setDataType(dataRestriction.getDatatype());
+    res.setValue(dataRestriction.getValue());
+
+    return res;
   }
 
   String generateGameName(String gameName, String difficulty) {

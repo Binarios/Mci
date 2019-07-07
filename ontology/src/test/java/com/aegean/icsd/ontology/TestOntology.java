@@ -246,10 +246,11 @@ public class TestOntology {
 
     Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
     Mockito.doReturn(new Cardinality()).when(ont).generateOwl2Cardinality(resMock);
+    Mockito.doReturn(IndividualRestriction.EXACTLY_TYPE).when(ont).generateOwl2RestrictionType(resMock);
 
     IndividualRestriction res = ont.generateRestriction(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("cardinality", res.getType());
+    Assertions.assertEquals(IndividualRestriction.EXACTLY_TYPE, res.getType());
   }
 
   @Test
@@ -269,7 +270,6 @@ public class TestOntology {
 
     Cardinality res = ont.generateOwl2Cardinality(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("max", res.getType());
     Assertions.assertEquals(value, res.getOccurrence());
   }
 
@@ -290,7 +290,6 @@ public class TestOntology {
 
     Cardinality res = ont.generateOwl2Cardinality(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("min", res.getType());
     Assertions.assertEquals(value, res.getOccurrence());
   }
 
@@ -311,7 +310,6 @@ public class TestOntology {
 
     Cardinality res = ont.generateOwl2Cardinality(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals("exactly", res.getType());
     Assertions.assertEquals(value, res.getOccurrence());
   }
 

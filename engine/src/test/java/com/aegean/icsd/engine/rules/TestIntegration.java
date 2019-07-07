@@ -3,7 +3,6 @@ package com.aegean.icsd.engine.rules;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +26,6 @@ import com.aegean.icsd.ontology.Ontology;
 @Execution(ExecutionMode.CONCURRENT)
 public class TestIntegration {
 
-  private static Logger LOGGER = Logger.getLogger(TestIntegration.class);
 
   @Test
   public void testSpring() {
@@ -63,9 +61,9 @@ public class TestIntegration {
     Assertions.assertEquals(difficulty, rule.getDifficulty());
     List<GameRestriction> restrictions = rule.getGameRestrictions();
     Assertions.assertNotNull(restrictions);
-    Assertions.assertEquals(4, restrictions.size());
+    Assertions.assertEquals(3, restrictions.size());
     List<GameProperty> properties = rule.getProperties();
     Assertions.assertNotNull(properties);
-    Assertions.assertEquals(8, properties.size());
+    Assertions.assertEquals(9, properties.size());
   }
 }

@@ -1,6 +1,13 @@
 package com.aegean.icsd.ontology.beans;
 
 public class IndividualRestriction {
+  public static String EXACTLY_TYPE = "exactly";
+  public static String MIN_TYPE = "min";
+  public static String MAX_TYPE = "max";
+  public static String ONLY_TYPE = "only";
+  public static String SOME_TYPE = "some";
+  public static String VALUE_TYPE = "value";
+
   /**
    * The property that this restriction is associated with
    */
