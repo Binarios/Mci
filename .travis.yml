@@ -1,6 +1,8 @@
 language: java
 jdk:
     - openjdk12
+before_script:
+    - ./clone-games-ontology.sh
 script:
     - mvn clean install -DskipTests=true -B
     - mvn test
