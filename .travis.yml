@@ -1,0 +1,6 @@
+language: java
+jdk:
+    - openjdk12
+script:
+    - mvn clean install -DskipTests=true -B
+    - mvn test
