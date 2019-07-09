@@ -25,7 +25,7 @@ public class ObservationsController {
   @GetMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   @ResponseStatus(HttpStatus.OK)
   public Response<List<Observation>> getObservations() {
-    List<Observation> obs = new ArrayList<Observation>();
+    List<Observation> obs = new ArrayList<>();
     Observation obs1 = new Observation();
     obs1.test = "hello";
     obs.add(obs1);
