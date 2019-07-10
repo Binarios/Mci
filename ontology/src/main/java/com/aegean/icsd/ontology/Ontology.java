@@ -64,42 +64,8 @@ public class Ontology implements IOntology {
   @Autowired
   private DatasetProperties ontologyProps;
 
-//  @Autowired
-//  private ITdbConnection conProvider;
-
   private OntModel model;
   private Dataset ds;
-
-  @Override
-  public JsonArray executeSelect(ParameterizedSparqlString sparql, List<String> colNames) throws OntologyException {
-//    Connection con = null;
-//    JsonArray result = new JsonArray();
-//    try {
-//      con = conProvider.connect(ontologyProps.getDatasetLocation());
-//      java.sql.Statement sel = con.createStatement();
-//      ResultSet raw = sel.executeQuery(sparql.asQuery().toString());
-//      while (raw.next()) {
-//        JsonObject row = new JsonObject();
-//        for(String col : colNames) {
-//          row.addProperty(col, raw.getString(col));
-//        }
-//      }
-//      raw.close();
-//      return result;
-//    } catch (ConnectionException | SQLException e) {
-//      throw new OntologyException("ONT.EX1", "Cannot execute sparql query", e);
-//    } finally {
-//      try {
-//        if (con != null && !con.isClosed()) {
-//          con.close();
-//        }
-//      } catch (SQLException e) {
-//        //noinspection ThrowFromFinallyBlock
-//        throw new OntologyException("ONT.EX2", "Cannot close connection", e);
-//      }
-//    }
-    return null;
-  }
 
   @Override
   public JsonObject selectTriplet(String subject, String predicate, String object) {
