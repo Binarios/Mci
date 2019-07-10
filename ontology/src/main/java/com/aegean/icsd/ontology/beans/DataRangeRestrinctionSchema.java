@@ -1,6 +1,6 @@
 package com.aegean.icsd.ontology.beans;
 
-public class DataRangeRestrinction {
+public class DataRangeRestrinctionSchema {
   private String predicate;
   private String value;
   private String datatype;

@@ -1,6 +1,6 @@
 package com.aegean.icsd.ontology.beans;
 
-public class IndividualProperty {
+public class PropertySchema {
   /**
    * The name of the property
    */

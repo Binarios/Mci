@@ -2,6 +2,8 @@ package com.aegean.icsd.engine.rules.beans;
 
 import java.util.List;
 
+import com.aegean.icsd.engine.common.beans.Difficulty;
+
 public class GameRules {
   /**
    * The game name
@@ -11,7 +13,7 @@ public class GameRules {
   /**
    * The difficulty
    */
-  private String difficulty;
+  private Difficulty difficulty;
 
   /**
    * List with all the restriction for the game
@@ -31,11 +33,11 @@ public class GameRules {
     this.gameName = gameName;
   }
 
-  public String getDifficulty() {
+  public Difficulty getDifficulty() {
     return difficulty;
   }
 
-  public void setDifficulty(String difficulty) {
+  public void setDifficulty(Difficulty difficulty) {
     this.difficulty = difficulty;
   }
 

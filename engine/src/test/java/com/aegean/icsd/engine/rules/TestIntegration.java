@@ -27,7 +27,6 @@ import com.aegean.icsd.ontology.Ontology;
 @Execution(ExecutionMode.CONCURRENT)
 public class TestIntegration {
 
-
   @Test
   public void testSpring() {
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EngineConfiguration.class,

@@ -2,10 +2,10 @@ package com.aegean.icsd.ontology.beans;
 
 import java.util.List;
 
-public class Cardinality {
+public class CardinalitySchema {
 
   private String occurrence;
-  private List<DataRangeRestrinction> dataRangeRestrictions;
+  private List<DataRangeRestrinctionSchema> dataRangeRestrictions;
 
   public String getOccurrence() {
     return occurrence;
@@ -15,11 +15,11 @@ public class Cardinality {
     this.occurrence = occurrence;
   }
 
-  public List<DataRangeRestrinction> getDataRangeRestrictions() {
+  public List<DataRangeRestrinctionSchema> getDataRangeRestrictions() {
     return dataRangeRestrictions;
   }
 
-  public void setDataRangeRestrictions(List<DataRangeRestrinction> dataRangeRestrictions) {
+  public void setDataRangeRestrictions(List<DataRangeRestrinctionSchema> dataRangeRestrictions) {
     this.dataRangeRestrictions = dataRangeRestrictions;
   }
 }

@@ -1,6 +1,6 @@
 package com.aegean.icsd.ontology.beans;
 
-public class IndividualRestriction {
+public class RestrictionSchema {
   public static String EXACTLY_TYPE = "exactly";
   public static String MIN_TYPE = "min";
   public static String MAX_TYPE = "max";
@@ -11,7 +11,7 @@ public class IndividualRestriction {
   /**
    * The property that this restriction is associated with
    */
-  private IndividualProperty onIndividualProperty;
+  private PropertySchema onPropertySchema;
 
   /**
    * The type of the association. For example is it a given value, is it min/max
@@ -24,16 +24,16 @@ public class IndividualRestriction {
   private String exactValue;
 
   /**
-   * if the type has a cardinality (min, max, exact) then it is described here
+   * if the type has a cardinalitySchema (min, max, exact) then it is described here
    */
-  private Cardinality cardinality;
+  private CardinalitySchema cardinalitySchema;
 
-  public IndividualProperty getOnIndividualProperty() {
-    return onIndividualProperty;
+  public PropertySchema getOnPropertySchema() {
+    return onPropertySchema;
   }
 
-  public void setOnIndividualProperty(IndividualProperty onIndividualProperty) {
-    this.onIndividualProperty = onIndividualProperty;
+  public void setOnPropertySchema(PropertySchema onPropertySchema) {
+    this.onPropertySchema = onPropertySchema;
   }
 
   public String getType() {
@@ -44,12 +44,12 @@ public class IndividualRestriction {
     this.type = type;
   }
 
-  public Cardinality getCardinality() {
-    return cardinality;
+  public CardinalitySchema getCardinalitySchema() {
+    return cardinalitySchema;
   }
 
-  public void setCardinality(Cardinality cardinality) {
-    this.cardinality = cardinality;
+  public void setCardinalitySchema(CardinalitySchema cardinalitySchema) {
+    this.cardinalitySchema = cardinalitySchema;
   }
 
   public String getExactValue() {

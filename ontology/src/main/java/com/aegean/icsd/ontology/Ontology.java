@@ -1,13 +1,12 @@
 package com.aegean.icsd.ontology;
 
 import javax.annotation.PostConstruct;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
@@ -16,7 +15,15 @@ import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
+import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -25,6 +32,11 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.reasoner.ValidityReport;
+import org.apache.jena.tdb2.TDB2Factory;
+import org.apache.jena.update.UpdateExecutionFactory;
+import org.apache.jena.update.UpdateFactory;
+import org.apache.jena.update.UpdateProcessor;
+import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -32,14 +44,12 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.connection.ConnectionException;
-import com.aegean.icsd.connection.ITdbConnection;
-import com.aegean.icsd.ontology.beans.Cardinality;
-import com.aegean.icsd.ontology.beans.DataRangeRestrinction;
+import com.aegean.icsd.ontology.beans.CardinalitySchema;
+import com.aegean.icsd.ontology.beans.ClassSchema;
+import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
-import com.aegean.icsd.ontology.beans.Individual;
-import com.aegean.icsd.ontology.beans.IndividualRestriction;
-import com.aegean.icsd.ontology.beans.IndividualProperty;
+import com.aegean.icsd.ontology.beans.RestrictionSchema;
+import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
 
 import com.google.gson.JsonArray;
@@ -54,72 +64,101 @@ public class Ontology implements IOntology {
   @Autowired
   private DatasetProperties ontologyProps;
 
-  @Autowired
-  private ITdbConnection conProvider;
+//  @Autowired
+//  private ITdbConnection conProvider;
 
   private OntModel model;
+  private Dataset ds;
 
   @Override
   public JsonArray executeSelect(ParameterizedSparqlString sparql, List<String> colNames) throws OntologyException {
-    Connection con = null;
-    JsonArray result = new JsonArray();
-    try {
-      con = conProvider.connect(ontologyProps.getDatasetLocation());
-      java.sql.Statement sel = con.createStatement();
-      ResultSet raw = sel.executeQuery(sparql.asQuery().toString());
-      while (raw.next()) {
-        JsonObject row = new JsonObject();
-        for(String col : colNames) {
-          row.addProperty(col, raw.getString(col));
-        }
-      }
-      raw.close();
-      return result;
-    } catch (ConnectionException | SQLException e) {
-      throw new OntologyException("ONT.EX1", "Cannot execute sparql query", e);
-    } finally {
-      try {
-        if (con != null && !con.isClosed()) {
-          con.close();
-        }
-      } catch (SQLException e) {
-        //noinspection ThrowFromFinallyBlock
-        throw new OntologyException("ONT.EX2", "Cannot close connection", e);
-      }
-    }
+//    Connection con = null;
+//    JsonArray result = new JsonArray();
+//    try {
+//      con = conProvider.connect(ontologyProps.getDatasetLocation());
+//      java.sql.Statement sel = con.createStatement();
+//      ResultSet raw = sel.executeQuery(sparql.asQuery().toString());
+//      while (raw.next()) {
+//        JsonObject row = new JsonObject();
+//        for(String col : colNames) {
+//          row.addProperty(col, raw.getString(col));
+//        }
+//      }
+//      raw.close();
+//      return result;
+//    } catch (ConnectionException | SQLException e) {
+//      throw new OntologyException("ONT.EX1", "Cannot execute sparql query", e);
+//    } finally {
+//      try {
+//        if (con != null && !con.isClosed()) {
+//          con.close();
+//        }
+//      } catch (SQLException e) {
+//        //noinspection ThrowFromFinallyBlock
+//        throw new OntologyException("ONT.EX2", "Cannot close connection", e);
+//      }
+//    }
+    return null;
   }
 
   @Override
-  public boolean executeUpdate(ParameterizedSparqlString sparql) throws OntologyException {
-    Connection con = null;
-    try{
-      con = conProvider.connect(ontologyProps.getDatasetLocation());
-      java.sql.Statement sel = con.createStatement();
-      int res = sel.executeUpdate(sparql.asUpdate().toString());
-      return res == 0;
-    } catch (SQLException | ConnectionException e) {
-      throw new OntologyException("ONT.EX3", "Cannot execute sparql query", e);
-    } finally {
-      try {
-        if (con != null && !con.isClosed()) {
-          con.close();
-        }
-      } catch (SQLException e) {
-        //noinspection ThrowFromFinallyBlock
-        throw new OntologyException("ONT.EX4", "Cannot close connection", e);
+  public JsonObject selectTriplet(String subject, String predicate, String object) {
+    JsonObject obj = new JsonObject();
+    ParameterizedSparqlString sparql = getPrefixedSparql();
+    sparql.setCommandText("SELECT ?s ?p ?o WHERE {?s ?p ?o .}");
+//    sparql.setIri("s", getPrefixedEntity(subject));
+//    sparql.setIri("p", getPrefixedEntity(predicate));
+//    sparql.setLiteral("o", object);
+    ds.begin(ReadWrite.READ);
+    Query selectRequest = QueryFactory.create(sparql.asQuery().toString());
+    QueryExecution queryProcessor = QueryExecutionFactory.create(selectRequest, ds);
+    ResultSet resultSet = queryProcessor.execSelect();
+    while(resultSet.hasNext()) {
+      QuerySolution solution = resultSet.next();
+      Iterator<String> vars = solution.varNames();
+      while (vars.hasNext()) {
+       String var = vars.next();
+       RDFNode node = solution.get(var);
+       if(node != null && node.isResource()) {
+         obj.addProperty(var,node.asResource().getLocalName());
+       }
+       if(node != null && node.isLiteral()) {
+        obj.addProperty(var,node.asLiteral().getString());
+       }
       }
     }
+    ds.commit();
+    ds.close();
+
+    return obj;
+  }
+
+
+  @Override
+  public boolean insertTriplet(String subject, String predicate, String object) {
+    ParameterizedSparqlString sparql = getPrefixedSparql();
+    sparql.setCommandText("INSERT { ?s ?p ?o } WHERE {}");
+    sparql.setIri("s", getPrefixedEntity(subject));
+    sparql.setIri("p", getPrefixedEntity(predicate));
+    sparql.setLiteral("o", object);
+    ds.begin(ReadWrite.WRITE);
+    UpdateRequest updateRequest = UpdateFactory.create(sparql.asUpdate().toString());
+    UpdateProcessor updateProcessor = UpdateExecutionFactory.create(updateRequest, ds);
+    updateProcessor.execute();
+    ds.commit();
+    ds.close();
+    return true;
   }
 
   @Override
-  public Individual generateIndividual(String className) throws OntologyException {
-    Individual result = new Individual();
+  public ClassSchema getClassSchema(String className) throws OntologyException {
+    ClassSchema result = new ClassSchema();
     result.setClassName(className);
     OntClass entity = getOntClass(className);
 
-    List<IndividualProperty> properties = generateDeclaredProperties(entity);
-    List<IndividualRestriction> restrictions = generateRestrictions(entity);
-    List<IndividualRestriction> equalityRestrictions = generateEqualityRestrictions(entity);
+    List<PropertySchema> properties = getDeclaredPropertiesSchemas(entity);
+    List<RestrictionSchema> restrictions = getRestrictionSchemas(entity);
+    List<RestrictionSchema> equalityRestrictions = getEqualityRestrictionSchemas(entity);
 
     result.setProperties(properties);
     result.setRestrictions(restrictions);
@@ -127,12 +166,12 @@ public class Ontology implements IOntology {
     return result;
   }
 
-  List<IndividualProperty> generateDeclaredProperties(OntClass ontClass) {
-    List<IndividualProperty> properties = new ArrayList<>();
+  List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {
+    List<PropertySchema> properties = new ArrayList<>();
 
     ExtendedIterator<OntProperty> propIt = ontClass.listDeclaredProperties();
     while (propIt.hasNext()) {
-      IndividualProperty propertyDesc = generateProperty(propIt.next());
+      PropertySchema propertyDesc = getPropertySchema(propIt.next());
       if(propertyDesc.getName() != null) {
         properties.add(propertyDesc);
       }
@@ -140,31 +179,31 @@ public class Ontology implements IOntology {
     return properties;
   }
 
-  List<IndividualRestriction> generateRestrictions(OntClass ontClass) throws OntologyException {
-    List<IndividualRestriction> restrictions = new ArrayList<>();
+  List<RestrictionSchema> getRestrictionSchemas(OntClass ontClass) throws OntologyException {
+    List<RestrictionSchema> restrictions = new ArrayList<>();
     ExtendedIterator<OntClass> superClassesIt = ontClass.listSuperClasses();
     while (superClassesIt.hasNext()) {
       OntClass superClass = superClassesIt.next();
       if (superClass.isRestriction()) {
         Restriction resClass = superClass.asRestriction();
-        IndividualRestriction restriction = generateRestriction(resClass);
+        RestrictionSchema restriction = getRestrictionSchema(resClass);
         restrictions.add(restriction);
       }
     }
     return restrictions;
   }
 
-  List<IndividualRestriction> generateEqualityRestrictions(OntClass entity) throws OntologyException {
-    List<IndividualRestriction> equalityRestrictions = new ArrayList<>();
+  List<RestrictionSchema> getEqualityRestrictionSchemas(OntClass entity) throws OntologyException {
+    List<RestrictionSchema> equalityRestrictions = new ArrayList<>();
     OntClass equivalentClass = entity.getEquivalentClass();
     Resource intersectionOf = equivalentClass.getPropertyResourceValue(OWL2.intersectionOf);
     if (intersectionOf != null) {
-      generateEqualityRestriction(intersectionOf, equalityRestrictions);
+      getEqualityRestrictionSchema(intersectionOf, equalityRestrictions);
     }
     return equalityRestrictions;
   }
 
-  void generateEqualityRestriction(Resource intersectionOf, List<IndividualRestriction> equalityRestrictions)
+  void getEqualityRestrictionSchema(Resource intersectionOf, List<RestrictionSchema> equalityRestrictions)
           throws OntologyException {
     Resource first = intersectionOf.getPropertyResourceValue(RDF.first);
     if (first != null ) {
@@ -172,40 +211,39 @@ public class Ontology implements IOntology {
         OntClass firstAsClass = first.as(OntClass.class);
         if (firstAsClass.isRestriction()) {
           Restriction restriction = firstAsClass.asRestriction();
-          IndividualRestriction eqRestriction = generateRestriction(restriction);
+          RestrictionSchema eqRestriction = getRestrictionSchema(restriction);
           equalityRestrictions.add(eqRestriction);
         }
         Resource rest = intersectionOf.getPropertyResourceValue(RDF.rest);
         if (rest != null) {
-          generateEqualityRestriction(rest, equalityRestrictions);
+          getEqualityRestrictionSchema(rest, equalityRestrictions);
         }
       }
     }
   }
 
-
-  IndividualRestriction generateRestriction(Restriction restriction) throws OntologyException {
-    IndividualRestriction result = new IndividualRestriction();
+  RestrictionSchema getRestrictionSchema(Restriction restriction) throws OntologyException {
+    RestrictionSchema result = new RestrictionSchema();
     OntProperty resProp = restriction.getOnProperty();
-    result.setOnIndividualProperty(generateProperty(resProp));
+    result.setOnPropertySchema(getPropertySchema(resProp));
 
     if (restriction.isAllValuesFromRestriction()) {
-      result.setType(IndividualRestriction.ONLY_TYPE);
+      result.setType(RestrictionSchema.ONLY_TYPE);
     } else if (restriction.isHasValueRestriction()) {
-      result.setType(IndividualRestriction.VALUE_TYPE);
+      result.setType(RestrictionSchema.VALUE_TYPE);
       HasValueRestriction valueRes = restriction.asHasValueRestriction();
       result.setExactValue(valueRes.getHasValue().asLiteral().getString());
     } else if (restriction.isSomeValuesFromRestriction()) {
-      result.setType(IndividualRestriction.SOME_TYPE);
+      result.setType(RestrictionSchema.SOME_TYPE);
     } else {
-      result.setType(generateOwl2RestrictionType(restriction));
-      result.setCardinality(generateOwl2Cardinality(restriction));
+      result.setType(getOwl2RestrictionType(restriction));
+      result.setCardinalitySchema(getOwl2CardinalitySchema(restriction));
     }
     return result;
   }
 
-  IndividualProperty generateProperty(OntProperty property) {
-    IndividualProperty descriptor = new IndividualProperty();
+  PropertySchema getPropertySchema(OntProperty property) {
+    PropertySchema descriptor = new PropertySchema();
     if (property.isOntLanguageTerm()) {
       return descriptor;
     }
@@ -233,13 +271,13 @@ public class Ontology implements IOntology {
     return descriptor;
   }
 
-  Cardinality generateOwl2Cardinality(Restriction restriction) throws OntologyException {
+  CardinalitySchema getOwl2CardinalitySchema(Restriction restriction) throws OntologyException {
     RDFNode qualifiedCardinality = restriction.getPropertyValue(OWL2.qualifiedCardinality);
     RDFNode maxQualifiedCardinality = restriction.getPropertyValue(OWL2.maxQualifiedCardinality);
     RDFNode minQualifiedCardinality = restriction.getPropertyValue(OWL2.minQualifiedCardinality);
     String occurrences;
 
-    Cardinality cardinality = new Cardinality();
+    CardinalitySchema cardinalitySchema = new CardinalitySchema();
 
     if (qualifiedCardinality != null) {
       occurrences = qualifiedCardinality.asLiteral().getString();
@@ -248,26 +286,26 @@ public class Ontology implements IOntology {
     } else if (minQualifiedCardinality !=null) {
       occurrences = minQualifiedCardinality.asLiteral().getString();
     } else {
-      throw new OntologyException("CRDL.1", "Cannot calculate cardinality");
+      throw new OntologyException("CRDL.1", "Cannot calculate cardinalitySchema");
     }
 
-    cardinality.setOccurrence(occurrences);
-    cardinality.setDataRangeRestrictions(generateDataRangeRestrictions(restriction));
+    cardinalitySchema.setOccurrence(occurrences);
+    cardinalitySchema.setDataRangeRestrictions(generateDataRangeRestrictions(restriction));
 
-    return cardinality;
+    return cardinalitySchema;
   }
 
-  String generateOwl2RestrictionType(Restriction restriction) throws OntologyException {
+  String getOwl2RestrictionType(Restriction restriction) throws OntologyException {
     RDFNode qualifiedCardinality = restriction.getPropertyValue(OWL2.qualifiedCardinality);
     RDFNode maxQualifiedCardinality = restriction.getPropertyValue(OWL2.maxQualifiedCardinality);
     RDFNode minQualifiedCardinality = restriction.getPropertyValue(OWL2.minQualifiedCardinality);
     String type;
     if (qualifiedCardinality != null) {
-      type = IndividualRestriction.EXACTLY_TYPE;
+      type = RestrictionSchema.EXACTLY_TYPE;
     } else if (maxQualifiedCardinality != null) {
-      type = IndividualRestriction.MAX_TYPE;
+      type = RestrictionSchema.MAX_TYPE;
     } else if (minQualifiedCardinality !=null) {
-      type = IndividualRestriction.MIN_TYPE;
+      type = RestrictionSchema.MIN_TYPE;
     } else {
       throw new OntologyException("RESTYP.1", "Cannot calculate restriction type");
     }
@@ -275,11 +313,11 @@ public class Ontology implements IOntology {
     return type;
   }
 
-  List<DataRangeRestrinction> generateDataRangeRestrictions(OntClass ont) {
-    List<DataRangeRestrinction> dataRanges = new ArrayList<>();
+  List<DataRangeRestrinctionSchema> generateDataRangeRestrictions(OntClass ont) {
+    List<DataRangeRestrinctionSchema> dataRanges = new ArrayList<>();
     List<Statement> ranges = readDataRangeRestrictions(ont);
     for(Statement stmt : ranges) {
-      DataRangeRestrinction dataRange = new DataRangeRestrinction();
+      DataRangeRestrinctionSchema dataRange = new DataRangeRestrinctionSchema();
       dataRange.setPredicate(stmt.getPredicate().getLocalName());
       Literal value = stmt.getLiteral();
       dataRange.setValue(value.getString());
@@ -309,8 +347,25 @@ public class Ontology implements IOntology {
     return result;
   }
 
+  String getPrefixedEntity(String entityName) {
+    return ontologyProps.getPrefix() + ":" + entityName;
+  }
+
+  ParameterizedSparqlString getPrefixedSparql() {
+    Map<String, String> prefixes = new HashMap<>();
+    prefixes.put(ontologyProps.getPrefix(), ontologyProps.getNamespace());
+    prefixes.put("owl", "http://www.w3.org/2002/07/owl#");
+    prefixes.put("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    prefixes.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+    prefixes.put("xsd", "http://www.w3.org/2001/XMLSchema#");
+
+    ParameterizedSparqlString sparql = new ParameterizedSparqlString();
+    sparql.setNsPrefixes(prefixes);
+    return sparql;
+  }
+
   @PostConstruct
-  void setupModel () throws OntologyException {
+  void setupModel () {
     String ontologyName = this.ontologyProps.getOntologyName();
 
     ModelMaker maker= ModelFactory.createMemModelMaker();
@@ -320,22 +375,12 @@ public class Ontology implements IOntology {
     Model base = maker.createModel( ontologyName );
     this.model = ModelFactory.createOntologyModel(spec, base);
     this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
-    this.model.prepare();
-    ValidityReport report = this.model.validate();
-    if (!report.isValid()) {
-      StringBuilder msg = new StringBuilder();
-      msg.append("Model is not valid:").append("\n");
-      Iterator<ValidityReport.Report> it = report.getReports();
-      while (it.hasNext()) {
-        ValidityReport.Report validity = it.next();
-        msg.append("=============================")
-                .append("Type: ").append(validity.type).append("\n")
-                .append("Is it Error: ").append(validity.isError()).append("\n")
-                .append("Description: ").append(validity.description).append("\n");
-      }
 
-      throw new OntologyException("MODEL.1", msg.toString());
-    }
+    ds = TDB2Factory.connectDataset(this.ontologyProps.getDatasetLocation());
+    ds.begin(ReadWrite.WRITE);
+    ds.addNamedModel(ontologyProps.getOntologyName(), ModelFactory.createOntologyModel());
+    ds.commit();
+    ds.close();
   }
 
 }
