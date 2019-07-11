@@ -51,6 +51,8 @@ import com.aegean.icsd.ontology.beans.DatasetProperties;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.SelectQuery;
+import com.aegean.icsd.ontology.queries.Triplet;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -66,6 +68,16 @@ public class Ontology implements IOntology {
 
   private OntModel model;
   private Dataset ds;
+
+  @Override
+  public JsonObject select(SelectQuery selectQuery) {
+    JsonObject obj = new JsonObject();
+    ParameterizedSparqlString sparql = getPrefixedSparql(selectQuery.getPrefixes());
+    sparql.setCommandText(selectQuery.getCommand());
+
+
+    return new JsonObject();
+  }
 
   @Override
   public JsonObject selectTriplet(String subject, String predicate, String object) {
@@ -86,16 +98,15 @@ public class Ontology implements IOntology {
        String var = vars.next();
        RDFNode node = solution.get(var);
        if(node != null && node.isResource()) {
-         obj.addProperty(var,node.asResource().getLocalName());
+         obj.addProperty(var, node.asResource().getLocalName());
        }
        if(node != null && node.isLiteral()) {
-        obj.addProperty(var,node.asLiteral().getString());
+        obj.addProperty(var, node.asLiteral().getString());
        }
       }
     }
     ds.commit();
     ds.close();
-
     return obj;
   }
 
@@ -318,15 +329,21 @@ public class Ontology implements IOntology {
   }
 
   ParameterizedSparqlString getPrefixedSparql() {
-    Map<String, String> prefixes = new HashMap<>();
-    prefixes.put(ontologyProps.getPrefix(), ontologyProps.getNamespace());
-    prefixes.put("owl", "http://www.w3.org/2002/07/owl#");
-    prefixes.put("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-    prefixes.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-    prefixes.put("xsd", "http://www.w3.org/2001/XMLSchema#");
+    return getPrefixedSparql(new HashMap<>());
+  }
+
+  ParameterizedSparqlString getPrefixedSparql(Map<String, String> prefixes) {
+    Map<String, String> defaultPrefixes = new HashMap<>();
+    defaultPrefixes.put(ontologyProps.getPrefix(), ontologyProps.getNamespace());
+    defaultPrefixes.put("owl", "http://www.w3.org/2002/07/owl#");
+    defaultPrefixes.put("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    defaultPrefixes.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+    defaultPrefixes.put("xsd", "http://www.w3.org/2001/XMLSchema#");
+
+    defaultPrefixes.putAll(prefixes);
 
     ParameterizedSparqlString sparql = new ParameterizedSparqlString();
-    sparql.setNsPrefixes(prefixes);
+    sparql.setNsPrefixes(defaultPrefixes);
     return sparql;
   }
 
