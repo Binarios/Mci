@@ -14,6 +14,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import com.aegean.icsd.OntologyConfiguration;
 import com.aegean.icsd.engine.EngineConfiguration;
+import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.rules.beans.GameProperty;
 import com.aegean.icsd.engine.rules.beans.GameRestriction;
 import com.aegean.icsd.engine.rules.beans.GameRules;
@@ -54,12 +55,11 @@ public class TestIntegration {
     IRules r = ctx.getBean(Rules.class);
 
     String gameName = "Observation";
-    String difficulty = "Easy";
 
-    GameRules rule = r.getGameRules(gameName, difficulty);
+    GameRules rule = r.getGameRules(gameName, Difficulty.EASY);
     Assertions.assertNotNull(rule);
     Assertions.assertEquals(gameName, rule.getGameName());
-    Assertions.assertEquals(difficulty, rule.getDifficulty());
+    Assertions.assertEquals(Difficulty.EASY, rule.getDifficulty());
     List<GameRestriction> restrictions = rule.getGameRestrictions();
     Assertions.assertNotNull(restrictions);
     Assertions.assertEquals(3, restrictions.size());

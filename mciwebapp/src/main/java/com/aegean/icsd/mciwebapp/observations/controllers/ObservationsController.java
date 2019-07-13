@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.aegean.icsd.mciwebapp.common.beans.Response;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
+import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 
 @RestController
@@ -37,7 +38,7 @@ public class ObservationsController {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
           produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public Response<Observation> createObservation(@RequestBody Observation observation) {
+  public Response<Observation> createObservation(@RequestBody Observation observation) throws ObservationsException {
     Observation obs = observationSvc.createObservation(observation);
     return new Response<>(obs);
   }

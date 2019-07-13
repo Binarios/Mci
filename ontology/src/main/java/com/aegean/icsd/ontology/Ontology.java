@@ -18,6 +18,7 @@ import org.apache.jena.ontology.Restriction;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryException;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
@@ -31,7 +32,6 @@ import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateFactory;
@@ -51,8 +51,9 @@ import com.aegean.icsd.ontology.beans.DatasetProperties;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.InsertParam;
+import com.aegean.icsd.ontology.queries.InsertQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
-import com.aegean.icsd.ontology.queries.Triplet;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -70,60 +71,88 @@ public class Ontology implements IOntology {
   private Dataset ds;
 
   @Override
-  public JsonObject select(SelectQuery selectQuery) {
-    JsonObject obj = new JsonObject();
+  public JsonArray select(SelectQuery selectQuery) throws OntologyException {
+    JsonArray array = new JsonArray();
+
     ParameterizedSparqlString sparql = getPrefixedSparql(selectQuery.getPrefixes());
     sparql.setCommandText(selectQuery.getCommand());
 
+    for(Map.Entry<String, String> entry : selectQuery.getIriParams().entrySet()) {
+      sparql.setIri(entry.getKey(), entry.getValue());
+    }
 
-    return new JsonObject();
+    for(Map.Entry<String, String> entry : selectQuery.getLiteralParams().entrySet()) {
+      sparql.setLiteral(entry.getKey(), entry.getValue());
+    }
+
+    Query selectRequest;
+    try {
+      selectRequest = QueryFactory.create(sparql.asQuery().toString());
+    } catch (QueryException ex ) {
+      throw new OntologyException("SEL.1", "Error when constructing the query", ex);
+    }
+
+    try {
+      ds.begin(ReadWrite.READ);
+      QueryExecution queryProcessor = QueryExecutionFactory.create(selectRequest, ds);
+      ResultSet resultSet = queryProcessor.execSelect();
+      while (resultSet.hasNext()) {
+        JsonObject obj = new JsonObject();
+        QuerySolution solution = resultSet.next();
+        Iterator<String> vars = solution.varNames();
+        while (vars.hasNext()) {
+          String var = vars.next();
+          if (selectQuery.getSelectParams().contains(var)) {
+            RDFNode node = solution.get(var);
+            if (node != null && node.isResource()) {
+              obj.addProperty(var, node.asResource().getLocalName());
+            }
+            if (node != null && node.isLiteral()) {
+              obj.addProperty(var, node.asLiteral().getString());
+            }
+          }
+        }
+        array.add(obj);
+      }
+    } catch (Exception ex) {
+      throw new OntologyException("SEL.1", "Error when reading from TDB2", ex);
+    } finally {
+      ds.end();
+    }
+    return array;
   }
 
   @Override
-  public JsonObject selectTriplet(String subject, String predicate, String object) {
-    JsonObject obj = new JsonObject();
-    ParameterizedSparqlString sparql = getPrefixedSparql();
-    sparql.setCommandText("SELECT ?s ?p ?o WHERE {?s ?p ?o .}");
-//    sparql.setIri("s", getPrefixedEntity(subject));
-//    sparql.setIri("p", getPrefixedEntity(predicate));
-//    sparql.setLiteral("o", object);
-    ds.begin(ReadWrite.READ);
-    Query selectRequest = QueryFactory.create(sparql.asQuery().toString());
-    QueryExecution queryProcessor = QueryExecutionFactory.create(selectRequest, ds);
-    ResultSet resultSet = queryProcessor.execSelect();
-    while(resultSet.hasNext()) {
-      QuerySolution solution = resultSet.next();
-      Iterator<String> vars = solution.varNames();
-      while (vars.hasNext()) {
-       String var = vars.next();
-       RDFNode node = solution.get(var);
-       if(node != null && node.isResource()) {
-         obj.addProperty(var, node.asResource().getLocalName());
-       }
-       if(node != null && node.isLiteral()) {
-        obj.addProperty(var, node.asLiteral().getString());
-       }
+  public boolean insert(InsertQuery insertQuery) throws OntologyException {
+    ParameterizedSparqlString sparql = getPrefixedSparql(insertQuery.getPrefixes());
+    sparql.setCommandText(insertQuery.getCommand());
+
+    for (InsertParam param : insertQuery.getParams()) {
+      if (param.isIriParam()) {
+        sparql.setIri(param.getName(), param.getValue());
+      } else {
+        sparql.setLiteral(param.getName(), param.getValue());
       }
     }
-    ds.commit();
-    ds.close();
-    return obj;
-  }
 
+    UpdateRequest updateRequest;
+    try {
+      updateRequest = UpdateFactory.create(sparql.asUpdate().toString());
+    } catch (QueryException ex ) {
+      throw new OntologyException("INS.1", "Error when constructing the query", ex);
+    }
+    try {
+      ds.begin(ReadWrite.WRITE);
+      UpdateProcessor updateProcessor = UpdateExecutionFactory.create(updateRequest, ds);
+      updateProcessor.execute();
+      ds.commit();
+    } catch (Exception ex) {
+      ds.abort();
+      throw new OntologyException("INS.2", "Error when inserting the triple", ex);
+    }  finally {
+      ds.end();
+    }
 
-  @Override
-  public boolean insertTriplet(String subject, String predicate, String object) {
-    ParameterizedSparqlString sparql = getPrefixedSparql();
-    sparql.setCommandText("INSERT { ?s ?p ?o } WHERE {}");
-    sparql.setIri("s", getPrefixedEntity(subject));
-    sparql.setIri("p", getPrefixedEntity(predicate));
-    sparql.setLiteral("o", object);
-    ds.begin(ReadWrite.WRITE);
-    UpdateRequest updateRequest = UpdateFactory.create(sparql.asUpdate().toString());
-    UpdateProcessor updateProcessor = UpdateExecutionFactory.create(updateRequest, ds);
-    updateProcessor.execute();
-    ds.commit();
-    ds.close();
     return true;
   }
 
@@ -360,10 +389,16 @@ public class Ontology implements IOntology {
     this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
 
     ds = TDB2Factory.connectDataset(this.ontologyProps.getDatasetLocation());
-    ds.begin(ReadWrite.WRITE);
-    ds.addNamedModel(ontologyProps.getOntologyName(), ModelFactory.createOntologyModel());
-    ds.commit();
-    ds.close();
+    ds.begin(ReadWrite.READ);
+    boolean found = ds.containsNamedModel(ontologyProps.getOntologyName());
+    ds.end();
+
+    if (!found) {
+      ds.begin(ReadWrite.WRITE);
+      ds.addNamedModel(ontologyProps.getOntologyName(), ModelFactory.createOntologyModel());
+      ds.commit();
+      ds.end();
+    }
   }
 
 }

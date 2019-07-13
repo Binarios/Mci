@@ -1,7 +1,6 @@
 package com.aegean.icsd.ontology.queries;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -13,9 +12,11 @@ public class SelectQuery {
   private String command;
   private Map<String, String> prefixes = new HashMap<>();
   private Map<String, List<Triplet>> conditions = new HashMap<>();
+  private Map<String, String> iriParams = new HashMap<>();
+  private Map<String, String> literalParams = new HashMap<>();
+  private List<String> selectParams = new ArrayList<>();
 
-  private SelectQuery() {
-  }
+  private SelectQuery() { }
 
   public String getCommand() {
     return command;
@@ -29,12 +30,27 @@ public class SelectQuery {
     return conditions;
   }
 
+  public Map<String, String> getIriParams() {
+    return iriParams;
+  }
+
+  public Map<String, String> getLiteralParams() {
+    return literalParams;
+  }
+
+  public List<String> getSelectParams() {
+    return selectParams;
+  }
+
 
   public static class Builder {
     private List<String> params = new ArrayList<>();
     private Map<String, List<Triplet>> conditions = new HashMap<>();
     private Map<String, String> prefixes = new HashMap<>();
     private List<String> filters = new ArrayList<>();
+    private Map<String, String> iriParams = new HashMap<>();
+    private Map<String, String> literalParams = new HashMap<>();
+
 
     public enum Operator {
       GT, LT, EQ
@@ -45,8 +61,20 @@ public class SelectQuery {
       return this;
     }
 
+    public Builder addIriParam(String param, String value) {
+      iriParams.put(param, value);
+      return this;
+    }
+
+    public Builder addLiteralParam(String param, String value) {
+      literalParams.put(param, value);
+      return this;
+    }
+
     public Builder select(String... paramNames) {
-      params.addAll(Arrays.asList(paramNames));
+      for (String param : paramNames) {
+        params.add(removeParamChars(param));
+      }
       return this;
     }
 
@@ -54,17 +82,16 @@ public class SelectQuery {
       String subject = triplet.getSubject();
       String predicate = triplet.getPredicate();
       String object = triplet.getObject();
-      boolean literalObject = triplet.isLiteralObject();
 
-      this.where(subject, predicate, object, literalObject);
+      this.where(subject, predicate, object);
       return this;
     }
 
-    public Builder where(String subject, String predicate, String object, boolean isLiteralObject) {
+    public Builder where(String subject, String predicate, String object) {
       if (conditions.containsKey(subject)) {
-        conditions.get(subject).add(new Triplet(subject, predicate, object, isLiteralObject));
+        conditions.get(subject).add(new Triplet(subject, predicate, object));
       } else {
-        Triplet triplet = new Triplet(subject, predicate, object, isLiteralObject);
+        Triplet triplet = new Triplet(subject, predicate, object);
         List<Triplet> entries = new ArrayList<>();
         entries.add(triplet);
         conditions.put(subject, entries);
@@ -117,6 +144,9 @@ public class SelectQuery {
       query.command = builder.toString();
       query.prefixes = prefixes;
       query.conditions = conditions;
+      query.iriParams = iriParams;
+      query.literalParams = literalParams;
+      query.selectParams = params;
 
       return query;
     }
@@ -127,15 +157,7 @@ public class SelectQuery {
         if (StringUtils.isEmpty(param)) {
           continue;
         }
-        String uniParam= param.replace("$", "?");
-        if (uniParam.indexOf("?") == 0) {
-          builder.append(uniParam).append(" ");
-        } else if (uniParam.indexOf("?") > 0) {
-          uniParam = uniParam.replace("?", "");
-          builder.append("?").append(uniParam).append(" ");
-        } else {
-          builder.append("?").append(uniParam).append(" ");
-        }
+        builder.append("?").append(param).append(" ");
       }
       builder.append("\n");
     }
@@ -166,8 +188,12 @@ public class SelectQuery {
           builder.append(";").append("\n").append("\t");
         }
       }
-      builder.append(".").append("\n");
+      builder.append(" ").append(".");
       return builder.toString();
+    }
+
+    String removeParamChars(String entry) {
+      return entry.replace("?", "").replace("$", "");
     }
   }
 }

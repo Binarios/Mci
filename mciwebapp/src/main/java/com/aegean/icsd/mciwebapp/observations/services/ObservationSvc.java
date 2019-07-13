@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.generator.beans.GameInfo;
+import com.aegean.icsd.engine.generator.beans.GeneratorException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.mciwebapp.observations.beans.Exceptions;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
@@ -27,7 +28,12 @@ public class ObservationSvc implements IObservationSvc {
       throw Exceptions.InvalidRequest();
     }
 
-    GameInfo info = generator.generateGame(gameName, observation.getDifficulty(), observation.getPlayerName());
+    GameInfo info;
+    try {
+      info = generator.generateGame(gameName, observation.getDifficulty(), observation.getPlayerName());
+    } catch (GeneratorException e) {
+      throw Exceptions.GenerationError(e);
+    }
 
     return null;
   }
