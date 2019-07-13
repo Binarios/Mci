@@ -3,8 +3,8 @@ package com.aegean.icsd.ontology;
 
 import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.ontology.queries.InsertQuery;
-import com.aegean.icsd.ontology.queries.SelectQuery;
+import com.aegean.icsd.queries.InsertQuery;
+import com.aegean.icsd.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 

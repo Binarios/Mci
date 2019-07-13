@@ -51,9 +51,9 @@ import com.aegean.icsd.ontology.beans.DatasetProperties;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.ontology.queries.InsertParam;
-import com.aegean.icsd.ontology.queries.InsertQuery;
-import com.aegean.icsd.ontology.queries.SelectQuery;
+import com.aegean.icsd.queries.beans.InsertParam;
+import com.aegean.icsd.queries.InsertQuery;
+import com.aegean.icsd.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

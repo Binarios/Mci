@@ -1,4 +1,4 @@
-package com.aegean.icsd.ontology.queries;
+package com.aegean.icsd.queries.beans;
 
 public class Triplet {
   private String subject;

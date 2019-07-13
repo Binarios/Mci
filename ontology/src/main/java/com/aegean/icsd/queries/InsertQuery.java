@@ -1,4 +1,4 @@
-package com.aegean.icsd.ontology.queries;
+package com.aegean.icsd.queries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import com.aegean.icsd.queries.beans.InsertParam;
 
 public class InsertQuery {
   private String command;
