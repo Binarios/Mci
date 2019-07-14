@@ -9,9 +9,10 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.engine.rules.beans.EntityRestriction;
+import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
-import com.aegean.icsd.engine.rules.beans.GameProperty;
-import com.aegean.icsd.engine.rules.beans.GameRestriction;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.GameRules;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
@@ -31,39 +32,56 @@ public class Rules implements IRules {
 
   @Override
   public GameRules getGameRules(String gameName, Difficulty difficulty) throws RulesException {
-    ClassSchema game;
-    try {
-      game = ontology.getClassSchema(Utils.getFullGameName(gameName, difficulty));
-    } catch (OntologyException e) {
-      throw new RulesException("GGR.1", e.getCodeMsg(), e);
-    }
-
     GameRules rules = new GameRules();
     rules.setGameName(gameName);
     rules.setDifficulty(difficulty);
 
-    List<GameRestriction> restrictions = getGameRestrictions(game);
-    rules.setGameRestrictions(restrictions);
-
-    List<GameProperty> properties = getGameProperties(game.getProperties());
-    rules.setProperties(properties);
+    EntityRules entityRules = getEntityRules(Utils.getFullGameName(gameName, difficulty));
+    rules.setRestrictions(entityRules.getRestrictions());
+    rules.setProperties(entityRules.getProperties());
 
     return rules;
   }
 
-  List<GameProperty> getGameProperties(List<PropertySchema> availableProperties) {
-    List<GameProperty> properties = new ArrayList<>();
+  @Override
+  public EntityRules getEntityRules(String entityName) throws RulesException {
+    return getRules(entityName);
+  }
+
+
+  EntityRules getRules(String entityName) throws RulesException {
+    ClassSchema entitySchema;
+    try {
+      entitySchema = ontology.getClassSchema(entityName);
+    } catch (OntologyException e) {
+      throw new RulesException("GGR.1", e.getCodeMsg(), e);
+    }
+
+    EntityRules rules = new EntityRules();
+    rules.setName(entityName);
+
+    List<EntityRestriction> restrictions = getEntityRestrictions(entitySchema);
+    rules.setRestrictions(restrictions);
+
+    List<EntityProperty> properties = getEntityProperties(entitySchema.getProperties());
+    rules.setProperties(properties);
+
+    return rules;
+  }
+  List<EntityProperty> getEntityProperties(List<PropertySchema> availableProperties) {
+    List<EntityProperty> properties = new ArrayList<>();
     for (PropertySchema prop : availableProperties) {
-      GameProperty gameProperty = getGameProperty(prop);
-      properties.add(gameProperty);
+      EntityProperty entityProperty = getEntityProperty(prop);
+      properties.add(entityProperty);
     }
     return properties;
   }
 
-  GameProperty getGameProperty(PropertySchema prop) {
-    GameProperty property = new GameProperty();
+  EntityProperty getEntityProperty(PropertySchema prop) {
+    EntityProperty property = new EntityProperty();
     property.setName(prop.getName());
     property.setRange(prop.getRange());
+    property.setObjectProperty(prop.isObjectProperty());
     property.setIrreflexive(prop.isIrreflexive());
     property.setReflexive(prop.isReflexive());
     property.setMandatory(prop.isMandatory());
@@ -72,37 +90,25 @@ public class Rules implements IRules {
     return property;
   }
 
-  List<GameRestriction> getGameRestrictions(ClassSchema game) {
-    List<GameRestriction> gameRestrictions = new ArrayList<>();
+  List<EntityRestriction> getEntityRestrictions(ClassSchema game) {
+    List<EntityRestriction> entityRestrictions = new ArrayList<>();
 
     for(RestrictionSchema res : game.getEqualityRestrictions()) {
-      GameRestriction gameRes = getGameRestriction(res);
-      gameRestrictions.add(gameRes);
+      EntityRestriction gameRes = getEntityRestriction(res);
+      entityRestrictions.add(gameRes);
     }
 
     for(RestrictionSchema res : game.getRestrictions()) {
-      GameRestriction gameRes = getGameRestriction(res);
-      gameRestrictions.add(gameRes);
+      EntityRestriction gameRes = getEntityRestriction(res);
+      entityRestrictions.add(gameRes);
     }
 
-    Collections.sort(gameRestrictions, (i, k) -> {
-      if (i.getType().getOrder() == k.getType().getOrder()) {
-        return 0;
-      } else if (i.getType().getOrder() > k.getType().getOrder()) {
-        return 1;
-      } else {
-        return -1;
-      }
-    });
-
-    return gameRestrictions;
+    return entityRestrictions;
   }
 
-  GameRestriction getGameRestriction(RestrictionSchema res) {
-    GameRestriction gameRes = new GameRestriction();
-
-    gameRes.setOnProperty(res.getOnPropertySchema().getName());
-    gameRes.setRange(res.getOnPropertySchema().getRange());
+  EntityRestriction getEntityRestriction(RestrictionSchema res) {
+    EntityRestriction gameRes = new EntityRestriction();
+    gameRes.setOnProperty(getEntityProperty(res.getOnPropertySchema()));
     gameRes.setType(RestrictionType.fromString(res.getType()));
     gameRes.setCardinality(getRestrictionCardinality(res));
     gameRes.setDataRange(getDataRanges(res));

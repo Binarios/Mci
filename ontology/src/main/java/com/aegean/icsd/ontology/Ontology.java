@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
@@ -172,6 +173,16 @@ public class Ontology implements IOntology {
     return result;
   }
 
+  @Override
+  public String getPrefixedEntity(String entityName) {
+    return ontologyProps.getPrefix() + ":" + entityName;
+  }
+
+  @Override
+  public String nodeNameGenerator(String entityName) {
+    return getPrefixedEntity(entityName) + "_" + UUID.randomUUID().toString();
+  }
+
   List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {
     List<PropertySchema> properties = new ArrayList<>();
 
@@ -233,6 +244,11 @@ public class Ontology implements IOntology {
     OntProperty resProp = restriction.getOnProperty();
     result.setOnPropertySchema(getPropertySchema(resProp));
 
+    if (resProp.isObjectProperty()) {
+      Resource onClass = restriction.getPropertyResourceValue(OWL2.onClass);
+      result.getOnPropertySchema().setRange(onClass.getLocalName());
+    }
+
     if (restriction.isAllValuesFromRestriction()) {
       result.setType(RestrictionSchema.ONLY_TYPE);
     } else if (restriction.isHasValueRestriction()) {
@@ -254,7 +270,7 @@ public class Ontology implements IOntology {
       return descriptor;
     }
     descriptor.setName(property.getLocalName());
-    descriptor.setType(property.isObjectProperty()? "ObjectProperty": "DataTypeProperty");
+    descriptor.setObjectProperty(property.isObjectProperty());
     OntResource rangeResource = property.getRange();
     OntClass rangeClass = rangeResource.asClass();
     if (rangeClass.isEnumeratedClass()) {
@@ -351,14 +367,6 @@ public class Ontology implements IOntology {
   OntClass getOntClass(String className) {
     OntClass result = this.model.getOntClass(ontologyProps.getNamespace() + className);
     return result;
-  }
-
-  String getPrefixedEntity(String entityName) {
-    return ontologyProps.getPrefix() + ":" + entityName;
-  }
-
-  ParameterizedSparqlString getPrefixedSparql() {
-    return getPrefixedSparql(new HashMap<>());
   }
 
   ParameterizedSparqlString getPrefixedSparql(Map<String, String> prefixes) {

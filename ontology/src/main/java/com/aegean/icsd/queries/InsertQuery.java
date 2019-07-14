@@ -70,6 +70,13 @@ public class InsertQuery {
       return this;
     }
 
+    public Builder forSubject (InsertParam subject) {
+      this.subject = subject;
+      this.subject.setIriParam(true);
+
+      return this;
+    }
+
     public Builder addRelation (InsertParam predicate, InsertParam object) {
       boolean found = false;
       for (InsertParam existingPred : this.relations.keySet()) {
@@ -93,7 +100,7 @@ public class InsertQuery {
       StringBuilder builder = new StringBuilder();
       InsertQuery query = new InsertQuery();
       builder.append("INSERT DATA {\n\t");
-      builder.append("?").append(removeParamChars(subject.getName())).append(" ");
+      builder.append(removeParamChars(subject.getName())).append(" ");
 
       Iterator<Map.Entry<InsertParam, List<InsertParam>>> relationIt = relations.entrySet().iterator();
       while (relationIt.hasNext()) {
@@ -104,8 +111,8 @@ public class InsertQuery {
 
         while (objectsIt.hasNext()) {
           InsertParam object = objectsIt.next();
-          builder.append("?").append(removeParamChars(relation.getKey().getName())).append(" ")
-            .append("?").append(removeParamChars(object.getName())).append(" ");
+          builder.append(removeParamChars(relation.getKey().getName())).append(" ")
+            .append(removeParamChars(object.getName())).append(" ");
           if(objectsIt.hasNext()) {
             builder.append(";\n\t\t");
           }
@@ -124,7 +131,7 @@ public class InsertQuery {
     }
 
     String removeParamChars(String entry) {
-      return entry.replace("?", "").replace("$", "");
+      return "?" + entry.replace("?", "").replace("$", "");
     }
   }
 }

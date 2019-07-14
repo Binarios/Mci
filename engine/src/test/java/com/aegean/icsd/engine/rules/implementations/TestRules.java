@@ -16,7 +16,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.engine.rules.beans.GameRestriction;
+import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.GameRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
@@ -69,8 +69,8 @@ public class TestRules {
     List<PropertySchema> props = new ArrayList<>();
     given(ont.getClassSchema(any())).willReturn(mockInd);
     given(mockInd.getProperties()).willReturn(props);
-    Mockito.doReturn(new ArrayList<>()).when(rules).getGameRestrictions(mockInd);
-    Mockito.doReturn(new ArrayList<>()).when(rules).getGameProperties(props);
+    Mockito.doReturn(new ArrayList<>()).when(rules).getEntityRestrictions(mockInd);
+    Mockito.doReturn(new ArrayList<>()).when(rules).getEntityProperties(props);
 
     GameRules res = rules.getGameRules(gameName, Difficulty.EASY);
     Assertions.assertNotNull(res);
@@ -82,8 +82,8 @@ public class TestRules {
     RestrictionSchema restrictionSchemaMock1 = mock(RestrictionSchema.class);
     RestrictionSchema restrictionSchemaMock2 = mock(RestrictionSchema.class);
 
-    GameRestriction gameRes1 = generateGameRes("test", RestrictionType.MIN, 2,"xsd:string");
-    GameRestriction gameRes2 = generateGameRes("test", RestrictionType.ONLY, -1,"xsd:string");
+    EntityRestriction gameRes1 = generateGameRes("test", RestrictionType.MIN, 2,"xsd:string");
+    EntityRestriction gameRes2 = generateGameRes("test", RestrictionType.ONLY, -1,"xsd:string");
 
     given(indMock.getEqualityRestrictions()).willReturn(new ArrayList<>());
     given(indMock.getRestrictions()).willReturn(listMock);
@@ -92,10 +92,10 @@ public class TestRules {
     when(itMock.hasNext()).thenReturn(true, true, false);
     when(itMock.next()).thenReturn(restrictionSchemaMock1, restrictionSchemaMock2);
 
-    Mockito.doReturn(gameRes1).when(rules).getGameRestriction(restrictionSchemaMock1);
-    Mockito.doReturn(gameRes2).when(rules).getGameRestriction(restrictionSchemaMock2);
+    Mockito.doReturn(gameRes1).when(rules).getEntityRestriction(restrictionSchemaMock1);
+    Mockito.doReturn(gameRes2).when(rules).getEntityRestriction(restrictionSchemaMock2);
 
-    List<GameRestriction> res = rules.getGameRestrictions(indMock);
+    List<EntityRestriction> res = rules.getEntityRestrictions(indMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(2, res.size());
     Assertions.assertEquals(RestrictionType.ONLY, res.get(0).getType());
@@ -153,8 +153,8 @@ public class TestRules {
     Assertions.assertEquals(-1, r);
   }
 
-  private GameRestriction generateGameRes(String propertyName, RestrictionType type, int cardinality, String range) {
-    GameRestriction r = new GameRestriction();
+  private EntityRestriction generateGameRes(String propertyName, RestrictionType type, int cardinality, String range) {
+    EntityRestriction r = new EntityRestriction();
     r.setOnProperty(propertyName);
     r.setType(type);
     r.setCardinality(cardinality);

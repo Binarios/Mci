@@ -1,6 +1,7 @@
 package com.aegean.icsd.queries;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -52,7 +53,9 @@ public class SelectQuery {
     private List<String> filters = new ArrayList<>();
     private Map<String, String> iriParams = new HashMap<>();
     private Map<String, String> literalParams = new HashMap<>();
-
+    private boolean isAscOrdered = false;
+    private String orderFiled = null;
+    private int limit = -1;
 
     public enum Operator {
       GT, LT, EQ
@@ -74,18 +77,7 @@ public class SelectQuery {
     }
 
     public Builder select(String... paramNames) {
-      for (String param : paramNames) {
-        params.add(removeParamChars(param));
-      }
-      return this;
-    }
-
-    public Builder where(Triplet triplet) {
-      String subject = triplet.getSubject();
-      String predicate = triplet.getPredicate();
-      String object = triplet.getObject();
-
-      this.where(subject, predicate, object);
+      params.addAll(Arrays.asList(paramNames));
       return this;
     }
 
@@ -137,11 +129,26 @@ public class SelectQuery {
       return this;
     }
 
+    public Builder orderByDesc(String field) {
+      return this.orderBy(field, false);
+    }
+
+    public Builder orderByAsc(String field) {
+      return this.orderBy(field, true);
+    }
+
+    public Builder limit(int numberOfRecords) {
+      limit = numberOfRecords;
+      return this;
+    }
+
     public SelectQuery build() {
       SelectQuery query = new SelectQuery();
       StringBuilder builder = new StringBuilder();
       buildSelectParams(builder);
       buildWhereClauses(builder);
+      buildOrderClause(builder);
+      buildLimitClause(builder);
 
       query.command = builder.toString();
       query.prefixes = prefixes;
@@ -159,13 +166,13 @@ public class SelectQuery {
         if (StringUtils.isEmpty(param)) {
           continue;
         }
-        builder.append("?").append(param).append(" ");
+        builder.append(removeParamChars(param)).append(" ");
       }
       builder.append("\n");
     }
 
     void buildWhereClauses(StringBuilder builder) {
-      builder.append("WHERE").append(" ").append("{").append("\n");
+      builder.append("WHERE").append(" ").append("{").append("\n\t");
 
       for (Map.Entry<String, List<Triplet>> entry : conditions.entrySet()) {
         String whereClause = buildWhereClause(entry);
@@ -179,13 +186,32 @@ public class SelectQuery {
       builder.append("}").append("\n");
     }
 
+    void buildOrderClause(StringBuilder builder) {
+      if (!StringUtils.isEmpty(orderFiled)) {
+        builder.append("ORDER BY ");
+        if (isAscOrdered) {
+          builder.append("ASC");
+        } else {
+          builder.append("DESC");
+        }
+        builder.append("(").append(removeParamChars(orderFiled)).append(")\n");
+      }
+    }
+
+    void buildLimitClause(StringBuilder builder) {
+      if (limit > 0) {
+        builder.append("LIMIT ").append(limit).append("\n");
+      }
+    }
+
     String buildWhereClause(Map.Entry<String, List<Triplet>> entry) {
       StringBuilder builder = new StringBuilder();
-      builder.append(entry.getKey()).append(" ");
+      builder.append(removeParamChars(entry.getKey())).append(" ");
       Iterator<Triplet> it = entry.getValue().iterator();
       while (it.hasNext()) {
         Triplet triplet = it.next();
-        builder.append(triplet.getPredicate()).append(" ").append(triplet.getObject());
+        builder.append(removeParamChars(triplet.getPredicate())).append(" ")
+          .append(removeParamChars(triplet.getObject()));
         if(it.hasNext()) {
           builder.append(";").append("\n").append("\t");
         }
@@ -195,7 +221,13 @@ public class SelectQuery {
     }
 
     String removeParamChars(String entry) {
-      return entry.replace("?", "").replace("$", "");
+      return "?" + entry.replace("?", "").replace("$", "");
+    }
+
+    Builder orderBy(String field, boolean ascended) {
+      this.orderFiled = field;
+      this.isAscOrdered = ascended;
+      return this;
     }
   }
 }

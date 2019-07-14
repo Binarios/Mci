@@ -1,6 +1,6 @@
 package com.aegean.icsd.engine.rules.beans;
 
-public class GameProperty {
+public class EntityProperty {
   /**
    * The name of the property
    */
@@ -10,6 +10,11 @@ public class GameProperty {
    * The type of the values this property is associated with
    */
   private String range;
+
+  /**
+   * The type of the property. Either ObjectProperty or DataTypeProperty
+   */
+  private boolean objectProperty;
 
   /**
    * Is this property mandatory
@@ -78,5 +83,13 @@ public class GameProperty {
 
   public void setIrreflexive(boolean irreflexive) {
     this.irreflexive = irreflexive;
+  }
+
+  public boolean isObjectProperty() {
+    return objectProperty;
+  }
+
+  public void setObjectProperty(boolean objectProperty) {
+    this.objectProperty = objectProperty;
   }
 }

@@ -15,4 +15,8 @@ public interface IOntology {
   boolean insert(InsertQuery query) throws OntologyException;
 
   ClassSchema getClassSchema(String className) throws OntologyException;
+
+  String getPrefixedEntity(String entity);
+
+  String nodeNameGenerator(String entityName);
 }

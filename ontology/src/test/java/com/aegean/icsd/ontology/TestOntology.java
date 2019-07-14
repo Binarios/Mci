@@ -413,25 +413,13 @@ public class TestOntology {
     Assertions.assertEquals(test.getType(), result.get(0).getType());
   }
 
-
   @Test
   public void testInsertSelectTriplet() throws OntologyException {
     ont.setupModel();
 
-    InsertParam subject = new InsertParam();
-    subject.setIriParam(true);
-    subject.setName("?sub");
-    subject.setValue("mci:obs1");
-
-    InsertParam predicate = new InsertParam();
-    predicate.setIriParam(true);
-    predicate.setName("?pred");
-    predicate.setValue("mci:hasGameId");
-
-    InsertParam object = new InsertParam();
-    object.setIriParam(false);
-    object.setName("?obj");
-    object.setValue("1");
+    InsertParam subject = generateInsertParam("sub","mci:obs1", true);
+    InsertParam predicate = generateInsertParam("pred","mci:hasGameId", true);
+    InsertParam object = generateInsertParam("obj","1", false);
 
     InsertQuery insertQuery = new InsertQuery.Builder()
       .insertEntry(subject, "mci:EasyObservation")
@@ -475,6 +463,56 @@ public class TestOntology {
   }
 
   @Test
+  public void testGetLatestLevel() throws OntologyException {
+    String playerName = "test";
+    String className = "EasyObservation";
+    int level = 12;
+
+    InsertParam sub = generateInsertParam("sub", "mci:obs2", true);
+
+    InsertParam playerPred = generateInsertParam("hasPlayer", "mci:hasPlayer", true);
+    InsertParam playerObj = generateInsertParam("playerName", playerName, false);
+
+    InsertParam levelPred = generateInsertParam("hasLevel", "mci:hasLevel", true);
+    InsertParam levelObj = generateInsertParam("latestLevel", "" + level, false);
+
+    InsertParam completedDatePred = generateInsertParam("completedDate", "mci:completedDate", true);
+    InsertParam completedDateObj = generateInsertParam("date", "13/07/2019", false);
+
+    InsertQuery ins = new InsertQuery.Builder()
+      .insertEntry(sub, ont.getPrefixedEntity(className))
+      .addRelation(playerPred, playerObj)
+      .addRelation(levelPred, levelObj)
+      .addRelation(completedDatePred, completedDateObj)
+      .build();
+
+    ont.setupModel();
+    ont.insert(ins);
+
+    SelectQuery query = new SelectQuery.Builder()
+      .select("latestLevel")
+      .where("s", "type", "class")
+      .where("s", "hasPlayer", "playerName")
+      .where("s", "hasLevel", "latestLevel")
+      .where("s", "completed", "date")
+      .orderByDesc("date")
+      .limit(1)
+      .addIriParam("type", "rdf:type")
+      .addIriParam("class", ont.getPrefixedEntity(className))
+      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasLevel", ont.getPrefixedEntity("hasLevel"))
+      .addIriParam("completed", ont.getPrefixedEntity("completedDate"))
+      .addLiteralParam("playerName", playerName)
+      .build();
+
+    JsonArray array = ont.select(query);
+
+    Assertions.assertNotNull(array);
+    Assertions.assertEquals(1, array.size());
+    Assertions.assertEquals(level, array.get(0).getAsJsonObject().get("latestLevel").getAsInt());
+  }
+
+  @Test
   @Disabled("Exploring the Jena API")
   public void test() throws OntologyException {
     ont.setupModel();
@@ -496,6 +534,14 @@ public class TestOntology {
     obj.setType("ObjectProperty");
     obj.setRange(className);
     return obj;
+  }
+
+  private InsertParam generateInsertParam(String name, String value, boolean isIri) {
+    InsertParam param = new InsertParam();
+    param.setIriParam(isIri);
+    param.setName(name);
+    param.setValue(value);
+    return param;
   }
 }
 

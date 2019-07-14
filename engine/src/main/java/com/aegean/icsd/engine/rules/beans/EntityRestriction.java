@@ -2,16 +2,11 @@ package com.aegean.icsd.engine.rules.beans;
 
 import java.util.List;
 
-public class GameRestriction {
+public class EntityRestriction {
   /**
    * The name of the property the restriction is on
    */
-  private String onProperty;
-
-  /**
-   * The type of the values this property is associated with
-   */
-  private String range;
+  private EntityProperty onProperty;
 
   /**
    * The type of restriction
@@ -28,20 +23,12 @@ public class GameRestriction {
    */
   private List<ValueRangeRestriction> dataRange;
 
-  public String getOnProperty() {
+  public EntityProperty getOnProperty() {
     return onProperty;
   }
 
-  public void setOnProperty(String onProperty) {
+  public void setOnProperty(EntityProperty onProperty) {
     this.onProperty = onProperty;
-  }
-
-  public String getRange() {
-    return range;
-  }
-
-  public void setRange(String range) {
-    this.range = range;
   }
 
   public RestrictionType getType() {

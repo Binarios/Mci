@@ -9,7 +9,7 @@ public class PropertySchema {
   /**
    * The type of the property. Either ObjectProperty or DataTypeProperty
    */
-  private String type;
+  private boolean objectProperty;
 
   /**
    * The class name that is the range of the property values
@@ -42,14 +42,6 @@ public class PropertySchema {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
   }
 
   public String getRange() {
@@ -90,5 +82,13 @@ public class PropertySchema {
 
   public void setIrreflexive(boolean irreflexive) {
     this.irreflexive = irreflexive;
+  }
+
+  public boolean isObjectProperty() {
+    return objectProperty;
+  }
+
+  public void setObjectProperty(boolean objectProperty) {
+    this.objectProperty = objectProperty;
   }
 }

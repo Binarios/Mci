@@ -15,8 +15,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import com.aegean.icsd.OntologyConfiguration;
 import com.aegean.icsd.engine.EngineConfiguration;
 import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.engine.rules.beans.GameProperty;
-import com.aegean.icsd.engine.rules.beans.GameRestriction;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
+import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.GameRules;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.implementations.Rules;
@@ -60,10 +60,10 @@ public class TestIntegration {
     Assertions.assertNotNull(rule);
     Assertions.assertEquals(gameName, rule.getGameName());
     Assertions.assertEquals(Difficulty.EASY, rule.getDifficulty());
-    List<GameRestriction> restrictions = rule.getGameRestrictions();
+    List<EntityRestriction> restrictions = rule.getRestrictions();
     Assertions.assertNotNull(restrictions);
     Assertions.assertEquals(3, restrictions.size());
-    List<GameProperty> properties = rule.getProperties();
+    List<EntityProperty> properties = rule.getProperties();
     Assertions.assertNotNull(properties);
     Assertions.assertEquals(9, properties.size());
   }
