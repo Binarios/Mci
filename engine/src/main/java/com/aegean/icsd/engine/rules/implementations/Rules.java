@@ -1,8 +1,11 @@
 package com.aegean.icsd.engine.rules.implementations;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.GameRules;
 import com.aegean.icsd.engine.rules.beans.RulesException;
+import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.ontology.IOntology;
@@ -116,19 +120,26 @@ public class Rules implements IRules {
     return gameRes;
   }
 
-  List<ValueRangeRestriction> getDataRanges(RestrictionSchema res) {
-    List<ValueRangeRestriction> dataRanges = new ArrayList<>();
+  ValueRangeRestriction getDataRanges(RestrictionSchema res) {
+    ValueRangeRestriction dataRange = new ValueRangeRestriction();
 
     if (res.getCardinalitySchema() != null) {
       List<DataRangeRestrinctionSchema> dataRestrictions = res.getCardinalitySchema().getDataRangeRestrictions();
-      for (DataRangeRestrinctionSchema dataRestriction : dataRestrictions) {
-        ValueRangeRestriction valueRange = toValueRangeRestriction(dataRestriction);
-        if (valueRange != null) {
-          dataRanges.add(valueRange);
-        }
-      }
+      dataRestrictions.stream()
+        .collect(Collectors.groupingBy(DataRangeRestrinctionSchema::getDatatype))
+        .forEach((dataType, restrictions) -> {
+          dataRange.setDataType(dataType);
+          List<ValueRange> ranges = new ArrayList<>();
+          restrictions.forEach(x -> {
+            ValueRange range = new ValueRange();
+            range.setPredicate(x.getPredicate());
+            range.setValue(x.getValue());
+            ranges.add(range);
+          });
+          dataRange.setRanges(ranges);
+        });
     }
-    return dataRanges;
+    return dataRange;
   }
 
   int getRestrictionCardinality(RestrictionSchema res) {
@@ -151,18 +162,4 @@ public class Rules implements IRules {
 
     return cardinality;
   }
-
-  ValueRangeRestriction toValueRangeRestriction(DataRangeRestrinctionSchema dataRestriction) {
-    if (dataRestriction == null) {
-      return  null;
-    }
-
-    ValueRangeRestriction res = new ValueRangeRestriction();
-    res.setPredicate(dataRestriction.getPredicate());
-    res.setDataType(dataRestriction.getDatatype());
-    res.setValue(dataRestriction.getValue());
-
-    return res;
-  }
-
 }

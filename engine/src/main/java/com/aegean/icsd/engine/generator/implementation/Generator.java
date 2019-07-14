@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -17,10 +16,13 @@ import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
+import com.aegean.icsd.engine.providers.interfaces.IValueProvider;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.GameRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
+import com.aegean.icsd.engine.rules.beans.ValueRange;
+import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.queries.InsertQuery;
 import com.aegean.icsd.queries.beans.InsertParam;
@@ -33,6 +35,9 @@ public class Generator implements IGenerator {
 
   @Autowired
   private IGeneratorDao dao;
+
+  @Autowired
+  private IValueProvider provider;
 
   @Override
   public GameInfo generateGame(String gameName, Difficulty difficulty, String playerName) throws EngineException {
@@ -67,7 +72,7 @@ public class Generator implements IGenerator {
     Collections.copy(copy, restrictions);
 
     List<EntityRestriction> onlyRestrictions = copy.stream()
-      .filter(x -> x.getType().equals(RestrictionType.ONLY))
+      .filter(x -> RestrictionType.ONLY.equals(x.getType()))
       .collect(Collectors.toList());
 
     onlyRestrictions.forEach(onlyRes -> copy.stream()
@@ -80,11 +85,11 @@ public class Generator implements IGenerator {
     List<EntityRestriction> copyWithCardinality = calculateCardinality (copy);
     copy.clear();
 
-    List<EntityRestriction> dataTypeRestriction = copyWithCardinality.stream()
+    List<EntityRestriction> dataTypeRestrictions = copyWithCardinality.stream()
       .filter(x -> !x.getOnProperty().isObjectProperty())
       .collect(Collectors.toList());
 
-    List<EntityRestriction> objectRestriction = copyWithCardinality.stream()
+    List<EntityRestriction> objectRestrictions = copyWithCardinality.stream()
       .filter(x -> x.getOnProperty().isObjectProperty())
       .collect(Collectors.toList());
 
@@ -92,38 +97,84 @@ public class Generator implements IGenerator {
 
     List<InsertQuery> restrictionQueries = new LinkedList<>();
 
-    restrictionQueries.addAll(fulfillDataTypeRestrictions(entityNodeName, dataTypeRestriction));
+    List<InsertQuery> dataTypeQueries = fulfillDataTypeRestrictions(entityNodeName, dataTypeRestrictions);
+    List<InsertQuery> objectQueries = fulfillObjectRestrictions(entityNodeName, objectRestrictions);
+    restrictionQueries.addAll(dataTypeQueries);
 
 
     return restrictionQueries;
+  }
+
+  List<InsertQuery> fulfillObjectRestrictions(String entityNodeName, List<EntityRestriction> objectRestrictions) {
+    List<InsertQuery> queries = new LinkedList<>();
+    return queries;
   }
 
   List<InsertQuery> fulfillDataTypeRestrictions(String entityNodeName, List<EntityRestriction> dataTypeRestrictions) {
     List<InsertQuery> queries = new ArrayList<>();
 
     for (EntityRestriction res : dataTypeRestrictions) {
-      InsertQuery resQuery = fulfillDataTypeRestriction(entityNodeName, res);
-      queries.add(resQuery);
+      List<InsertQuery> resQueries = fulfillDataTypeRestriction(entityNodeName, res);
+      queries.addAll(resQueries);
     }
     return queries;
   }
 
-  InsertQuery fulfillDataTypeRestriction(String entityNodeName, EntityRestriction res) {
-    String predicateVarName = dao.generateNodeName(res.getOnProperty().getName());
-    String objectVarName = dao.generateNodeName(res.getOnProperty().getRange());
+  List<InsertQuery> fulfillDataTypeRestriction(String entityNodeName, EntityRestriction res) {
+    List<InsertQuery> queries = new LinkedList<>();
+    for (int i = 0; i < res.getCardinality(); i++) {
+      InsertQuery q = generateDataTypeInsert(entityNodeName,
+        res.getOnProperty().getName(), res.getOnProperty().getRange(), res.getDataRange());
+      queries.add(q);
+    }
 
-    String objValue = valueProvider(res);
+    return queries;
+  }
 
-    InsertParam predicate = dao.constructInsParam(predicateVarName, res.getOnProperty().getName(), true);
+  InsertQuery generateDataTypeInsert(String entityNodeName, String property,
+                                     String range, ValueRangeRestriction dataRange) {
+    String objValue = calculateDataValue(dataRange);
+
+    String predicateVarName = dao.generateNodeName(property);
+    String objectVarName = dao.generateNodeName(range);
+    InsertParam predicate = dao.constructInsParam(predicateVarName, property, true);
     InsertParam object = dao.constructInsParam(objectVarName, objValue, false);
+
     return new InsertQuery.Builder()
       .forSubject(dao.constructInsParam(entityNodeName, entityNodeName, true))
       .addRelation(predicate, object)
       .build();
   }
 
-  String valueProvider(EntityRestriction res) {
-    return null;
+  String calculateDataValue(ValueRangeRestriction res) {
+    String value = "";
+    if (res.getDataType().endsWith("integer")) {
+      int min = 0;
+      int max = 0;
+
+      for (ValueRange range : res.getRanges()) {
+        int parsed = Integer.parseInt(range.getValue());
+        switch (range.getPredicate()) {
+          case "maxExclusive":
+            max = parsed - 1;
+            break;
+          case "maxInclusive":
+            max = parsed;
+            break;
+          case "minExclusive":
+            min = parsed + 1;
+            break;
+          case "minInclusive":
+            min = parsed;
+            break;
+          default:
+              break;
+        }
+      }
+      value = String.valueOf(provider.getPositiveValue(min, max));
+    }
+
+    return value;
   }
 
   List<EntityRestriction> calculateCardinality(List<EntityRestriction> entityRestrictions) {
@@ -140,7 +191,10 @@ public class Generator implements IGenerator {
             .orElse(null);
 
           if (calculated == null) {
-            if (res.getType().equals(RestrictionType.EXACTLY)) {
+            if (RestrictionType.EXACTLY.equals(res.getType())) {
+              simplifiedList.add(res);
+            } else if (RestrictionType.SOME.equals(res.getType()) || RestrictionType.VALUE.equals(res.getType())) {
+              res.setCardinality(1);
               simplifiedList.add(res);
             } else {
               int cardinality = determineCardinality(res.getOnProperty().getRange(), restrictions);
@@ -156,31 +210,19 @@ public class Generator implements IGenerator {
   int determineCardinality(String rangeClass, List<EntityRestriction> restrictions) {
     int minCardinality = 0;
     int maxCardinality = 0;
-    int cardinality = -1;
 
     List<EntityRestriction> filtered = restrictions.stream()
       .filter(x -> rangeClass.equals(x.getOnProperty().getRange()))
       .collect(Collectors.toList());
 
     for (EntityRestriction propRestriction : filtered) {
-      if (RestrictionType.EXACTLY == propRestriction.getType()) {
-        cardinality = propRestriction.getCardinality();
-        break;
-      } else if (RestrictionType.MIN == propRestriction.getType()) {
+      if (RestrictionType.MIN.equals(propRestriction.getType())) {
         minCardinality = propRestriction.getCardinality();
-      } else if (RestrictionType.MAX == propRestriction.getType()) {
+      } else if (RestrictionType.MAX.equals(propRestriction.getType())) {
         maxCardinality = propRestriction.getCardinality();
-      } else if (RestrictionType.SOME == propRestriction.getType()) {
-        cardinality = 1;
       }
     }
-
-    if (cardinality == -1) {
-      Random random = new Random(System.currentTimeMillis());
-      cardinality = random.nextInt((maxCardinality - minCardinality) + 1) + minCardinality;
-    }
-
-    return cardinality;
+    return provider.getPositiveValue(minCardinality, maxCardinality);
   }
 
 }

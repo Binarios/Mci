@@ -21,7 +21,7 @@ public class EntityRestriction {
   /**
    * The acceptable range of values that must be given, if any
    */
-  private List<ValueRangeRestriction> dataRange;
+  private ValueRangeRestriction dataRange;
 
   public EntityProperty getOnProperty() {
     return onProperty;
@@ -47,11 +47,11 @@ public class EntityRestriction {
     this.cardinality = cardinality;
   }
 
-  public List<ValueRangeRestriction> getDataRange() {
+  public ValueRangeRestriction getDataRange() {
     return dataRange;
   }
 
-  public void setDataRange(List<ValueRangeRestriction> dataRange) {
+  public void setDataRange(ValueRangeRestriction dataRange) {
     this.dataRange = dataRange;
   }
 }

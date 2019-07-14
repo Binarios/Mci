@@ -109,7 +109,7 @@ public class TestOntology {
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(objectPropertyMockName, prop.getName());
-    Assertions.assertEquals("ObjectProperty", prop.getType());
+    Assertions.assertTrue(prop.isObjectProperty());
     Assertions.assertEquals(rangeMockName, prop.getRange());
   }
 
@@ -129,7 +129,7 @@ public class TestOntology {
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(propertyMockName, prop.getName());
-    Assertions.assertEquals("DataTypeProperty", prop.getType());
+    Assertions.assertFalse(prop.isObjectProperty());
     Assertions.assertEquals(rangeMockName, prop.getRange());
   }
 
@@ -159,7 +159,7 @@ public class TestOntology {
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(propertyMockName, prop.getName());
-    Assertions.assertEquals("DataTypeProperty", prop.getType());
+    Assertions.assertFalse(prop.isObjectProperty());
     Assertions.assertEquals(rangeMockName, prop.getRange());
   }
 
@@ -523,7 +523,7 @@ public class TestOntology {
   private PropertySchema generateDataProperty (String name, String className) {
     PropertySchema obj = new PropertySchema();
     obj.setName(name);
-    obj.setType("DataTypeProperty");
+    obj.setObjectProperty(false);
     obj.setRange(className);
     return obj;
   }
@@ -531,7 +531,7 @@ public class TestOntology {
   private PropertySchema generateObjectProperty (String name, String className) {
     PropertySchema obj = new PropertySchema();
     obj.setName(name);
-    obj.setType("ObjectProperty");
+    obj.setObjectProperty(true);
     obj.setRange(className);
     return obj;
   }

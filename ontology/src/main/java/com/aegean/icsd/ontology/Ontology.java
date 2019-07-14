@@ -9,6 +9,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -395,7 +396,6 @@ public class Ontology implements IOntology {
     Model base = maker.createModel( ontologyName );
     this.model = ModelFactory.createOntologyModel(spec, base);
     this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
-
     ds = TDB2Factory.connectDataset(this.ontologyProps.getDatasetLocation());
     ds.begin(ReadWrite.READ);
     boolean found = ds.containsNamedModel(ontologyProps.getOntologyName());

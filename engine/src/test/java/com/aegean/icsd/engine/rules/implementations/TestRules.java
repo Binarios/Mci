@@ -16,6 +16,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.GameRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
@@ -117,16 +118,13 @@ public class TestRules {
     when(itMock.hasNext()).thenReturn(true, true, false);
     when(itMock.next()).thenReturn(dataRangeMock1, dataRangeMock2);
 
-    Mockito.doReturn(null).when(rules).toValueRangeRestriction(dataRangeMock1);
-    Mockito.doReturn(generateRangeRes(value, predicate, dataType)).when(rules).toValueRangeRestriction(dataRangeMock2);
-
-    List<ValueRangeRestriction> res = rules.getDataRanges(indResMock);
+    ValueRangeRestriction res = rules.getDataRanges(indResMock);
 
     Assertions.assertNotNull(res);
-    Assertions.assertEquals(1, res.size());
-    Assertions.assertEquals(predicate, res.get(0).getPredicate());
-    Assertions.assertEquals(value, res.get(0).getValue());
-    Assertions.assertEquals(dataType, res.get(0).getDataType());
+    Assertions.assertEquals(1, res.getRanges().size());
+    Assertions.assertEquals(predicate, res.getRanges().get(0).getPredicate());
+    Assertions.assertEquals(value, res.getRanges().get(0).getValue());
+    Assertions.assertEquals(dataType, res.getDataType());
   }
 
   @Test
@@ -154,21 +152,14 @@ public class TestRules {
   }
 
   private EntityRestriction generateGameRes(String propertyName, RestrictionType type, int cardinality, String range) {
+    EntityProperty prop = new EntityProperty();
+    prop.setName(propertyName);
+    prop.setRange(range);
+
     EntityRestriction r = new EntityRestriction();
-    r.setOnProperty(propertyName);
+    r.setOnProperty(prop);
     r.setType(type);
     r.setCardinality(cardinality);
-    r.setRange(range);
-    return r;
-  }
-
-  private ValueRangeRestriction generateRangeRes(String value, String predicate, String dataType) {
-    ValueRangeRestriction r = new ValueRangeRestriction();
-
-    r.setValue(value);
-    r.setPredicate(predicate);
-    r.setDataType(dataType);
-
     return r;
   }
 }
