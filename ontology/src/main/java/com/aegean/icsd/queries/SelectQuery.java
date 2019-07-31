@@ -207,11 +207,14 @@ public class SelectQuery {
     String buildWhereClause(Map.Entry<String, List<Triplet>> entry) {
       StringBuilder builder = new StringBuilder();
       builder.append(removeParamChars(entry.getKey())).append(" ");
+//      builder.append(entry.getKey()).append(" ");
       Iterator<Triplet> it = entry.getValue().iterator();
       while (it.hasNext()) {
         Triplet triplet = it.next();
         builder.append(removeParamChars(triplet.getPredicate())).append(" ")
+//        builder.append(triplet.getPredicate()).append(" ")
           .append(removeParamChars(triplet.getObject()));
+//          .append(triplet.getObject());
         if(it.hasNext()) {
           builder.append(";").append("\n").append("\t");
         }

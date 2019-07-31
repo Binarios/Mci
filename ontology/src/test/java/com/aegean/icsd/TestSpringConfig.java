@@ -7,6 +7,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import com.aegean.icsd.ontology.OntologyConfiguration;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
 
 @ExtendWith(MockitoExtension.class)

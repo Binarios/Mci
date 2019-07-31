@@ -9,7 +9,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -98,23 +97,23 @@ public class Ontology implements IOntology {
       ds.begin(ReadWrite.READ);
       QueryExecution queryProcessor = QueryExecutionFactory.create(selectRequest, ds);
       ResultSet resultSet = queryProcessor.execSelect();
+      List<String> varNames = resultSet.getResultVars();
       while (resultSet.hasNext()) {
-        JsonObject obj = new JsonObject();
         QuerySolution solution = resultSet.next();
-        Iterator<String> vars = solution.varNames();
-        while (vars.hasNext()) {
-          String var = vars.next();
-          if (selectQuery.getSelectParams().contains(var)) {
-            RDFNode node = solution.get(var);
-            if (node != null && node.isResource()) {
-              obj.addProperty(var, node.asResource().getLocalName());
-            }
-            if (node != null && node.isLiteral()) {
-              obj.addProperty(var, node.asLiteral().getString());
-            }
+        JsonObject obj = new JsonObject();
+        for (String varName : varNames) {
+          String var = "?" + varName;
+          RDFNode node = solution.get(var);
+          if (node != null && node.isResource()) {
+            obj.addProperty(varName, node.asResource().getLocalName());
+          }
+          if (node != null && node.isLiteral()) {
+            obj.addProperty(varName, node.asLiteral().getString());
           }
         }
-        array.add(obj);
+        if (obj.entrySet().size() > 0) {
+          array.add(obj);
+        }
       }
     } catch (Exception ex) {
       throw new OntologyException("SEL.1", "Error when reading from TDB2", ex);
@@ -213,10 +212,15 @@ public class Ontology implements IOntology {
 
   List<RestrictionSchema> getEqualityRestrictionSchemas(OntClass entity) throws OntologyException {
     List<RestrictionSchema> equalityRestrictions = new ArrayList<>();
-    OntClass equivalentClass = entity.getEquivalentClass();
-    Resource intersectionOf = equivalentClass.getPropertyResourceValue(OWL2.intersectionOf);
-    if (intersectionOf != null) {
-      getEqualityRestrictionSchema(intersectionOf, equalityRestrictions);
+    ExtendedIterator<OntClass> eqIt = entity.listEquivalentClasses();
+    while (eqIt.hasNext()) {
+      OntClass eqClass = eqIt.next();
+      if (eqClass != null && eqClass.isAnon()) {
+        Resource intersectionOf = eqClass.getPropertyResourceValue(OWL2.intersectionOf);
+        if (intersectionOf != null) {
+          getEqualityRestrictionSchema(intersectionOf, equalityRestrictions);
+        }
+      }
     }
     return equalityRestrictions;
   }

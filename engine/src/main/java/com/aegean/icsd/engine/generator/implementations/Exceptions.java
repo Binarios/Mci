@@ -1,4 +1,4 @@
-package com.aegean.icsd.engine.generator.implementation;
+package com.aegean.icsd.engine.generator.implementations;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 
@@ -11,6 +11,10 @@ class Exceptions {
 
   static EngineException CannotRetrieveRules(String gameName, Throwable t) {
     return new EngineException(CODE_NAME + "." + 2, String.format("Unable to retrieve game rules for game: %s", gameName), t);
+  }
+
+  static EngineException CannotCreateCoreGame(String gameName, Throwable t) {
+    return new EngineException(CODE_NAME + "." + 3, String.format("There was an issue creating a core game %s", gameName), t);
   }
 
 }

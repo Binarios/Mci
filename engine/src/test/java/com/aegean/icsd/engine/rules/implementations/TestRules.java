@@ -99,7 +99,7 @@ public class TestRules {
     List<EntityRestriction> res = rules.getEntityRestrictions(indMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(2, res.size());
-    Assertions.assertEquals(RestrictionType.ONLY, res.get(0).getType());
+    Assertions.assertEquals(RestrictionType.MIN, res.get(0).getType());
     reset(listMock, indMock);
   }
 
@@ -111,17 +111,21 @@ public class TestRules {
 
     DataRangeRestrinctionSchema dataRangeMock1 = mock(DataRangeRestrinctionSchema.class);
     DataRangeRestrinctionSchema dataRangeMock2 = mock(DataRangeRestrinctionSchema.class);
-
+    List<DataRangeRestrinctionSchema> listMock = new ArrayList<>();
+    listMock.add(dataRangeMock1);
+    listMock.add(dataRangeMock2);
     given(indResMock.getCardinalitySchema()).willReturn(crdMock);
     given(crdMock.getDataRangeRestrictions()).willReturn(listMock);
-    when(listMock.iterator()).thenReturn(itMock);
-    when(itMock.hasNext()).thenReturn(true, true, false);
-    when(itMock.next()).thenReturn(dataRangeMock1, dataRangeMock2);
+    given(dataRangeMock1.getDatatype()).willReturn(dataType);
+    given(dataRangeMock1.getPredicate()).willReturn(predicate);
+    given(dataRangeMock1.getValue()).willReturn(value);
+    given(dataRangeMock2.getDatatype()).willReturn(dataType);
+
 
     ValueRangeRestriction res = rules.getDataRanges(indResMock);
 
     Assertions.assertNotNull(res);
-    Assertions.assertEquals(1, res.getRanges().size());
+    Assertions.assertEquals(2, res.getRanges().size());
     Assertions.assertEquals(predicate, res.getRanges().get(0).getPredicate());
     Assertions.assertEquals(value, res.getRanges().get(0).getValue());
     Assertions.assertEquals(dataType, res.getDataType());
@@ -139,9 +143,8 @@ public class TestRules {
   @Test
   public void testGetRestrictionCardinalityWithValue() {
     given(indResMock.getType()).willReturn(RestrictionSchema.VALUE_TYPE);
-    given(indResMock.getExactValue()).willReturn("1");
     int r = rules.getRestrictionCardinality(indResMock);
-    Assertions.assertEquals(1, r);
+    Assertions.assertEquals(-1, r);
   }
 
   @Test

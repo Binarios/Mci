@@ -1,24 +1,24 @@
 package com.aegean.icsd.mciwebapp.observations.beans;
 
 import java.util.Map;
-import java.util.UUID;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 
 public class Observation {
-  private UUID id;
+  private String id;
   private Difficulty difficulty;
   private String playerName;
   private String maxCompletionTime;
   private String completionTime;
   private String level;
+  private String completedDate;
   private Map<String, Integer> solution;
 
-  public UUID getId() {
+  public String getId() {
     return id;
   }
 
-  public void setId(UUID id) {
+  public void setId(String id) {
     this.id = id;
   }
 
@@ -68,5 +68,13 @@ public class Observation {
 
   public void setSolution(Map<String, Integer> solution) {
     this.solution = solution;
+  }
+
+  public String getCompletedDate() {
+    return completedDate;
+  }
+
+  public void setCompletedDate(String completedDate) {
+    this.completedDate = completedDate;
   }
 }

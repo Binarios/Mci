@@ -44,20 +44,36 @@ public class InsertQuery {
       return this;
     }
 
+    public Builder insertEntry (String id, String type) {
+      this.subject = InsertParam.createObj(id);
+      this.subject.setIriParam(true);
+
+//      InsertParam rdfType = InsertParam.createObj("?rdfType", "rdf:type");
+      InsertParam rdfType = InsertParam.createObj("rdf:type");
+      params.add(rdfType);
+
+//      InsertParam typeToAssociate = InsertParam.createObj("?typeToAssociate", type);
+      InsertParam typeToAssociate = InsertParam.createObj(type);
+
+      params.add(typeToAssociate);
+      params.add(this.subject);
+
+      List<InsertParam> typeList = new LinkedList<>();
+      typeList.add(typeToAssociate);
+
+      relations.put(rdfType, typeList);
+
+      return this;
+    }
+
     public Builder insertEntry (InsertParam subject, String type) {
       this.subject = subject;
       this.subject.setIriParam(true);
 
-      InsertParam rdfType = new InsertParam();
-      rdfType.setIriParam(true);
-      rdfType.setName("?rdfType");
-      rdfType.setValue("rdf:type");
+      InsertParam rdfType = InsertParam.create("?rdfType", "rdf:type", true);
       params.add(rdfType);
 
-      InsertParam typeToAssociate = new InsertParam();
-      typeToAssociate.setIriParam(true);
-      typeToAssociate.setName("?typeToAssociate");
-      typeToAssociate.setValue(type);
+      InsertParam typeToAssociate = InsertParam.create("?typeToAssociate", type, true);;
 
       params.add(typeToAssociate);
       params.add(this.subject);
@@ -94,7 +110,6 @@ public class InsertQuery {
 
       return this;
     }
-
 
     public InsertQuery build() {
       StringBuilder builder = new StringBuilder();

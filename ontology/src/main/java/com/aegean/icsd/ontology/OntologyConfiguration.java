@@ -1,4 +1,4 @@
-package com.aegean.icsd;
+package com.aegean.icsd.ontology;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +11,7 @@ import org.springframework.test.context.TestPropertySource;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
 
 @Configuration
-@ComponentScan({"com.aegean.icsd.ontology", "com.aegean.icsd.connection" })
+@ComponentScan({"com.aegean.icsd.ontology"})
 @PropertySource("classpath:com/aegean/icsd/ontology.properties")
 public class OntologyConfiguration {
 

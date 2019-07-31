@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
@@ -26,7 +27,7 @@ import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 public class ObservationsController {
 
   @Autowired
-  private IObservationSvc observationSvc;
+  private IObservationSvc observationImpl;
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   @ResponseStatus(HttpStatus.OK)
@@ -38,8 +39,9 @@ public class ObservationsController {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
           produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public Response<Observation> createObservation(@RequestBody Observation observation) throws ObservationsException {
-    Observation obs = observationSvc.createObservation(observation);
+  public Response<Observation> createObservation(@RequestBody String playerName, Difficulty difficulty)
+    throws ObservationsException {
+    Observation obs = observationImpl.createObservation(playerName, difficulty);
     return new Response<>(obs);
   }
 

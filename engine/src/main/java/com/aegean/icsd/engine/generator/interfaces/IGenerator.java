@@ -6,5 +6,7 @@ import com.aegean.icsd.engine.generator.beans.GameInfo;
 
 public interface IGenerator {
 
-  GameInfo generateGame(String gameName, Difficulty difficulty, String playerName) throws EngineException;
+  GameInfo createCoreIndividual(GameInfo info) throws EngineException;
+
+  GameInfo getLastGeneratedIndividual(String gameName, Difficulty difficulty, String playerName);
 }

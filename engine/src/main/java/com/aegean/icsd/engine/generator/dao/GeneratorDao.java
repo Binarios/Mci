@@ -1,11 +1,11 @@
 package com.aegean.icsd.engine.generator.dao;
 
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.EngineException;
+import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.queries.InsertQuery;
@@ -17,6 +17,12 @@ import com.google.gson.JsonArray;
 @Repository
 public class GeneratorDao implements IGeneratorDao {
 
+  static final String HAS_PLAYER = "hasPlayer";
+  static final String HAS_LEVEL = "hasLevel";
+  static final String HAS_DIFFICULTY = "hasDifficulty";
+  static final String HAS_GAME_ID = "hasGameId";
+  static final String MAX_COMPLETION_TIME = "maxCompletionTime";
+
   @Autowired
   private IOntology ontology;
 
@@ -25,15 +31,15 @@ public class GeneratorDao implements IGeneratorDao {
     SelectQuery selectQuery = new SelectQuery.Builder()
       .select("latestLevel")
       .where("s", "type", "class")
-      .where("s", "hasPlayer", "playerName")
-      .where("s", "hasLevel", "latestLevel")
+      .where("s", HAS_PLAYER, "playerName")
+      .where("s", HAS_LEVEL, "latestLevel")
       .where("s", "completed", "date")
       .orderByDesc("date")
       .limit(1)
       .addIriParam("type", "rdf:type")
       .addIriParam("class", ontology.getPrefixedEntity(gameName))
-      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
-      .addIriParam("hasLevel", ontology.getPrefixedEntity("hasLevel"))
+      .addIriParam(HAS_PLAYER, ontology.getPrefixedEntity(HAS_PLAYER))
+      .addIriParam(HAS_LEVEL, ontology.getPrefixedEntity(HAS_LEVEL))
       .addIriParam("completed", ontology.getPrefixedEntity("completedDate"))
       .addLiteralParam("playerName", playerName)
       .build();
@@ -50,44 +56,32 @@ public class GeneratorDao implements IGeneratorDao {
   }
 
   @Override
-  public String generateBasicGame(String gameName) throws EngineException {
-    String nodeName = generateNodeName(gameName);
-
-    InsertParam param = new InsertParam();
-    param.setName("sub");
-    param.setValue(nodeName);
-    param.setIriParam(true);
+  public boolean generateBasicGame(GameInfo info) throws EngineException {
+    String prefixedFullGameName = getPrefixedName(Utils.getFullGameName(info.getGameName(), info.getDifficulty()));
 
     InsertQuery ins = new InsertQuery.Builder()
-      .insertEntry(param, ontology.getPrefixedEntity(gameName))
+      .insertEntry(getPrefixedName(info.getId()), prefixedFullGameName)
+      .addRelation(InsertParam.createObj(getPrefixedName(MAX_COMPLETION_TIME)),
+        InsertParam.createValue(info.getMaxCompletionTime()))
+      .addRelation(InsertParam.createObj(getPrefixedName(HAS_PLAYER)),
+        InsertParam.createValue(info.getPlayerName()))
+      .addRelation(InsertParam.createObj(getPrefixedName(HAS_DIFFICULTY)),
+        InsertParam.createValue(info.getDifficulty().getNormalizedName()))
+      .addRelation(InsertParam.createObj(getPrefixedName(HAS_GAME_ID)),
+        InsertParam.createValue(info.getId()))
       .build();
 
     try {
-      ontology.insert(ins);
+      return ontology.insert(ins);
     } catch (OntologyException e) {
-      throw DaoExceptions.InsertQuery("Game: " + gameName, e);
+      throw DaoExceptions.InsertQuery("Game: " + prefixedFullGameName, e);
     }
-
-    return nodeName;
   }
 
 
   @Override
   public String getPrefixedName(String entity) {
     return ontology.getPrefixedEntity(entity);
-  }
-
-  @Override
-  public InsertParam constructInsParam(String varName, String varValue, boolean isIri) {
-    InsertParam param = new InsertParam();
-    param.setName(varName);
-    String value = "";
-    if (isIri) {
-      value = getPrefixedName(varValue);
-    }
-    param.setValue(value);
-    param.setIriParam(isIri);
-    return param;
   }
 
   @Override

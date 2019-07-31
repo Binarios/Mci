@@ -17,7 +17,7 @@ import com.google.gson.internal.bind.DateTypeAdapter;
 
 @Configuration
 @EnableWebMvc
-@ComponentScan(basePackages = "com.aegean.icsd.mciwebapp")
+@ComponentScan({"com.aegean.icsd.engine", "com.aegean.icsd.mciwebapp"})
 public class WebAppConfig implements WebMvcConfigurer {
 
   @Override

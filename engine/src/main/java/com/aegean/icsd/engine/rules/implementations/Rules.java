@@ -1,12 +1,10 @@
 package com.aegean.icsd.engine.rules.implementations;
 
-import javax.swing.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +38,8 @@ public class Rules implements IRules {
     rules.setGameName(gameName);
     rules.setDifficulty(difficulty);
 
-    EntityRules entityRules = getEntityRules(Utils.getFullGameName(gameName, difficulty));
+    String entityName = Utils.getFullGameName(gameName, difficulty);
+    EntityRules entityRules = getRules(entityName);
     rules.setRestrictions(entityRules.getRestrictions());
     rules.setProperties(entityRules.getProperties());
 
@@ -48,17 +47,29 @@ public class Rules implements IRules {
   }
 
   @Override
-  public EntityRules getEntityRules(String entityName) throws RulesException {
-    return getRules(entityName);
-  }
+  public EntityRestriction getEntityRestriction(String gameName, Difficulty difficulty, String restrictionName)
+    throws RulesException {
+    if (StringUtils.isEmpty(gameName)
+    || StringUtils.isEmpty(restrictionName)
+    || difficulty == null) {
+      throw Exceptions.InvalidParameters();
+    }
 
+    GameRules rules = getGameRules(gameName, difficulty);
+    EntityRestriction restriction = rules.getRestrictions().stream()
+      .filter(res -> restrictionName.equals(res.getOnProperty().getName()))
+      .findFirst()
+      .orElseThrow(() -> Exceptions.CannotFindRestriction(restrictionName, gameName));
+
+    return restriction;
+  }
 
   EntityRules getRules(String entityName) throws RulesException {
     ClassSchema entitySchema;
     try {
       entitySchema = ontology.getClassSchema(entityName);
     } catch (OntologyException e) {
-      throw new RulesException("GGR.1", e.getCodeMsg(), e);
+      throw Exceptions.CannotRetrieveClassSchema(entityName, e);
     }
 
     EntityRules rules = new EntityRules();
@@ -72,6 +83,7 @@ public class Rules implements IRules {
 
     return rules;
   }
+
   List<EntityProperty> getEntityProperties(List<PropertySchema> availableProperties) {
     List<EntityProperty> properties = new ArrayList<>();
     for (PropertySchema prop : availableProperties) {
@@ -138,6 +150,15 @@ public class Rules implements IRules {
           });
           dataRange.setRanges(ranges);
         });
+    } else if (RestrictionSchema.VALUE_TYPE.equals(res.getType())) {
+      ValueRange range = new ValueRange();
+      range.setValue(res.getExactValue());
+      range.setPredicate("equals");
+
+      List<ValueRange> ranges = new ArrayList<>();
+      ranges.add(range);
+      dataRange.setRanges(ranges);
+      dataRange.setDataType(res.getOnPropertySchema().getRange());
     }
     return dataRange;
   }
@@ -151,11 +172,6 @@ public class Rules implements IRules {
       case MAX:
         cardinality = Integer.parseInt(res.getCardinalitySchema().getOccurrence());
         break;
-      case VALUE:
-        cardinality = Integer.parseInt(res.getExactValue());
-        break;
-      case ONLY:
-      case SOME:
       default:
         break;
     }

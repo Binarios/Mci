@@ -12,6 +12,7 @@ import com.aegean.icsd.queries.beans.InsertParam;
 
 @ExtendWith(MockitoExtension.class)
 @Execution(ExecutionMode.CONCURRENT)
+
 public class TestInsertQuery {
 
   @Test

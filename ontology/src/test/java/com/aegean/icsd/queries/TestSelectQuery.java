@@ -19,7 +19,7 @@ public class TestSelectQuery {
       .select("?s", "?p", "?o")
       .where("?s", "?p", "?o")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\n?s ?p ?o .\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\t?s ?p ?o .\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -30,9 +30,11 @@ public class TestSelectQuery {
     SelectQuery query = new SelectQuery.Builder()
       .select("?s", "?p", "?o")
       .where("?s", "?p", "?o")
-      .where("?s", "mci:hasPredicate", "mci:Object")
+      .where("?s", "?hasPredicate", "?object")
+      .addIriParam("?hasPredicate", "mci:hasPredicate")
+      .addIriParam("?object", "mci:Object")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\n?s ?p ?o;\n\tmci:hasPredicate mci:Object .\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\t?s ?p ?o;\n\t?hasPredicate ?object .\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -45,7 +47,7 @@ public class TestSelectQuery {
       .where("?s", "?p", "?o")
       .regexFilter("testVal", "pattern")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\n?s ?p ?o .\nFILTER regex(testVal, pattern)\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\t?s ?p ?o .\nFILTER regex(testVal, pattern)\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -58,7 +60,7 @@ public class TestSelectQuery {
       .where("?s", "?p", "?o")
       .regexFilter("testVal", "pattern", "i")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\n?s ?p ?o .\nFILTER regex(testVal, pattern, i)\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\t?s ?p ?o .\nFILTER regex(testVal, pattern, i)\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -69,10 +71,10 @@ public class TestSelectQuery {
     SelectQuery query = new SelectQuery.Builder()
       .select("?s", "?p", "?o")
       .where("?s", "?p", "?o")
-      .where("?s", "mci:hasPredicate", "mci:Object")
+      .where("?s", "?hasPredicate", "?object")
       .regexFilter("testVal", "pattern", "i")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\n?s ?p ?o;\n\tmci:hasPredicate mci:Object .\nFILTER regex(testVal, pattern, i)\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\t?s ?p ?o;\n\t?hasPredicate ?object .\nFILTER regex(testVal, pattern, i)\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -83,7 +85,7 @@ public class TestSelectQuery {
     SelectQuery query = new SelectQuery.Builder()
       .select("s", "p", "o")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\t}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -94,7 +96,7 @@ public class TestSelectQuery {
     SelectQuery query = new SelectQuery.Builder()
       .select("$s", "$p", "$o")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\t}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -106,7 +108,7 @@ public class TestSelectQuery {
       .select("$s", "$p", "$o")
       .filter("o", SelectQuery.Builder.Operator.GT, "2")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\nFILTER (o > 2)\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\tFILTER (o > 2)\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -118,7 +120,7 @@ public class TestSelectQuery {
       .select("$s", "$p", "$o")
       .filter("o", SelectQuery.Builder.Operator.LT, "2")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\nFILTER (o < 2)\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\tFILTER (o < 2)\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);
@@ -130,7 +132,7 @@ public class TestSelectQuery {
       .select("$s", "$p", "$o")
       .filter("o", SelectQuery.Builder.Operator.EQ, "2")
       .build();
-    String expected = "SELECT ?s ?p ?o \nWHERE {\nFILTER (o = 2)\n}\n";
+    String expected = "SELECT ?s ?p ?o \nWHERE {\n\tFILTER (o = 2)\n}\n";
     String actual = query.getCommand();
 
     Assertions.assertEquals(expected, actual);

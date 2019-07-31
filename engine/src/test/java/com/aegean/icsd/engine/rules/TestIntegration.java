@@ -12,7 +12,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import com.aegean.icsd.OntologyConfiguration;
+import com.aegean.icsd.ontology.OntologyConfiguration;
 import com.aegean.icsd.engine.EngineConfiguration;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;

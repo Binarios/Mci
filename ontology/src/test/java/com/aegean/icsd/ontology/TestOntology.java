@@ -422,7 +422,7 @@ public class TestOntology {
     InsertParam object = generateInsertParam("obj","1", false);
 
     InsertQuery insertQuery = new InsertQuery.Builder()
-      .insertEntry(subject, "mci:EasyObservation")
+      .insertEntry(subject, "mci:Test")
       .addRelation(predicate, object)
       .build();
 
@@ -432,21 +432,21 @@ public class TestOntology {
       .where("?s", "?pred", "?obj")
       .where("?s", "?p", "?o")
       .addIriParam("?pred", "rdf:type")
-      .addIriParam("?obj", "mci:EasyObservation")
+      .addIriParam("?obj", "mci:Test")
       .build();
     JsonArray array = ont.select(query);
 
     Assertions.assertNotNull(array);
     Assertions.assertEquals(2, array.size());
-    Assertions.assertEquals("obs1", array.get(0).getAsJsonObject().get("s").getAsString());
-    Assertions.assertEquals("hasGameId", array.get(0).getAsJsonObject().get("p").getAsString());
-    Assertions.assertEquals(object.getValue(), array.get(0).getAsJsonObject().get("o").getAsString());
+    Assertions.assertEquals("obs1", array.get(1).getAsJsonObject().get("s").getAsString());
+    Assertions.assertEquals("hasGameId", array.get(1).getAsJsonObject().get("p").getAsString());
+    Assertions.assertEquals(object.getValue(), array.get(1).getAsJsonObject().get("o").getAsString());
   }
 
   @Test
   public void testSelectTriplet() throws OntologyException {
     ont.setupModel();
-    String subject = "EasyObservation";
+    String subject = "obs1";
     String predicate = "hasGameId";
     String object = "1";
     SelectQuery query = new SelectQuery.Builder()
