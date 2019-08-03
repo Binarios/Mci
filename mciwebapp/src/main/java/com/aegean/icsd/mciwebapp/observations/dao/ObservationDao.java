@@ -1,6 +1,5 @@
 package com.aegean.icsd.mciwebapp.observations.dao;
 
-import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -20,17 +19,16 @@ public class ObservationDao implements IObservationDao {
   private IGenerator generator;
 
   @Override
-  public Observation generateCoreGameInstance(String playerName, Difficulty difficulty, int newLevel, String maxCompletionTime) throws ObservationsException {
+  public Observation generateCoreGameInstance(String playerName, Difficulty difficulty, int newLevel) throws ObservationsException {
 
     GameInfo info = new GameInfo();
     info.setGameName(gameName);
     info.setDifficulty(difficulty);
-    info.setMaxCompletionTime(maxCompletionTime);
     info.setLevel("" + newLevel);
     info.setPlayerName(playerName);
 
     try {
-      info = generator.createCoreIndividual(info);
+      info = generator.instantiateGame(info);
     } catch (EngineException e) {
       throw Exceptions.GenerationError(e);
     }

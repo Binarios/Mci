@@ -19,9 +19,7 @@ public class GeneratorDao implements IGeneratorDao {
 
   static final String HAS_PLAYER = "hasPlayer";
   static final String HAS_LEVEL = "hasLevel";
-  static final String HAS_DIFFICULTY = "hasDifficulty";
   static final String HAS_GAME_ID = "hasGameId";
-  static final String MAX_COMPLETION_TIME = "maxCompletionTime";
 
   @Autowired
   private IOntology ontology;
@@ -61,12 +59,8 @@ public class GeneratorDao implements IGeneratorDao {
 
     InsertQuery ins = new InsertQuery.Builder()
       .insertEntry(getPrefixedName(info.getId()), prefixedFullGameName)
-      .addRelation(InsertParam.createObj(getPrefixedName(MAX_COMPLETION_TIME)),
-        InsertParam.createValue(info.getMaxCompletionTime()))
       .addRelation(InsertParam.createObj(getPrefixedName(HAS_PLAYER)),
         InsertParam.createValue(info.getPlayerName()))
-      .addRelation(InsertParam.createObj(getPrefixedName(HAS_DIFFICULTY)),
-        InsertParam.createValue(info.getDifficulty().getNormalizedName()))
       .addRelation(InsertParam.createObj(getPrefixedName(HAS_GAME_ID)),
         InsertParam.createValue(info.getId()))
       .build();
@@ -78,14 +72,50 @@ public class GeneratorDao implements IGeneratorDao {
     }
   }
 
-
   @Override
   public String getPrefixedName(String entity) {
     return ontology.getPrefixedEntity(entity);
   }
 
   @Override
-  public String generateNodeName(String entity) {
-    return ontology.nodeNameGenerator(entity.replace(":", "_"));
+  public boolean createValueRelation(String id, String name, String rangeValue) throws EngineException {
+    return createRelation(id, name, rangeValue,false);
+  }
+
+  @Override
+  public boolean createObjRelation(String id, String name, String objId) throws EngineException {
+    return createRelation(id, name, objId,true);
+  }
+
+  @Override
+  public boolean instantiateObject(String id, String type) throws EngineException {
+    InsertQuery ins = new InsertQuery.Builder()
+      .insertEntry(getPrefixedName(id), getPrefixedName(type))
+      .build();
+
+    try {
+      return ontology.insert(ins);
+    } catch (OntologyException e) {
+      throw DaoExceptions.InsertQuery("Object: " + id, e);
+    }
+  }
+
+  boolean createRelation(String id, String name, String rangeValue, boolean isObject) throws EngineException {
+    InsertParam rangeParam;
+    if (isObject) {
+      rangeParam = InsertParam.createObj(getPrefixedName(rangeValue));
+    } else {
+      rangeParam = InsertParam.createValue(rangeValue);
+    }
+
+    InsertQuery ins = new InsertQuery.Builder()
+      .forSubject(InsertParam.createObj(getPrefixedName(id)))
+      .addRelation(InsertParam.createObj(getPrefixedName(name)), rangeParam)
+      .build();
+    try {
+      return ontology.insert(ins);
+    } catch (OntologyException e) {
+      throw DaoExceptions.InsertQuery("Game: " + id, e);
+    }
   }
 }

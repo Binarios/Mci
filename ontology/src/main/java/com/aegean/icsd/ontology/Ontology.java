@@ -33,6 +33,7 @@ import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.tdb2.TDB2Factory;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateFactory;
@@ -251,6 +252,9 @@ public class Ontology implements IOntology {
 
     if (resProp.isObjectProperty()) {
       Resource onClass = restriction.getPropertyResourceValue(OWL2.onClass);
+      if (onClass == null) {
+        onClass = restriction.getPropertyResourceValue(OWL2.someValuesFrom);
+      }
       result.getOnPropertySchema().setRange(onClass.getLocalName());
     }
 
@@ -342,31 +346,40 @@ public class Ontology implements IOntology {
 
   List<DataRangeRestrinctionSchema> generateDataRangeRestrictions(OntClass ont) {
     List<DataRangeRestrinctionSchema> dataRanges = new ArrayList<>();
-    List<Statement> ranges = readDataRangeRestrictions(ont);
-    for(Statement stmt : ranges) {
-      DataRangeRestrinctionSchema dataRange = new DataRangeRestrinctionSchema();
-      dataRange.setPredicate(stmt.getPredicate().getLocalName());
-      Literal value = stmt.getLiteral();
-      dataRange.setValue(value.getString());
-      dataRange.setDatatype(value.getDatatypeURI());
-      dataRanges.add(dataRange);
+    Resource dataRangeResource = ont.getPropertyResourceValue(OWL2.onDataRange);
+    if(dataRangeResource != null) {
+      Resource withRestrictionResource = dataRangeResource.getPropertyResourceValue(OWL2.withRestrictions);
+      if (withRestrictionResource != null) {
+        getDataRanges(withRestrictionResource, dataRanges);
+      }
     }
 
     return dataRanges;
   }
 
-  List<Statement> readDataRangeRestrictions (OntClass ont) {
-    Resource dataRangeResource = ont.getPropertyResourceValue(OWL2.onDataRange);
-    if(dataRangeResource != null) {
-      Resource withRestrictionResource = dataRangeResource.getPropertyResourceValue(OWL2.withRestrictions);
-      if (withRestrictionResource != null) {
-        Resource restrictions = withRestrictionResource.getPropertyResourceValue(RDF.first);
-        if (restrictions != null) {
-          return  restrictions.listProperties().toList();
-        }
+  void getDataRanges(Resource resource, List<DataRangeRestrinctionSchema> dataRanges) {
+    Resource first = resource.getPropertyResourceValue(RDF.first);
+    if (first != null ) {
+      StmtIterator it = first.listProperties();
+      while (it.hasNext()) {
+        Statement stmt = it.nextStatement();
+        DataRangeRestrinctionSchema eqRestriction = getDataRangeSchema(stmt);
+        dataRanges.add(eqRestriction);
+      }
+      Resource rest = resource.getPropertyResourceValue(RDF.rest);
+      if (rest != null) {
+        getDataRanges(rest, dataRanges);
       }
     }
-    return new ArrayList<>();
+  }
+
+  DataRangeRestrinctionSchema getDataRangeSchema(Statement stmt) {
+    DataRangeRestrinctionSchema dataRange = new DataRangeRestrinctionSchema();
+    dataRange.setPredicate(stmt.getPredicate().getLocalName());
+    Literal value = stmt.getLiteral();
+    dataRange.setValue(value.getString());
+    dataRange.setDatatype(value.getDatatypeURI());
+    return dataRange;
   }
 
   OntClass getOntClass(String className) {

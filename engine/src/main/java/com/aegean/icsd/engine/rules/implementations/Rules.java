@@ -2,6 +2,7 @@ package com.aegean.icsd.engine.rules.implementations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,10 +15,10 @@ import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
-import com.aegean.icsd.engine.rules.beans.GameRules;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
+import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
@@ -33,38 +34,14 @@ public class Rules implements IRules {
   private IOntology ontology;
 
   @Override
-  public GameRules getGameRules(String gameName, Difficulty difficulty) throws RulesException {
-    GameRules rules = new GameRules();
-    rules.setGameName(gameName);
-    rules.setDifficulty(difficulty);
-
+  public List<EntityRestriction> getGameRules(String gameName, Difficulty difficulty) throws RulesException {
     String entityName = Utils.getFullGameName(gameName, difficulty);
-    EntityRules entityRules = getRules(entityName);
-    rules.setRestrictions(entityRules.getRestrictions());
-    rules.setProperties(entityRules.getProperties());
-
-    return rules;
+    EntityRules entityRules = getEntityRules(entityName);
+    return entityRules.getRestrictions();
   }
 
   @Override
-  public EntityRestriction getEntityRestriction(String gameName, Difficulty difficulty, String restrictionName)
-    throws RulesException {
-    if (StringUtils.isEmpty(gameName)
-    || StringUtils.isEmpty(restrictionName)
-    || difficulty == null) {
-      throw Exceptions.InvalidParameters();
-    }
-
-    GameRules rules = getGameRules(gameName, difficulty);
-    EntityRestriction restriction = rules.getRestrictions().stream()
-      .filter(res -> restrictionName.equals(res.getOnProperty().getName()))
-      .findFirst()
-      .orElseThrow(() -> Exceptions.CannotFindRestriction(restrictionName, gameName));
-
-    return restriction;
-  }
-
-  EntityRules getRules(String entityName) throws RulesException {
+  public EntityRules getEntityRules(String entityName) throws RulesException {
     ClassSchema entitySchema;
     try {
       entitySchema = ontology.getClassSchema(entityName);
@@ -144,7 +121,7 @@ public class Rules implements IRules {
           List<ValueRange> ranges = new ArrayList<>();
           restrictions.forEach(x -> {
             ValueRange range = new ValueRange();
-            range.setPredicate(x.getPredicate());
+            range.setPredicate(ValueRangeType.fromString(x.getPredicate()));
             range.setValue(x.getValue());
             ranges.add(range);
           });
@@ -153,13 +130,13 @@ public class Rules implements IRules {
     } else if (RestrictionSchema.VALUE_TYPE.equals(res.getType())) {
       ValueRange range = new ValueRange();
       range.setValue(res.getExactValue());
-      range.setPredicate("equals");
+      range.setPredicate(ValueRangeType.EQUALS);
 
       List<ValueRange> ranges = new ArrayList<>();
       ranges.add(range);
       dataRange.setRanges(ranges);
-      dataRange.setDataType(res.getOnPropertySchema().getRange());
     }
+    dataRange.setDataType(res.getOnPropertySchema().getRange());
     return dataRange;
   }
 

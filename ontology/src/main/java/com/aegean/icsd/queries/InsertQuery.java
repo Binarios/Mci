@@ -76,7 +76,7 @@ public class InsertQuery {
       InsertParam typeToAssociate = InsertParam.create("?typeToAssociate", type, true);;
 
       params.add(typeToAssociate);
-      params.add(this.subject);
+
 
       List<InsertParam> typeList = new LinkedList<>();
       typeList.add(typeToAssociate);
@@ -116,6 +116,7 @@ public class InsertQuery {
       InsertQuery query = new InsertQuery();
       builder.append("INSERT DATA {\n\t");
       builder.append(removeParamChars(subject.getName())).append(" ");
+      params.add(subject);
 
       Iterator<Map.Entry<InsertParam, List<InsertParam>>> relationIt = relations.entrySet().iterator();
       while (relationIt.hasNext()) {

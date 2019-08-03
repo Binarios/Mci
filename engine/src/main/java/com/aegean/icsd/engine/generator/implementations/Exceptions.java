@@ -17,4 +17,11 @@ class Exceptions {
     return new EngineException(CODE_NAME + "." + 3, String.format("There was an issue creating a core game %s", gameName), t);
   }
 
+  static EngineException CannotCreateRelation(String relationName, String gameId, Throwable t) {
+    return new EngineException(CODE_NAME + "." + 3, String.format("There was an issue add the relation %s to the game with id %s", relationName, gameId), t);
+  }
+
+  static EngineException CannotCreateObject(String type) {
+    return new EngineException(CODE_NAME + "." + 4, String.format("Could not create an object of type: %s", type));
+  }
 }

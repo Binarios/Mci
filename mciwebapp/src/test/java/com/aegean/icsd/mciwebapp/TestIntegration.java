@@ -53,6 +53,7 @@ public class TestIntegration {
     String playerName = "TestUser";
 
     Observation obs = observationImpl.createObservation(playerName, Difficulty.EASY);
+
     Assertions.assertNotNull(obs);
     Assertions.assertEquals(playerName, obs.getPlayerName());
     Assertions.assertEquals(Difficulty.EASY, obs.getDifficulty());

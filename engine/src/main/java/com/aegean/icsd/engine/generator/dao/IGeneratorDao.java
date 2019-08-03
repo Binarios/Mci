@@ -11,5 +11,9 @@ public interface IGeneratorDao {
 
   String getPrefixedName(String entity);
 
-  String generateNodeName(String entity);
+  boolean createValueRelation(String id, String name, String rangeValue) throws EngineException;
+
+  boolean createObjRelation(String id, String name, String objId) throws EngineException;
+
+  boolean instantiateObject(String id, String type) throws EngineException;
 }

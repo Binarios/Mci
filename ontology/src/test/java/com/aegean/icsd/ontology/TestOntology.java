@@ -16,6 +16,7 @@ import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.Assertions;
@@ -171,16 +172,19 @@ public class TestOntology {
 
     Property predicateMock = mock(Property.class);
     Statement statementMock = mock(Statement.class);
-    List<Statement> statementsMock = new ArrayList<>();
-    statementsMock.add(statementMock);
+    StmtIterator itMock = mock(StmtIterator.class);
 
+    given(ontClassMock.getPropertyResourceValue(eq(OWL2.onDataRange))).willReturn(resourceMock);
+    given(resourceMock.getPropertyResourceValue(eq(OWL2.withRestrictions))).willReturn(resourceMock);
+    given(resourceMock.getPropertyResourceValue(eq(RDF.first))).willReturn(resourceMock);
+    given(resourceMock.listProperties()).willReturn(itMock);
+    given(itMock.hasNext()).willReturn(true, false);
+    given(itMock.nextStatement()).willReturn(statementMock);
     given(statementMock.getPredicate()).willReturn(predicateMock);
     given(predicateMock.getLocalName()).willReturn(predicate);
     given(statementMock.getLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
     given(literalMock.getDatatypeURI()).willReturn(type);
-
-    Mockito.doReturn(statementsMock).when(ont).readDataRangeRestrictions(ontClassMock);
 
     List<DataRangeRestrinctionSchema> res = ont.generateDataRangeRestrictions(ontClassMock);
 
@@ -516,7 +520,7 @@ public class TestOntology {
   @Disabled("Exploring the Jena API")
   public void test() throws OntologyException {
     ont.setupModel();
-    String className = "EasyFindTheSound";
+    String className = "Number";
     ont.getClassSchema(className);
   }
 

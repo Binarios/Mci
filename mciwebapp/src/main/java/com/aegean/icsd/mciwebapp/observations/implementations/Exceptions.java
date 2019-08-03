@@ -1,6 +1,5 @@
 package com.aegean.icsd.mciwebapp.observations.implementations;
 
-import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
 
 class Exceptions {
@@ -16,9 +15,18 @@ class Exceptions {
       "generation of the game, please retry", t);
   }
 
-  static ObservationsException UnableToRetrieveMaxCompletionTime(Difficulty difficulty, Throwable t) {
+  static ObservationsException UnableToRetrieveGameRules(Throwable t) {
     return new ObservationsException(CODE_NAME + "." + 3,
-      String.format("There was a problem retrieving the maximum completion" +
-        "time for difficulty %s, please retry", difficulty.getNormalizedName()), t);
+      "There was a problem retrieving the game rules", t);
   }
+
+  static ObservationsException GenerationError(String msg) {
+    return new ObservationsException(CODE_NAME + "." + 4, String.format("There was a problem during the " +
+      "generation of the game: %s", msg));
+  }
+  static ObservationsException CannotCalculateCardinality(String entity) {
+    return new ObservationsException(CODE_NAME + "." + 5,
+      String.format( "Unable to calculate the cardinality of the entity: %s", entity));
+  }
+
 }

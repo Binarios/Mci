@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
-import com.aegean.icsd.engine.rules.beans.GameRules;
+import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
@@ -31,6 +31,7 @@ import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -45,22 +46,25 @@ public class TestRules {
   private Rules rules = new Rules();
 
   @Mock
-  private IOntology ont;
+  private IOntology ontology;
 
   @Mock
-  private ClassSchema indMock;
+  private ClassSchema classSchema;
 
   @Mock
-  private RestrictionSchema indResMock;
+  private RestrictionSchema restrictionSchema;
 
   @Mock
-  private CardinalitySchema crdMock;
+  private CardinalitySchema cardinalitySchema;
 
   @Mock
-  private List listMock;
+  private PropertySchema propertySchema;
 
   @Mock
-  private Iterator itMock;
+  private List list;
+
+  @Mock
+  private Iterator iterator;
 
   @Test
   public void testGetGameRules() throws RulesException, OntologyException {
@@ -68,14 +72,13 @@ public class TestRules {
 
     ClassSchema mockInd = mock(ClassSchema.class);
     List<PropertySchema> props = new ArrayList<>();
-    given(ont.getClassSchema(any())).willReturn(mockInd);
+    given(ontology.getClassSchema(any())).willReturn(mockInd);
     given(mockInd.getProperties()).willReturn(props);
     Mockito.doReturn(new ArrayList<>()).when(rules).getEntityRestrictions(mockInd);
     Mockito.doReturn(new ArrayList<>()).when(rules).getEntityProperties(props);
 
-    GameRules res = rules.getGameRules(gameName, Difficulty.EASY);
+    List<EntityRestriction> res = rules.getGameRules(gameName, Difficulty.EASY);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals(gameName, res.getGameName());
   }
 
   @Test
@@ -84,28 +87,28 @@ public class TestRules {
     RestrictionSchema restrictionSchemaMock2 = mock(RestrictionSchema.class);
 
     EntityRestriction gameRes1 = generateGameRes("test", RestrictionType.MIN, 2,"xsd:string");
-    EntityRestriction gameRes2 = generateGameRes("test", RestrictionType.ONLY, -1,"xsd:string");
+    EntityRestriction gameRes2 = generateGameRes("test2", RestrictionType.ONLY, -1,"xsd:string");
 
-    given(indMock.getEqualityRestrictions()).willReturn(new ArrayList<>());
-    given(indMock.getRestrictions()).willReturn(listMock);
+    given(classSchema.getEqualityRestrictions()).willReturn(new ArrayList<>());
+    given(classSchema.getRestrictions()).willReturn(list);
 
-    when(listMock.iterator()).thenReturn(itMock);
-    when(itMock.hasNext()).thenReturn(true, true, false);
-    when(itMock.next()).thenReturn(restrictionSchemaMock1, restrictionSchemaMock2);
+    when(list.iterator()).thenReturn(iterator);
+    when(iterator.hasNext()).thenReturn(true, true, false);
+    when(iterator.next()).thenReturn(restrictionSchemaMock1, restrictionSchemaMock2);
 
     Mockito.doReturn(gameRes1).when(rules).getEntityRestriction(restrictionSchemaMock1);
     Mockito.doReturn(gameRes2).when(rules).getEntityRestriction(restrictionSchemaMock2);
 
-    List<EntityRestriction> res = rules.getEntityRestrictions(indMock);
+    List<EntityRestriction> res = rules.getEntityRestrictions(classSchema);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(2, res.size());
     Assertions.assertEquals(RestrictionType.MIN, res.get(0).getType());
-    reset(listMock, indMock);
+    reset(list, classSchema);
   }
 
   @Test
   public void testGetDataRanges() {
-    String predicate = "predicate";
+    String predicate = "minInclusive";
     String value = "value";
     String dataType = "dataType";
 
@@ -114,43 +117,45 @@ public class TestRules {
     List<DataRangeRestrinctionSchema> listMock = new ArrayList<>();
     listMock.add(dataRangeMock1);
     listMock.add(dataRangeMock2);
-    given(indResMock.getCardinalitySchema()).willReturn(crdMock);
-    given(crdMock.getDataRangeRestrictions()).willReturn(listMock);
+    given(restrictionSchema.getCardinalitySchema()).willReturn(cardinalitySchema);
+    given(restrictionSchema.getOnPropertySchema()).willReturn(propertySchema);
+    given(propertySchema.getRange()).willReturn(dataType);
+    given(cardinalitySchema.getDataRangeRestrictions()).willReturn(listMock);
     given(dataRangeMock1.getDatatype()).willReturn(dataType);
     given(dataRangeMock1.getPredicate()).willReturn(predicate);
     given(dataRangeMock1.getValue()).willReturn(value);
     given(dataRangeMock2.getDatatype()).willReturn(dataType);
 
 
-    ValueRangeRestriction res = rules.getDataRanges(indResMock);
+    ValueRangeRestriction res = rules.getDataRanges(restrictionSchema);
 
     Assertions.assertNotNull(res);
     Assertions.assertEquals(2, res.getRanges().size());
-    Assertions.assertEquals(predicate, res.getRanges().get(0).getPredicate());
+    Assertions.assertEquals(predicate, res.getRanges().get(0).getPredicate().getName());
     Assertions.assertEquals(value, res.getRanges().get(0).getValue());
     Assertions.assertEquals(dataType, res.getDataType());
   }
 
   @Test
   public void testGetRestrictionCardinalityWithCardinality() {
-    given(indResMock.getType()).willReturn(RestrictionSchema.EXACTLY_TYPE);
-    given(indResMock.getCardinalitySchema()).willReturn(crdMock);
-    given(crdMock.getOccurrence()).willReturn("1");
-    int r = rules.getRestrictionCardinality(indResMock);
+    given(restrictionSchema.getType()).willReturn(RestrictionSchema.EXACTLY_TYPE);
+    given(restrictionSchema.getCardinalitySchema()).willReturn(cardinalitySchema);
+    given(cardinalitySchema.getOccurrence()).willReturn("1");
+    int r = rules.getRestrictionCardinality(restrictionSchema);
     Assertions.assertEquals(1, r);
   }
 
   @Test
   public void testGetRestrictionCardinalityWithValue() {
-    given(indResMock.getType()).willReturn(RestrictionSchema.VALUE_TYPE);
-    int r = rules.getRestrictionCardinality(indResMock);
+    given(restrictionSchema.getType()).willReturn(RestrictionSchema.VALUE_TYPE);
+    int r = rules.getRestrictionCardinality(restrictionSchema);
     Assertions.assertEquals(-1, r);
   }
 
   @Test
   public void testGetRestrictionCardinalityWithOnlyValue() {
-    given(indResMock.getType()).willReturn(RestrictionSchema.ONLY_TYPE);
-    int r = rules.getRestrictionCardinality(indResMock);
+    given(restrictionSchema.getType()).willReturn(RestrictionSchema.ONLY_TYPE);
+    int r = rules.getRestrictionCardinality(restrictionSchema);
     Assertions.assertEquals(-1, r);
   }
 

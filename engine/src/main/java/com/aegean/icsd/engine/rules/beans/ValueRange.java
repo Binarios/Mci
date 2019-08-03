@@ -1,14 +1,14 @@
 package com.aegean.icsd.engine.rules.beans;
 
 public class ValueRange {
-  private String predicate;
+  private ValueRangeType predicate;
   private String value;
 
-  public String getPredicate() {
+  public ValueRangeType getPredicate() {
     return predicate;
   }
 
-  public void setPredicate(String predicate) {
+  public void setPredicate(ValueRangeType predicate) {
     this.predicate = predicate;
   }
 

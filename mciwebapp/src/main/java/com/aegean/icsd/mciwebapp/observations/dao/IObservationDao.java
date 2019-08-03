@@ -6,6 +6,6 @@ import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
 
 public interface IObservationDao {
 
-  Observation generateCoreGameInstance(String playerName, Difficulty difficulty, int newLevel, String maxCompletionTime) throws ObservationsException;
+  Observation generateCoreGameInstance(String playerName, Difficulty difficulty, int newLevel) throws ObservationsException;
   String getLastCompletedLevel(Difficulty difficulty, String playerName);
 }

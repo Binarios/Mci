@@ -43,28 +43,14 @@ public class TestIntegration {
   @Test
   @Disabled("Unstable")
   public void testRulesGeneration() throws RulesException {
-    long startTime = System.nanoTime();
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(EngineConfiguration.class,
             OntologyConfiguration.class);
-    long endTime = System.nanoTime();
-    long durationInNano = (endTime - startTime);
-    long seconds = TimeUnit.NANOSECONDS.toSeconds(durationInNano);  //
-    System.out.println("Elapsed: " + seconds + " s");
 
-    // Total execution time in nano seconds
     IRules r = ctx.getBean(Rules.class);
-
     String gameName = "Observation";
+    List<EntityRestriction> restrictions= r.getGameRules(gameName, Difficulty.EASY);
 
-    GameRules rule = r.getGameRules(gameName, Difficulty.EASY);
-    Assertions.assertNotNull(rule);
-    Assertions.assertEquals(gameName, rule.getGameName());
-    Assertions.assertEquals(Difficulty.EASY, rule.getDifficulty());
-    List<EntityRestriction> restrictions = rule.getRestrictions();
     Assertions.assertNotNull(restrictions);
-    Assertions.assertEquals(3, restrictions.size());
-    List<EntityProperty> properties = rule.getProperties();
-    Assertions.assertNotNull(properties);
-    Assertions.assertEquals(9, properties.size());
+    Assertions.assertEquals(4, restrictions.size());
   }
 }

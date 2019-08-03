@@ -1,7 +1,5 @@
 package com.aegean.icsd.mciwebapp.observations.beans;
 
-import java.util.Map;
-
 import com.aegean.icsd.engine.common.beans.Difficulty;
 
 public class Observation {
@@ -12,7 +10,6 @@ public class Observation {
   private String completionTime;
   private String level;
   private String completedDate;
-  private Map<String, Integer> solution;
 
   public String getId() {
     return id;
@@ -62,14 +59,6 @@ public class Observation {
     this.level = level;
   }
 
-  public Map<String, Integer> getSolution() {
-    return solution;
-  }
-
-  public void setSolution(Map<String, Integer> solution) {
-    this.solution = solution;
-  }
-
   public String getCompletedDate() {
     return completedDate;
   }
@@ -77,4 +66,5 @@ public class Observation {
   public void setCompletedDate(String completedDate) {
     this.completedDate = completedDate;
   }
+
 }
