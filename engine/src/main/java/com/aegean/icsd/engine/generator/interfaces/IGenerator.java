@@ -6,6 +6,7 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
+import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 
 public interface IGenerator {
 
@@ -20,4 +21,8 @@ public interface IGenerator {
   List<String> instantiateObjects(String objectType, int cardinality) throws EngineException;
 
   String instantiateObject(String objectType) throws EngineException;
+
+  int generateIntDataValue(ValueRangeRestriction res);
+
+  boolean upsertObj(Object word) throws EngineException;
 }

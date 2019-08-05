@@ -17,13 +17,13 @@ import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
-import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
-import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
 import com.aegean.icsd.mciwebapp.observations.dao.IObservationDao;
+import com.aegean.icsd.mciwebapp.providers.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.providers.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 
 @Service
@@ -40,9 +40,11 @@ public class ObservationImpl implements IObservationSvc {
   @Autowired
   private IGenerator generator;
 
+  @Autowired
+  private IWordProvider wordProvider;
+
   @Override
-  public Observation createObservation(String playerName, Difficulty difficulty)
-    throws ObservationsException {
+  public Observation createObservation(String playerName, Difficulty difficulty) throws ObservationsException {
 
     if (difficulty == null
       || StringUtils.isEmpty(playerName)) {
@@ -60,11 +62,16 @@ public class ObservationImpl implements IObservationSvc {
     Map<String, List<EntityRestriction>> groupedRestrictions = restrictions.stream()
       .collect(Collectors.groupingBy(x -> x.getOnProperty().getName() + ":" + x.getOnProperty().getRange()));
 
+    int numberOfWords = -1;
+
     for (Map.Entry<String, List<EntityRestriction>> grp : groupedRestrictions.entrySet()) {
       int cardinality = calculateCardinality(grp.getValue());
       EntityRestriction er = grp.getValue().get(0);
       er.setCardinality(cardinality);
       er.setType(RestrictionType.EXACTLY);
+      if ("hasWord".equals(grp.getKey())) {
+        numberOfWords = er.getCardinality();
+      }
       simplifiedList.add(er);
     }
 
@@ -73,10 +80,11 @@ public class ObservationImpl implements IObservationSvc {
     Observation observation = dao.generateCoreGameInstance(playerName, difficulty, newLevel);
 
     List<String> objIds;
-
+    List<String> words;
     try {
+      words = wordProvider.getWords(numberOfWords);
       objIds = createRestrictions(simplifiedList, observation.getId());
-    } catch (RulesException | EngineException e) {
+    } catch (RulesException | EngineException | ProviderException e) {
       throw Exceptions.GenerationError(e);
     }
 
@@ -91,6 +99,28 @@ public class ObservationImpl implements IObservationSvc {
       }
     }
     return observation;
+  }
+
+  List<String> createWordRestriction(List<String> values)
+    throws RulesException, EngineException {
+    List<String> objIds = new ArrayList<>();
+    for (String value : values) {
+      String existingId = generator.getObjId("Word", value);
+      if (StringUtils.isEmpty(existingId)) {
+        objIds.add(existingId);
+      } else {
+        EntityRules entityRules = rules.getEntityRules("Word");
+        List<EntityRestriction> restrictions = entityRules.getRestrictions();
+
+
+        for (EntityRestriction res : dataRestrictions) {
+          String rangeValue = calculateDataValue(res.getDataRange());
+          generator.createValueRelation(parentId, res.getOnProperty(), rangeValue);
+        }
+      }
+    }
+
+    return objIds;
   }
 
   List<String> createRestrictions(List<EntityRestriction> restrictions, String parentId)
@@ -119,8 +149,8 @@ public class ObservationImpl implements IObservationSvc {
     }
 
     for (EntityRestriction res : dataRestrictions) {
-        String rangeValue = calculateDataValue(res.getDataRange());
-        generator.createValueRelation(parentId, res.getOnProperty(), rangeValue);
+      String rangeValue = calculateDataValue(res.getDataRange());
+      generator.createValueRelation(parentId, res.getOnProperty(), rangeValue);
     }
 
     return objIds;
@@ -191,37 +221,7 @@ public class ObservationImpl implements IObservationSvc {
     String rangeValue = null;
     switch (dataType) {
       case "positiveInteger":
-        int min = Integer.MAX_VALUE;
-        int max = Integer.MIN_VALUE;
-        for (ValueRange vRange : res.getRanges()) {
-          if (ValueRangeType.EQUALS.equals(vRange.getPredicate())) {
-            rangeValue = vRange.getValue();
-          } else if (ValueRangeType.MIN.equals(vRange.getPredicate())
-            && min > Integer.parseInt(vRange.getValue())) {
-            min = Integer.parseInt(vRange.getValue()) + 1;
-          } else if (ValueRangeType.MAX.equals(vRange.getPredicate())
-            && max < Integer.parseInt(vRange.getValue())) {
-            max = Integer.parseInt(vRange.getValue());
-          } else if (ValueRangeType.MIN_IN.equals(vRange.getPredicate())
-            && min > Integer.parseInt(vRange.getValue())) {
-            min = Integer.parseInt(vRange.getValue());
-          } else if (ValueRangeType.MAX_IN.equals(vRange.getPredicate())
-            && max < Integer.parseInt(vRange.getValue())) {
-            max = Integer.parseInt(vRange.getValue()) + 1;
-          }
-        }
-
-        if (min == Integer.MAX_VALUE && max < Integer.MAX_VALUE ) {
-          min = 0;
-        }
-
-        if (min > Integer.MIN_VALUE && max < Integer.MAX_VALUE  && rangeValue == null) {
-          if (min == max) {
-            rangeValue = "" + min;
-          } else if (min < max) {
-            rangeValue = "" + ThreadLocalRandom.current().nextInt(min, max);
-          }
-        }
+        rangeValue = "" + generator.generateIntDataValue(res);
         break;
       case "anyURI":
         break;

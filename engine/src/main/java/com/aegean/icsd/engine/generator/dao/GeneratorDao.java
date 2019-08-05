@@ -55,13 +55,13 @@ public class GeneratorDao implements IGeneratorDao {
 
   @Override
   public boolean generateBasicGame(GameInfo info) throws EngineException {
-    String prefixedFullGameName = getPrefixedName(Utils.getFullGameName(info.getGameName(), info.getDifficulty()));
+    String prefixedFullGameName = ontology.getPrefixedEntity(Utils.getFullGameName(info.getGameName(), info.getDifficulty()));
 
     InsertQuery ins = new InsertQuery.Builder()
-      .insertEntry(getPrefixedName(info.getId()), prefixedFullGameName)
-      .addRelation(InsertParam.createObj(getPrefixedName(HAS_PLAYER)),
+      .insertEntry(ontology.getPrefixedEntity(info.getId()), prefixedFullGameName)
+      .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(HAS_PLAYER)),
         InsertParam.createValue(info.getPlayerName()))
-      .addRelation(InsertParam.createObj(getPrefixedName(HAS_GAME_ID)),
+      .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(HAS_GAME_ID)),
         InsertParam.createValue(info.getId()))
       .build();
 
@@ -90,7 +90,7 @@ public class GeneratorDao implements IGeneratorDao {
   @Override
   public boolean instantiateObject(String id, String type) throws EngineException {
     InsertQuery ins = new InsertQuery.Builder()
-      .insertEntry(getPrefixedName(id), getPrefixedName(type))
+      .insertEntry(ontology.getPrefixedEntity(id), ontology.getPrefixedEntity(type))
       .build();
 
     try {
@@ -100,17 +100,38 @@ public class GeneratorDao implements IGeneratorDao {
     }
   }
 
+  @Override
+  public boolean isCreated(String id) throws EngineException {
+    SelectQuery selectQuery = new SelectQuery.Builder()
+      .select("class")
+      .where("id", "type", "class")
+      .limit(1)
+      .addIriParam("id", ontology.getPrefixedEntity(id))
+      .addIriParam("type", ontology.getPrefixedEntity("rdf:type"))
+      .build();
+
+    JsonArray result;
+    try {
+      result = ontology.select(selectQuery);
+    } catch (OntologyException e) {
+      throw DaoExceptions.SelectQuery("Error when checking the existence of the id", e);
+    }
+
+    String entityClass = result.get(0).getAsJsonObject().get("class").getAsString();
+    return entityClass != null;
+  }
+
   boolean createRelation(String id, String name, String rangeValue, boolean isObject) throws EngineException {
     InsertParam rangeParam;
     if (isObject) {
-      rangeParam = InsertParam.createObj(getPrefixedName(rangeValue));
+      rangeParam = InsertParam.createObj(ontology.getPrefixedEntity(rangeValue));
     } else {
       rangeParam = InsertParam.createValue(rangeValue);
     }
 
     InsertQuery ins = new InsertQuery.Builder()
-      .forSubject(InsertParam.createObj(getPrefixedName(id)))
-      .addRelation(InsertParam.createObj(getPrefixedName(name)), rangeParam)
+      .forSubject(InsertParam.createObj(ontology.getPrefixedEntity(id)))
+      .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(name)), rangeParam)
       .build();
     try {
       return ontology.insert(ins);

@@ -16,4 +16,6 @@ public interface IGeneratorDao {
   boolean createObjRelation(String id, String name, String objId) throws EngineException;
 
   boolean instantiateObject(String id, String type) throws EngineException;
+
+  boolean isCreated(String id) throws EngineException;
 }
