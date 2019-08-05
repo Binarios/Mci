@@ -18,5 +18,5 @@ public interface IOntology {
 
   String getPrefixedEntity(String entity);
 
-  String nodeNameGenerator(String entityName);
+  Class<?> getJavaClassFromOwlType (String owlType);
 }

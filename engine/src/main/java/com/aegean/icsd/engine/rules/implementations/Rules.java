@@ -34,10 +34,19 @@ public class Rules implements IRules {
   private IOntology ontology;
 
   @Override
-  public List<EntityRestriction> getGameRules(String gameName, Difficulty difficulty) throws RulesException {
+  public EntityRules getGameRules(String gameName, Difficulty difficulty) throws RulesException {
     String entityName = Utils.getFullGameName(gameName, difficulty);
-    EntityRules entityRules = getEntityRules(entityName);
-    return entityRules.getRestrictions();
+    return getEntityRules(entityName);
+  }
+
+
+  @Override
+  public EntityRestriction getEntityRestriction(String entityName, String restrictionName) throws RulesException {
+    EntityRules rules = getEntityRules(entityName);
+    return rules.getRestrictions().stream()
+      .filter(x -> restrictionName.equals(x.getOnProperty().getName()))
+      .findFirst()
+      .orElse(null);
   }
 
   @Override

@@ -1,14 +1,37 @@
 package com.aegean.icsd.mciwebapp.observations.beans;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.engine.core.annotations.DataProperty;
+import com.aegean.icsd.engine.core.annotations.Entity;
+import com.aegean.icsd.engine.core.annotations.Id;
+import com.aegean.icsd.engine.core.annotations.Key;
 
+@Entity(Observation.NAME)
 public class Observation {
+  public static final String NAME = "Observation";
+
+  @Id
+  @DataProperty("hasId")
   private String id;
+
+  @Key
+  @DataProperty("hasDifficulty")
   private Difficulty difficulty;
+
+  @Key
+  @DataProperty("hasPlayer")
   private String playerName;
-  private String maxCompletionTime;
+
+  @DataProperty("maxCompletionTime")
+  private Long maxCompletionTime;
+
+  @DataProperty("isCompletedIn")
   private String completionTime;
+
+  @DataProperty("hasLevel")
   private String level;
+
+  @DataProperty("completedDate")
   private String completedDate;
 
   public String getId() {
@@ -35,11 +58,11 @@ public class Observation {
     this.playerName = playerName;
   }
 
-  public String getMaxCompletionTime() {
+  public Long getMaxCompletionTime() {
     return maxCompletionTime;
   }
 
-  public void setMaxCompletionTime(String maxCompletionTime) {
+  public void setMaxCompletionTime(Long maxCompletionTime) {
     this.maxCompletionTime = maxCompletionTime;
   }
 

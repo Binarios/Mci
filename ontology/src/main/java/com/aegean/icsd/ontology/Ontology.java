@@ -131,9 +131,15 @@ public class Ontology implements IOntology {
 
     for (InsertParam param : insertQuery.getParams()) {
       if (param.isIriParam()) {
-        sparql.setIri(param.getName(), param.getValue());
+        sparql.setIri(param.getName(), param.getValue().toString());
       } else {
-        sparql.setLiteral(param.getName(), param.getValue());
+        if (String.class.equals(param.getValueClass())) {
+          sparql.setLiteral(param.getName(), param.getValue().toString());
+        } else if (Long.class.equals(param.getValueClass())) {
+          sparql.setLiteral(param.getName(), (Long)param.getValue());
+        } else if (Boolean.class.equals(param.getValueClass())) {
+          sparql.setLiteral(param.getName(), (Boolean) param.getValue());
+        }
       }
     }
 
@@ -180,8 +186,26 @@ public class Ontology implements IOntology {
   }
 
   @Override
-  public String nodeNameGenerator(String entityName) {
-    return getPrefixedEntity(entityName) + "_" + UUID.randomUUID().toString();
+  public Class<?> getJavaClassFromOwlType(String owlType) {
+    Class<?> rangeClass = null;
+    switch (owlType) {
+      case "string" :
+      case "anyURI" :
+        rangeClass = String.class;
+        break;
+      case "positiveInteger":
+        rangeClass = Long.class;
+        break;
+      case "boolean":
+        rangeClass = Boolean.class;
+        break;
+      default:
+        if (owlType.contains(";")) {
+          rangeClass = String.class;
+        }
+        break;
+    }
+    return rangeClass;
   }
 
   List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {

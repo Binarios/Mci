@@ -29,6 +29,11 @@ class Exceptions {
     return new EngineException(CODE_NAME + "." + 6, String.format("Annotation <%s> was not found in the provided bean.", annotation));
   }
 
+  static EngineException MissingMandatoryRelation(String type, String relationName) {
+    return new EngineException(CODE_NAME + "." + 5, String.format("Missing mandatory relation %s from object %s", relationName, type));
+  }
+
+
   static EngineException GenericError(Throwable t) {
     return new EngineException(CODE_NAME + "." + 100, "There was a generic error. See including trace for more details", t);
   }

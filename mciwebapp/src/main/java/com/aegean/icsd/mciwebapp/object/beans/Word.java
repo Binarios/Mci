@@ -1,9 +1,9 @@
 package com.aegean.icsd.mciwebapp.object.beans;
 
-import com.aegean.icsd.engine.annotations.DataProperty;
-import com.aegean.icsd.engine.annotations.Entity;
-import com.aegean.icsd.engine.annotations.Id;
-import com.aegean.icsd.engine.annotations.Key;
+import com.aegean.icsd.engine.core.annotations.DataProperty;
+import com.aegean.icsd.engine.core.annotations.Entity;
+import com.aegean.icsd.engine.core.annotations.Id;
+import com.aegean.icsd.engine.core.annotations.Key;
 
 @Entity(Word.NAME)
 public class Word {

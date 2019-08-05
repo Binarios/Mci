@@ -1,4 +1,4 @@
-package com.aegean.icsd.engine.annotations;
+package com.aegean.icsd.engine.core.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

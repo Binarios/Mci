@@ -1,20 +1,19 @@
-package com.aegean.icsd.mciwebapp.object.beans;
+package com.aegean.icsd.engine;
 
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.annotations.Key;
 
-@Entity(Character.NAME)
-public class Character {
-  public static final String NAME = "Character";
+@Entity(TestWordBean.NAME)
+public class TestWordBean {
+  public static final String NAME = "Word";
 
   @Id
   @DataProperty("hasId")
   private String id;
 
   @Key
-  @DataProperty("hasStringValue")
   private String value;
 
   public String getId() {

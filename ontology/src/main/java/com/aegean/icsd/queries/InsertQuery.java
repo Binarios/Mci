@@ -48,21 +48,11 @@ public class InsertQuery {
       this.subject = InsertParam.createObj(id);
       this.subject.setIriParam(true);
 
-//      InsertParam rdfType = InsertParam.createObj("?rdfType", "rdf:type");
       InsertParam rdfType = InsertParam.createObj("rdf:type");
-      params.add(rdfType);
-
-//      InsertParam typeToAssociate = InsertParam.createObj("?typeToAssociate", type);
       InsertParam typeToAssociate = InsertParam.createObj(type);
-
-      params.add(typeToAssociate);
-      params.add(this.subject);
-
       List<InsertParam> typeList = new LinkedList<>();
       typeList.add(typeToAssociate);
-
       relations.put(rdfType, typeList);
-
       return this;
     }
 
@@ -70,17 +60,10 @@ public class InsertQuery {
       this.subject = subject;
       this.subject.setIriParam(true);
 
-      InsertParam rdfType = InsertParam.create("?rdfType", "rdf:type", true);
-      params.add(rdfType);
-
-      InsertParam typeToAssociate = InsertParam.create("?typeToAssociate", type, true);;
-
-      params.add(typeToAssociate);
-
-
+      InsertParam rdfType = InsertParam.create("?rdfType", "rdf:type", true, String.class);
+      InsertParam typeToAssociate = InsertParam.create("?typeToAssociate", type, true, type.getClass());
       List<InsertParam> typeList = new LinkedList<>();
       typeList.add(typeToAssociate);
-
       relations.put(rdfType, typeList);
 
       return this;

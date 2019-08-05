@@ -57,6 +57,6 @@ public class TestIntegration {
     Assertions.assertNotNull(obs);
     Assertions.assertEquals(playerName, obs.getPlayerName());
     Assertions.assertEquals(Difficulty.EASY, obs.getDifficulty());
-    Assertions.assertEquals("1800", obs.getMaxCompletionTime());
+    Assertions.assertEquals(1800, obs.getMaxCompletionTime());
   }
 }

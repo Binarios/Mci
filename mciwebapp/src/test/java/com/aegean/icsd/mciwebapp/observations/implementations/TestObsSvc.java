@@ -9,15 +9,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +33,8 @@ public class TestObsSvc {
   @Spy
   private ObservationImpl svc = new ObservationImpl();
 
+  @Mock
+  private IGenerator generator;
 
   @Test
   public void testCalculateStringDataValue() {
@@ -53,6 +60,8 @@ public class TestObsSvc {
     res.setDataType("positiveInteger");
     res.setRanges(ranges);
 
+    given(generator.generateIntDataValue(eq(res))).willReturn(21);
+
     String value = svc.calculateDataValue(res);
 
     Assertions.assertNotNull(value);
@@ -71,10 +80,12 @@ public class TestObsSvc {
     res.setDataType("positiveInteger");
     res.setRanges(ranges);
 
+    given(generator.generateIntDataValue(eq(res))).willReturn(2);
+
     String value = svc.calculateDataValue(res);
 
     Assertions.assertNotNull(value);
-    Assertions.assertTrue(Integer.parseInt(value) < 3);
+    Assertions.assertTrue(Integer.parseInt(value) < max);
   }
 
   @Test
@@ -88,6 +99,8 @@ public class TestObsSvc {
     ValueRangeRestriction res = new ValueRangeRestriction();
     res.setDataType("positiveInteger");
     res.setRanges(ranges);
+
+    given(generator.generateIntDataValue(eq(res))).willReturn(0);
 
     String value = svc.calculateDataValue(res);
 
@@ -112,6 +125,8 @@ public class TestObsSvc {
     res.setDataType("positiveInteger");
     res.setRanges(ranges);
 
+    given(generator.generateIntDataValue(eq(res))).willReturn(22);
+
     String value = svc.calculateDataValue(res);
 
     Assertions.assertNotNull(value);
@@ -134,6 +149,8 @@ public class TestObsSvc {
     ValueRangeRestriction res = new ValueRangeRestriction();
     res.setDataType("positiveInteger");
     res.setRanges(ranges);
+
+    given(generator.generateIntDataValue(eq(res))).willReturn(23);
 
     String value = svc.calculateDataValue(res);
 

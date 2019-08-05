@@ -17,8 +17,7 @@ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerCo
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.aegean.icsd.mciwebapp.providers.beans.WordConfiguration;
-import com.aegean.icsd.ontology.beans.DatasetProperties;
+import com.aegean.icsd.mciwebapp.object.WordConfiguration;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;

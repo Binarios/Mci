@@ -77,7 +77,7 @@ public class TestRules {
     Mockito.doReturn(new ArrayList<>()).when(rules).getEntityRestrictions(mockInd);
     Mockito.doReturn(new ArrayList<>()).when(rules).getEntityProperties(props);
 
-    List<EntityRestriction> res = rules.getGameRules(gameName, Difficulty.EASY);
+   EntityRules res = rules.getGameRules(gameName, Difficulty.EASY);
     Assertions.assertNotNull(res);
   }
 

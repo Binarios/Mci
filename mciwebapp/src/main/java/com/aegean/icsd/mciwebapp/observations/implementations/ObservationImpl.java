@@ -12,18 +12,21 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
+import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
 import com.aegean.icsd.mciwebapp.observations.dao.IObservationDao;
-import com.aegean.icsd.mciwebapp.providers.beans.ProviderException;
-import com.aegean.icsd.mciwebapp.providers.interfaces.IWordProvider;
+import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 
 @Service
@@ -43,6 +46,9 @@ public class ObservationImpl implements IObservationSvc {
   @Autowired
   private IWordProvider wordProvider;
 
+  @Autowired
+  private IAnnotationReader ano;
+
   @Override
   public Observation createObservation(String playerName, Difficulty difficulty) throws ObservationsException {
 
@@ -51,109 +57,63 @@ public class ObservationImpl implements IObservationSvc {
       throw Exceptions.InvalidRequest();
     }
 
-    List<EntityRestriction> restrictions;
+    EntityRules entityRules;
     try {
-      restrictions = rules.getGameRules(gameName, difficulty);
+      entityRules = rules.getGameRules(gameName, difficulty);
     } catch (RulesException e) {
       throw Exceptions.UnableToRetrieveGameRules(e);
     }
 
-    List<EntityRestriction> simplifiedList = new ArrayList<>();
-    Map<String, List<EntityRestriction>> groupedRestrictions = restrictions.stream()
+    String lastCompletedLevel = dao.getLastCompletedLevel(difficulty, playerName);
+    String newLevel = "" + Integer.parseInt(lastCompletedLevel) + 1;
+
+    EntityRestriction maxCompleteTimeRes;
+    try {
+      maxCompleteTimeRes = rules.getEntityRestriction(entityRules.getName(), "maxCompletionTime");
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveGameRules(e);
+    }
+
+    Observation toCreate = new Observation();
+    toCreate.setPlayerName(playerName);
+    toCreate.setLevel(newLevel);
+    toCreate.setDifficulty(difficulty);
+    toCreate.setMaxCompletionTime(Long.parseLong(calculateDataValue(maxCompleteTimeRes.getDataRange())));
+
+    List<EntityRestriction> simplifiedRestrictionList = new ArrayList<>();
+    Map<String, List<EntityRestriction>> groupedRestrictions = entityRules.getRestrictions()
+      .stream()
       .collect(Collectors.groupingBy(x -> x.getOnProperty().getName() + ":" + x.getOnProperty().getRange()));
 
     int numberOfWords = -1;
-
     for (Map.Entry<String, List<EntityRestriction>> grp : groupedRestrictions.entrySet()) {
       int cardinality = calculateCardinality(grp.getValue());
       EntityRestriction er = grp.getValue().get(0);
-      er.setCardinality(cardinality);
-      er.setType(RestrictionType.EXACTLY);
-      if ("hasWord".equals(grp.getKey())) {
+      if (cardinality > 0) {
+        er.setCardinality(cardinality);
+        er.setType(RestrictionType.EXACTLY);
+      }
+      String[] keyFragments = grp.getKey().split(":");
+      if ("hasWord".equals(keyFragments[0])) {
         numberOfWords = er.getCardinality();
       }
-      simplifiedList.add(er);
+      simplifiedRestrictionList.add(er);
     }
 
-    String lastCompletedLevel = dao.getLastCompletedLevel(difficulty, playerName);
-    int newLevel = Integer.parseInt(lastCompletedLevel) + 1;
-    Observation observation = dao.generateCoreGameInstance(playerName, difficulty, newLevel);
+    try {
+      generator.upsertObj(toCreate);
+    } catch (EngineException e) {
+      throw  Exceptions.GenerationError(e);
+    }
 
-    List<String> objIds;
-    List<String> words;
+    List<Word> words;
     try {
       words = wordProvider.getWords(numberOfWords);
-      objIds = createRestrictions(simplifiedList, observation.getId());
-    } catch (RulesException | EngineException | ProviderException e) {
+    } catch (ProviderException e) {
       throw Exceptions.GenerationError(e);
     }
 
-    for (EntityRestriction res : simplifiedList) {
-      if (!res.getOnProperty().isObjectProperty()) {
-        String rangeValue = calculateDataValue(res.getDataRange());
-        try {
-          generator.createValueRelation(observation.getId(), res.getOnProperty(), rangeValue);
-        } catch (EngineException e) {
-          throw Exceptions.GenerationError(e);
-        }
-      }
-    }
-    return observation;
-  }
-
-  List<String> createWordRestriction(List<String> values)
-    throws RulesException, EngineException {
-    List<String> objIds = new ArrayList<>();
-    for (String value : values) {
-      String existingId = generator.getObjId("Word", value);
-      if (StringUtils.isEmpty(existingId)) {
-        objIds.add(existingId);
-      } else {
-        EntityRules entityRules = rules.getEntityRules("Word");
-        List<EntityRestriction> restrictions = entityRules.getRestrictions();
-
-
-        for (EntityRestriction res : dataRestrictions) {
-          String rangeValue = calculateDataValue(res.getDataRange());
-          generator.createValueRelation(parentId, res.getOnProperty(), rangeValue);
-        }
-      }
-    }
-
-    return objIds;
-  }
-
-  List<String> createRestrictions(List<EntityRestriction> restrictions, String parentId)
-    throws RulesException, EngineException {
-    List<String> objIds = new ArrayList<>();
-
-    List<EntityRestriction> objRestrictions = restrictions.stream()
-      .filter(x -> x.getOnProperty().isObjectProperty())
-      .collect(Collectors.toList());
-
-    List<EntityRestriction> dataRestrictions = restrictions.stream()
-      .filter(x -> !x.getOnProperty().isObjectProperty())
-      .collect(Collectors.toList());
-
-    for (EntityRestriction res : objRestrictions) {
-      EntityRules entityRules = rules.getEntityRules(res.getOnProperty().getRange());
-      List<EntityRestriction> childRestrictions = entityRules.getRestrictions();
-      int cardinality = calculateRestrictionCardinality(res);
-      List<String> childrenIds = generator.instantiateObjects(res.getOnProperty().getRange(), cardinality);
-      objIds.addAll(childrenIds);
-
-      for (String id : childrenIds) {
-        createRestrictions(childRestrictions, id);
-        generator.createObjRelation(parentId, res.getOnProperty(), id);
-      }
-    }
-
-    for (EntityRestriction res : dataRestrictions) {
-      String rangeValue = calculateDataValue(res.getDataRange());
-      generator.createValueRelation(parentId, res.getOnProperty(), rangeValue);
-    }
-
-    return objIds;
+    return toCreate;
   }
 
   int calculateCardinality(List<EntityRestriction> restrictions) throws ObservationsException {
@@ -161,9 +121,6 @@ public class ObservationImpl implements IObservationSvc {
     if (cardinality == -1) {
       EntityRestriction er = restrictions.get(0);
       cardinality = calculateRestrictionCardinality(er);
-      if (cardinality == -1) {
-        throw Exceptions.CannotCalculateCardinality(er.getOnProperty().getName());
-      }
     }
     return cardinality;
   }

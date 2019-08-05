@@ -9,10 +9,7 @@ import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.queries.InsertQuery;
-import com.aegean.icsd.queries.SelectQuery;
 import com.aegean.icsd.queries.beans.InsertParam;
-
-import com.google.gson.JsonArray;
 
 @Repository
 public class GeneratorDao implements IGeneratorDao {
@@ -25,44 +22,15 @@ public class GeneratorDao implements IGeneratorDao {
   private IOntology ontology;
 
   @Override
-  public int getLatestLevel(String gameName, String playerName) throws EngineException {
-    SelectQuery selectQuery = new SelectQuery.Builder()
-      .select("latestLevel")
-      .where("s", "type", "class")
-      .where("s", HAS_PLAYER, "playerName")
-      .where("s", HAS_LEVEL, "latestLevel")
-      .where("s", "completed", "date")
-      .orderByDesc("date")
-      .limit(1)
-      .addIriParam("type", "rdf:type")
-      .addIriParam("class", ontology.getPrefixedEntity(gameName))
-      .addIriParam(HAS_PLAYER, ontology.getPrefixedEntity(HAS_PLAYER))
-      .addIriParam(HAS_LEVEL, ontology.getPrefixedEntity(HAS_LEVEL))
-      .addIriParam("completed", ontology.getPrefixedEntity("completedDate"))
-      .addLiteralParam("playerName", playerName)
-      .build();
-
-    JsonArray result;
-    try {
-      result = ontology.select(selectQuery);
-    } catch (OntologyException e) {
-      throw DaoExceptions.SelectQuery("Error when retrieving the latest level", e);
-    }
-    int latestLevel = result.get(0).getAsJsonObject().get("latestLevel").getAsInt();
-
-    return latestLevel;
-  }
-
-  @Override
   public boolean generateBasicGame(GameInfo info) throws EngineException {
     String prefixedFullGameName = ontology.getPrefixedEntity(Utils.getFullGameName(info.getGameName(), info.getDifficulty()));
 
     InsertQuery ins = new InsertQuery.Builder()
       .insertEntry(ontology.getPrefixedEntity(info.getId()), prefixedFullGameName)
       .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(HAS_PLAYER)),
-        InsertParam.createValue(info.getPlayerName()))
+        InsertParam.createValue(info.getPlayerName(), info.getPlayerName().getClass()))
       .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(HAS_GAME_ID)),
-        InsertParam.createValue(info.getId()))
+        InsertParam.createValue(info.getId(), info.getId().getClass()))
       .build();
 
     try {
@@ -73,18 +41,19 @@ public class GeneratorDao implements IGeneratorDao {
   }
 
   @Override
-  public String getPrefixedName(String entity) {
-    return ontology.getPrefixedEntity(entity);
+  public boolean createStringValueRelation(String id, String name, String rangeValue) throws EngineException {
+    return createRelation(id, name, rangeValue,false, String.class);
   }
 
   @Override
-  public boolean createValueRelation(String id, String name, String rangeValue) throws EngineException {
-    return createRelation(id, name, rangeValue,false);
+  public boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)
+    throws EngineException {
+    return createRelation(id, name, rangeValue,false, valueClass);
   }
 
   @Override
   public boolean createObjRelation(String id, String name, String objId) throws EngineException {
-    return createRelation(id, name, objId,true);
+    return createRelation(id, name, objId,true, null);
   }
 
   @Override
@@ -101,32 +70,17 @@ public class GeneratorDao implements IGeneratorDao {
   }
 
   @Override
-  public boolean isCreated(String id) throws EngineException {
-    SelectQuery selectQuery = new SelectQuery.Builder()
-      .select("class")
-      .where("id", "type", "class")
-      .limit(1)
-      .addIriParam("id", ontology.getPrefixedEntity(id))
-      .addIriParam("type", ontology.getPrefixedEntity("rdf:type"))
-      .build();
-
-    JsonArray result;
-    try {
-      result = ontology.select(selectQuery);
-    } catch (OntologyException e) {
-      throw DaoExceptions.SelectQuery("Error when checking the existence of the id", e);
-    }
-
-    String entityClass = result.get(0).getAsJsonObject().get("class").getAsString();
-    return entityClass != null;
+  public Class<?> getJavaClass(String range) {
+    return ontology.getJavaClassFromOwlType(range);
   }
 
-  boolean createRelation(String id, String name, String rangeValue, boolean isObject) throws EngineException {
+  <T> boolean createRelation(String id, String name, Object rangeValue, boolean isObject, Class<T> rangeClass)
+    throws EngineException {
     InsertParam rangeParam;
     if (isObject) {
-      rangeParam = InsertParam.createObj(ontology.getPrefixedEntity(rangeValue));
+      rangeParam = InsertParam.createObj(ontology.getPrefixedEntity(rangeValue.toString()));
     } else {
-      rangeParam = InsertParam.createValue(rangeValue);
+      rangeParam = InsertParam.createValue(rangeValue, rangeClass);
     }
 
     InsertQuery ins = new InsertQuery.Builder()

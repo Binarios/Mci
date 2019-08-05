@@ -1,20 +1,18 @@
 package com.aegean.icsd.engine.generator.implementations;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.engine.annotations.Entity;
-import com.aegean.icsd.engine.annotations.Key;
 import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
+import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
@@ -35,20 +33,8 @@ public class Generator implements IGenerator {
   @Autowired
   private IGeneratorDao dao;
 
-  @Override
-  public GameInfo instantiateGame(GameInfo info) throws EngineException {
-    if (info == null) {
-      throw Exceptions.InvalidParameters();
-    }
-    String gameId = generateGameId(info.getPlayerName(), info.getGameName(), info.getDifficulty(), info.getLevel());
-    info.setId(gameId);
-    try {
-      boolean success = dao.generateBasicGame(info);
-      return success ? info : null ;
-    } catch (EngineException e) {
-      throw Exceptions.CannotCreateCoreGame(gameId, e);
-    }
-  }
+  @Autowired
+  private IAnnotationReader ano;
 
   @Override
   public GameInfo getLastGeneratedIndividual(String gameName, Difficulty difficulty, String playerName) {
@@ -58,7 +44,7 @@ public class Generator implements IGenerator {
   @Override
   public boolean createValueRelation(String id, EntityProperty onProperty, String rangeValue) throws EngineException {
     try {
-      boolean success = dao.createValueRelation(id, onProperty.getName(), rangeValue);
+      boolean success = dao.createStringValueRelation(id, onProperty.getName(), rangeValue);
       return success;
     } catch (EngineException e) {
       throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);
@@ -73,32 +59,6 @@ public class Generator implements IGenerator {
     } catch (EngineException e) {
       throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);
     }
-  }
-
-  @Override
-  public List<String> instantiateObjects(String objectType, int cardinality) throws EngineException {
-    if (StringUtils.isEmpty(objectType)) {
-      throw Exceptions.InvalidParameters();
-    }
-    List<String> ids = new ArrayList<>();
-    for (int i = 0; i < cardinality; i++) {
-      ids.add(instantiateObject(objectType));
-    }
-    return ids;
-  }
-
-  @Override
-  public String instantiateObject(String objectType) throws EngineException {
-    if (StringUtils.isEmpty(objectType)) {
-      throw Exceptions.InvalidParameters();
-    }
-
-    String id = generateObjectId(objectType);
-    boolean success = dao.instantiateObject(id, objectType);
-    if (!success) {
-      throw Exceptions.CannotCreateObject(objectType);
-    }
-    return id;
   }
 
   @Override
@@ -141,60 +101,42 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public boolean upsertObj(Object object) throws EngineException {
-    String id = getObjectId(object);
-    String name = getObjectType(object);
+  public String upsertObj(Object object) throws EngineException {
+    String id = ano.setEntityId(object);
+    String name = ano.getEntityValue(object);
+    Map<String, Object> relations = ano.getDataProperties(object);
+    EntityRules er;
+    try {
+      er = rules.getEntityRules(name);
+    } catch (RulesException e) {
+      throw  Exceptions.CannotRetrieveRules(name, e);
+    }
+    List<EntityProperty> dataProperties = er.getProperties().stream()
+      .filter(x -> !x.isObjectProperty())
+      .collect(Collectors.toList());
 
-    boolean exists = dao.isCreated(id);
+    boolean success = dao.instantiateObject(id, name);
+    if (!success) {
+      throw Exceptions.CannotCreateObject(name);
+    }
 
-    if(!exists) {
-      EntityRules eR;
-      try {
-        eR = rules.getEntityRules(name);
-      } catch (RulesException e) {
-        throw Exceptions.CannotRetrieveRules(name, e);
+    for (EntityProperty property : dataProperties) {
+      Object rangeValue = relations.get(property.getName());
+      if (property.isMandatory() && rangeValue == null) {
+        throw Exceptions.MissingMandatoryRelation(name, property.getName());
       }
 
-
-
-    }
-    return true;
-  }
-
-  String getObjectId(Object object) throws EngineException {
-    String objName = getObjectType(object);
-    String id = null;
-    for (Field field : object.getClass().getDeclaredFields()) {
-      if (field.isAnnotationPresent(Key.class)) {
-        try {
-          id = (String) field.get(object);
-          break;
-        } catch (IllegalAccessException e) {
-          throw Exceptions.GenericError(e);
-        }
+      if (rangeValue != null) {
+        Class<?> rangeClass = dao.getJavaClass(property.getRange());
+        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
       }
     }
-    if (id == null) {
-      throw Exceptions.UnableToReadAnnotation(Key.class.getSimpleName());
-    }
-    return objName + "_" + id;
-  }
 
-  String getObjectType(Object object) throws EngineException {
-    if (!object.getClass().isAnnotationPresent(Entity.class)) {
-      throw Exceptions.UnableToReadAnnotation(Entity.class.getSimpleName());
-    }
-    Entity entityAno = object.getClass().getAnnotation(Entity.class);
-    return entityAno.value();
+    return id;
   }
 
   String generateGameId(String playerName, String gameName, Difficulty difficulty, String level) {
     String fullGameName = Utils.getFullGameName(gameName, difficulty);
     return StringUtils.capitalize(playerName) + "_" + StringUtils.capitalize(fullGameName) + "_" + level;
-  }
-
-  String generateObjectId(String objectName) {
-    String randomId = UUID.randomUUID().toString().replace("-", "");
-    return StringUtils.capitalize(objectName) + randomId;
   }
 }
