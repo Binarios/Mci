@@ -4,83 +4,104 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
+import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
-import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
+import com.aegean.icsd.engine.rules.beans.EntityRules;
+import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciwebapp.object.beans.CharacterObj;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
-import com.aegean.icsd.mciwebapp.object.interfaces.IObjectProvider;
+import com.aegean.icsd.mciwebapp.object.interfaces.IProvider;
 
-public class WordProvider extends AbstractProvider {
-
-  private WordConfiguration config;
-  private IGenerator generator;
-  private IRules rules;
-  private IObjectProvider provider;
-  private IAnnotationReader ano;
+@Service
+public class WordProvider implements IProvider {
 
   @Autowired
-  public WordProvider(WordConfiguration config,
-                      IGenerator generator, IRules rules, IObjectProvider provider, IAnnotationReader ano ) {
-    super(ano, rules, generator, provider);
-    this.config = config;
-  }
+  private WordConfiguration config;
+
+  @Autowired
+  private IGenerator generator;
+
+  @Autowired
+  private IRules rules;
 
   @Override
   public List<String> getObjectsIds(int number) throws ProviderException {
-    return getObjectIds(number, null);
-  }
 
-  @Override
-  public List<String> getObjectsIds(List<String> values) throws ProviderException {
-    return getObjectIds(-1, values);
-  }
-
-  List<String> getObjectIds(int number, List<String> values) throws ProviderException {
+    List<String> objIds = new ArrayList<>();
     if (number < 0) {
       number = 0;
     }
-    List<Word> words;
-    if (values != null
-      && values.size() > 0) {
-      words = getWordsFromValues(values);
-    } else {
-      words = readWords(number);
+
+    EntityRules er;
+    try {
+      er = rules.getEntityRules(Word.NAME);
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveRules(Word.NAME, e);
     }
 
-    return generateObjects(words);
-  }
+    List<EntityRestriction> simplifiedRestrictions = generator.calculateExactCardinality(er.getRestrictions());
+    List<Word> words = readWords(number);
 
-  @Override
-  protected Map<EntityProperty, List<String>> handleRestrictions(Object forObject, List<EntityRestriction> restrictions)
-    throws ProviderException {
-    Word word = (Word) forObject;
-    char[] characters = word.getValue().toCharArray();
-    List<String> chars = new LinkedList<>();
-    for (char c : characters) {
-      chars.add("" + c);
-    }
-    Map<EntityProperty, List<String>> relations = new HashMap<>();
-    for (EntityRestriction res : restrictions) {
-      if (res.getOnProperty().isObjectProperty()) {
-        List<String> objIds = provider.getObjectsIds(res.getOnProperty().getRange(), chars);
-        relations.put(res.getOnProperty(), objIds);
+    for (Word word : words) {
+      try {
+        generator.upsertObj(word);
+        objIds.add(word.getId());
+        for (EntityRestriction res : simplifiedRestrictions) {
+          if ("hasCharacter".equals(res.getOnProperty().getName())) {
+            List<String> charsIds = createCharacters(word);
+            for (String charId : charsIds) {
+              generator.createObjRelation(word.getId(), res.getOnProperty(), charId);
+            }
+          }
+        }
+      } catch (EngineException e) {
+        e.printStackTrace();
       }
     }
-    return relations;
+
+    return objIds;
+  }
+
+  List<String> createCharacters (Word word) throws ProviderException {
+    List<String> charIds = new ArrayList<>();
+
+    EntityRestriction res;
+    try {
+      res = rules.getEntityRestriction(CharacterObj.NAME, "hasNextCharacter");
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveRules(Word.NAME, e);
+    }
+
+    char[] chars = StringUtils.reverse(word.getValue()).toCharArray();
+    CharacterObj lastlyCreated = null;
+    for (char ch : chars) {
+      CharacterObj chObj = getCharacterFromValue(ch);
+      try {
+        generator.upsertObj(chObj);
+        if (lastlyCreated != null) {
+          generator.createObjRelation(chObj.getId(), res.getOnProperty(), lastlyCreated.getId());
+        }
+        charIds.add(chObj.getId());
+        lastlyCreated = chObj;
+      } catch (EngineException e) {
+        throw Exceptions.GenerationError(e);
+      }
+    }
+
+    return charIds;
   }
 
   List<Word> readWords(int number) throws ProviderException {
@@ -119,19 +140,9 @@ public class WordProvider extends AbstractProvider {
     return words;
   }
 
-  List<Word> getWordsFromValues(List<String> values) {
-    List<Word> words = new ArrayList<>();
-    for (String value : values) {
-      words.add(getWordFromValue(value));
-    }
-    return words;
+  CharacterObj getCharacterFromValue(char value) {
+    CharacterObj ch = new CharacterObj();
+    ch.setValue(value);
+    return ch;
   }
-
-  Word getWordFromValue(String value) {
-    Word word = new Word();
-    word.setValue(value);
-    return word;
-  }
-
-
 }
