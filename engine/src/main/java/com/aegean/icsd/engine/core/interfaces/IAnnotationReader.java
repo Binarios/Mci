@@ -5,6 +5,9 @@ import java.util.Map;
 import com.aegean.icsd.engine.common.beans.EngineException;
 
 public interface IAnnotationReader {
+
+  String getEntityId(Object object) throws EngineException;
+
   String setEntityId(Object object) throws EngineException;
 
   String getEntityValue(Object object) throws EngineException;

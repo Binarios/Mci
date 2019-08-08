@@ -5,8 +5,8 @@ import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.annotations.Key;
 
-@Entity(Number.NAME)
-public class Number {
+@Entity(NumberObj.NAME)
+public class NumberObj {
   public static final String NAME = "Number";
 
   @Id

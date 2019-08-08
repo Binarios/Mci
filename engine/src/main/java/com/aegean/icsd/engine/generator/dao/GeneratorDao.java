@@ -8,8 +8,8 @@ import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.queries.InsertQuery;
-import com.aegean.icsd.queries.beans.InsertParam;
+import com.aegean.icsd.ontology.queries.InsertQuery;
+import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
 @Repository
 public class GeneratorDao implements IGeneratorDao {

@@ -1,4 +1,4 @@
-package com.aegean.icsd.queries;
+package com.aegean.icsd.ontology.queries;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.aegean.icsd.queries.beans.Triplet;
+import com.aegean.icsd.ontology.queries.beans.Triplet;
 
 public class SelectQuery {
   private String command;

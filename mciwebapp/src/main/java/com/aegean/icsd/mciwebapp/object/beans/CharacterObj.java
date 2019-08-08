@@ -5,8 +5,8 @@ import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.annotations.Key;
 
-@Entity(Character.NAME)
-public class Character {
+@Entity(CharacterObj.NAME)
+public class CharacterObj {
   public static final String NAME = "Character";
 
   @Id
@@ -15,7 +15,7 @@ public class Character {
 
   @Key
   @DataProperty("hasStringValue")
-  private String value;
+  private Character value;
 
   public String getId() {
     return id;
@@ -25,11 +25,11 @@ public class Character {
     this.id = id;
   }
 
-  public String getValue() {
+  public Character getValue() {
     return value;
   }
 
-  public void setValue(String value) {
+  public void setValue(Character value) {
     this.value = value;
   }
 }

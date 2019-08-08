@@ -3,11 +3,9 @@ package com.aegean.icsd.ontology;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
@@ -53,9 +51,9 @@ import com.aegean.icsd.ontology.beans.DatasetProperties;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.queries.beans.InsertParam;
-import com.aegean.icsd.queries.InsertQuery;
-import com.aegean.icsd.queries.SelectQuery;
+import com.aegean.icsd.ontology.queries.beans.InsertParam;
+import com.aegean.icsd.ontology.queries.InsertQuery;
+import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

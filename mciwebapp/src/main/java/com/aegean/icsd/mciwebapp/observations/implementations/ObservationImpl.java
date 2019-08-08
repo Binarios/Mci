@@ -1,10 +1,7 @@
 package com.aegean.icsd.mciwebapp.observations.implementations;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,19 +11,17 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
-import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
-import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
+import com.aegean.icsd.mciwebapp.object.interfaces.IObjectProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
 import com.aegean.icsd.mciwebapp.observations.dao.IObservationDao;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
-import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 
 @Service
@@ -44,7 +39,7 @@ public class ObservationImpl implements IObservationSvc {
   private IGenerator generator;
 
   @Autowired
-  private IWordProvider wordProvider;
+  private IObjectProvider wordProvider;
 
   @Autowired
   private IAnnotationReader ano;
@@ -80,24 +75,13 @@ public class ObservationImpl implements IObservationSvc {
     toCreate.setDifficulty(difficulty);
     toCreate.setMaxCompletionTime(Long.parseLong(calculateDataValue(maxCompleteTimeRes.getDataRange())));
 
-    List<EntityRestriction> simplifiedRestrictionList = new ArrayList<>();
-    Map<String, List<EntityRestriction>> groupedRestrictions = entityRules.getRestrictions()
-      .stream()
-      .collect(Collectors.groupingBy(x -> x.getOnProperty().getName() + ":" + x.getOnProperty().getRange()));
+    List<EntityRestriction> simplifiedRestrictionList =  generator.calculateExactCardinality(entityRules.getRestrictions());
 
     int numberOfWords = -1;
-    for (Map.Entry<String, List<EntityRestriction>> grp : groupedRestrictions.entrySet()) {
-      int cardinality = calculateCardinality(grp.getValue());
-      EntityRestriction er = grp.getValue().get(0);
-      if (cardinality > 0) {
-        er.setCardinality(cardinality);
-        er.setType(RestrictionType.EXACTLY);
+    for (EntityRestriction res : simplifiedRestrictionList) {
+      if ("hasWord".equals(res.getOnProperty().getName())) {
+        numberOfWords = res.getCardinality();
       }
-      String[] keyFragments = grp.getKey().split(":");
-      if ("hasWord".equals(keyFragments[0])) {
-        numberOfWords = er.getCardinality();
-      }
-      simplifiedRestrictionList.add(er);
     }
 
     try {
@@ -106,71 +90,14 @@ public class ObservationImpl implements IObservationSvc {
       throw  Exceptions.GenerationError(e);
     }
 
-    List<Word> words;
+    List<String> wordsIds;
     try {
-      words = wordProvider.getWords(numberOfWords);
+      wordsIds = wordProvider.getObjectsIds(Word.NAME, numberOfWords);
     } catch (ProviderException e) {
       throw Exceptions.GenerationError(e);
     }
 
     return toCreate;
-  }
-
-  int calculateCardinality(List<EntityRestriction> restrictions) throws ObservationsException {
-    int cardinality = calculateMinMaxCardinality(restrictions);
-    if (cardinality == -1) {
-      EntityRestriction er = restrictions.get(0);
-      cardinality = calculateRestrictionCardinality(er);
-    }
-    return cardinality;
-  }
-
-  int calculateMinMaxCardinality(List<EntityRestriction> restrictions) {
-    int min = Integer.MAX_VALUE;
-    int max = Integer.MIN_VALUE;
-    int cardinality = -1;
-
-    for (EntityRestriction res : restrictions) {
-      if (RestrictionType.MAX.equals(res.getType()) && max < res.getCardinality()) {
-        max = res.getCardinality() + 1;
-      } else if (RestrictionType.MIN.equals(res.getType()) && min > res.getCardinality()) {
-        min = res.getCardinality();
-      }
-    }
-
-    if (min == Integer.MAX_VALUE && max < Integer.MAX_VALUE) {
-      min = 0;
-    }
-
-    if (min >= 0) {
-      if (min == max) {
-        cardinality = min;
-      } else if (min < max) {
-        cardinality = ThreadLocalRandom.current().nextInt(min, max);
-      }
-    }
-
-    return cardinality;
-  }
-
-  int calculateRestrictionCardinality(EntityRestriction restriction) {
-    int minCardinality = Integer.MAX_VALUE;
-    int maxCardinality = Integer.MIN_VALUE;
-    int cardinality = -1;
-
-    if (RestrictionType.EXACTLY.equals(restriction.getType())) {
-      cardinality = restriction.getCardinality();
-    } else if (RestrictionType.SOME.equals(restriction.getType())) {
-      minCardinality = 4;
-      maxCardinality = 6;
-    }
-
-    if (cardinality == -1
-       && minCardinality < maxCardinality) {
-      cardinality = ThreadLocalRandom.current().nextInt(minCardinality, maxCardinality + 1);
-    }
-
-    return cardinality;
   }
 
   String calculateDataValue (ValueRangeRestriction res) {

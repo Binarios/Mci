@@ -39,11 +39,7 @@ import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.queries.beans.InsertParam;
-import com.aegean.icsd.queries.InsertQuery;
-import com.aegean.icsd.queries.SelectQuery;
-
-import com.google.gson.JsonArray;
+import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;

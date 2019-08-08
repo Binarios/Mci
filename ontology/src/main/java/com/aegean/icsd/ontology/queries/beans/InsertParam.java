@@ -1,4 +1,4 @@
-package com.aegean.icsd.queries.beans;
+package com.aegean.icsd.ontology.queries.beans;
 
 import java.util.UUID;
 

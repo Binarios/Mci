@@ -1,4 +1,4 @@
-package com.aegean.icsd.queries;
+package com.aegean.icsd.ontology.queries;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -7,8 +7,7 @@ import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.aegean.icsd.queries.InsertQuery;
-import com.aegean.icsd.queries.beans.InsertParam;
+import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
 @ExtendWith(MockitoExtension.class)
 @Execution(ExecutionMode.CONCURRENT)

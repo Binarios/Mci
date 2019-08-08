@@ -1,5 +1,6 @@
 package com.aegean.icsd.engine.generator.implementations;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,7 +18,9 @@ import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
+import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
+import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
@@ -35,6 +38,41 @@ public class Generator implements IGenerator {
 
   @Autowired
   private IAnnotationReader ano;
+
+  @Override
+  public String upsertObj(Object object) throws EngineException {
+    String id = ano.setEntityId(object);
+    String name = ano.getEntityValue(object);
+    Map<String, Object> relations = ano.getDataProperties(object);
+    EntityRules er;
+    try {
+      er = rules.getEntityRules(name);
+    } catch (RulesException e) {
+      throw  Exceptions.CannotRetrieveRules(name, e);
+    }
+    List<EntityProperty> dataProperties = er.getProperties().stream()
+      .filter(x -> !x.isObjectProperty())
+      .collect(Collectors.toList());
+
+    boolean success = dao.instantiateObject(id, name);
+    if (!success) {
+      throw Exceptions.CannotCreateObject(name);
+    }
+
+    for (EntityProperty property : dataProperties) {
+      Object rangeValue = relations.get(property.getName());
+      if (property.isMandatory() && rangeValue == null) {
+        throw Exceptions.MissingMandatoryRelation(name, property.getName());
+      }
+
+      if (rangeValue != null) {
+        Class<?> rangeClass = dao.getJavaClass(property.getRange());
+        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
+      }
+    }
+
+    return id;
+  }
 
   @Override
   public GameInfo getLastGeneratedIndividual(String gameName, Difficulty difficulty, String playerName) {
@@ -101,42 +139,80 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public String upsertObj(Object object) throws EngineException {
-    String id = ano.setEntityId(object);
-    String name = ano.getEntityValue(object);
-    Map<String, Object> relations = ano.getDataProperties(object);
-    EntityRules er;
-    try {
-      er = rules.getEntityRules(name);
-    } catch (RulesException e) {
-      throw  Exceptions.CannotRetrieveRules(name, e);
-    }
-    List<EntityProperty> dataProperties = er.getProperties().stream()
-      .filter(x -> !x.isObjectProperty())
-      .collect(Collectors.toList());
+  public List<EntityRestriction> calculateExactCardinality(List<EntityRestriction> restrictions) {
+    List<EntityRestriction> simplifiedRestrictionList = new ArrayList<>();
+    Map<String, List<EntityRestriction>> groupedRestrictions = restrictions.stream()
+      .collect(Collectors.groupingBy(x -> x.getOnProperty().getName() + ":" + x.getOnProperty().getRange()));
 
-    boolean success = dao.instantiateObject(id, name);
-    if (!success) {
-      throw Exceptions.CannotCreateObject(name);
-    }
-
-    for (EntityProperty property : dataProperties) {
-      Object rangeValue = relations.get(property.getName());
-      if (property.isMandatory() && rangeValue == null) {
-        throw Exceptions.MissingMandatoryRelation(name, property.getName());
+    for (Map.Entry<String, List<EntityRestriction>> grp : groupedRestrictions.entrySet()) {
+      int cardinality = calculateMinMaxCardinality(grp.getValue());
+      EntityRestriction er = grp.getValue().get(0);
+      if (cardinality > 0) {
+        er.setCardinality(cardinality);
+        er.setType(RestrictionType.EXACTLY);
       }
-
-      if (rangeValue != null) {
-        Class<?> rangeClass = dao.getJavaClass(property.getRange());
-        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
-      }
+      simplifiedRestrictionList.add(er);
     }
 
-    return id;
+    return simplifiedRestrictionList;
   }
 
-  String generateGameId(String playerName, String gameName, Difficulty difficulty, String level) {
-    String fullGameName = Utils.getFullGameName(gameName, difficulty);
-    return StringUtils.capitalize(playerName) + "_" + StringUtils.capitalize(fullGameName) + "_" + level;
+  int calculateCardinality(List<EntityRestriction> restrictions) {
+    int cardinality = calculateMinMaxCardinality(restrictions);
+    if (cardinality == -1) {
+      EntityRestriction er = restrictions.get(0);
+      cardinality = calculateRestrictionCardinality(er);
+    }
+    return cardinality;
   }
+
+
+  int calculateMinMaxCardinality(List<EntityRestriction> restrictions) {
+    int min = Integer.MAX_VALUE;
+    int max = Integer.MIN_VALUE;
+    int cardinality = -1;
+
+    for (EntityRestriction res : restrictions) {
+      if (RestrictionType.MAX.equals(res.getType()) && max < res.getCardinality()) {
+        max = res.getCardinality() + 1;
+      } else if (RestrictionType.MIN.equals(res.getType()) && min > res.getCardinality()) {
+        min = res.getCardinality();
+      }
+    }
+
+    if (min == Integer.MAX_VALUE && max < Integer.MAX_VALUE) {
+      min = 0;
+    }
+
+    if (min >= 0) {
+      if (min == max) {
+        cardinality = min;
+      } else if (min < max) {
+        cardinality = ThreadLocalRandom.current().nextInt(min, max);
+      }
+    }
+
+    return cardinality;
+  }
+
+  int calculateRestrictionCardinality(EntityRestriction restriction) {
+    int minCardinality = Integer.MAX_VALUE;
+    int maxCardinality = Integer.MIN_VALUE;
+    int cardinality = -1;
+
+    if (RestrictionType.EXACTLY.equals(restriction.getType())) {
+      cardinality = restriction.getCardinality();
+    } else if (RestrictionType.SOME.equals(restriction.getType())) {
+      minCardinality = 4;
+      maxCardinality = 6;
+    }
+
+    if (cardinality == -1
+      && minCardinality < maxCardinality) {
+      cardinality = ThreadLocalRandom.current().nextInt(minCardinality, maxCardinality + 1);
+    }
+
+    return cardinality;
+  }
+
 }
