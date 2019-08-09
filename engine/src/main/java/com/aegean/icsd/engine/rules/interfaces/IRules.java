@@ -1,7 +1,5 @@
 package com.aegean.icsd.engine.rules.interfaces;
 
-import java.util.List;
-
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;

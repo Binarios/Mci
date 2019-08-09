@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.object;
+package com.aegean.icsd.mciwebapp.object.configurations;
 
 public class WordConfiguration {
   private String location;

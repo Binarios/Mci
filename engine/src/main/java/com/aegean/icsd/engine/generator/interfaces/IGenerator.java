@@ -11,7 +11,7 @@ import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 
 public interface IGenerator {
 
-  String upsertObj(Object word) throws EngineException;
+  String upsertObj(Object object) throws EngineException;
 
   GameInfo getLastGeneratedIndividual(String gameName, Difficulty difficulty, String playerName);
 

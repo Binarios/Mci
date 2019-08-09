@@ -1,6 +1,5 @@
 package com.aegean.icsd.mciwebapp;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,7 +17,7 @@ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerCo
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.aegean.icsd.mciwebapp.object.WordConfiguration;
+import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;
