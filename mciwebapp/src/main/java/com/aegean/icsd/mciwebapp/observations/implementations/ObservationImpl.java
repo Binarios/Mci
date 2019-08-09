@@ -3,6 +3,7 @@ package com.aegean.icsd.mciwebapp.observations.implementations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +18,7 @@ import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
-import com.aegean.icsd.mciwebapp.object.beans.Word;
-import com.aegean.icsd.mciwebapp.object.interfaces.IObjectProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
-import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
 import com.aegean.icsd.mciwebapp.observations.dao.IObservationDao;
@@ -90,22 +88,34 @@ public class ObservationImpl implements IObservationSvc {
     toCreate.setPlayerName(playerName);
     toCreate.setLevel(newLevel);
     toCreate.setDifficulty(difficulty);
-    toCreate.setMaxCompletionTime(Long.parseLong(calculateDataValue(maxCompleteTimeRes.getDataRange())));
-    toCreate.setTotalImages(Integer.parseInt(calculateDataValue(totalImages.getDataRange())));
+    toCreate.setMaxCompletionTime(Long.parseLong("" + generator.generateIntDataValue(maxCompleteTimeRes.getDataRange())));
+    toCreate.setTotalImages(generator.generateIntDataValue(totalImages.getDataRange()));
 
     List<String> obsIds = new ArrayList<>();
+    List<String> chosenWords = new ArrayList<>();
 
     int remaining = toCreate.getTotalImages();
     for (int i = 0; i < hasObservationRes.getCardinality(); i++) {
+      int nbOfOccurrences;
       if (remaining < 1) {
-        int totalToCreate = ThreadLocalRandom.current().nextInt(0, remaining + 1);
-        try {
-          String id = observationProvider.getObservationId(totalToCreate);
+        nbOfOccurrences = 0;
+      } else if (i + 1 >= hasObservationRes.getCardinality()) {
+        nbOfOccurrences = remaining;
+      } else {
+        nbOfOccurrences = ThreadLocalRandom.current().nextInt(0, remaining + 1);
+      }
+      try {
+        String id = observationProvider.getObservationId(nbOfOccurrences);
+        if (obsIds.contains(id)) {
+          i--;
+        } else {
           obsIds.add(id);
-          remaining -= totalToCreate;
-        } catch (ProviderException e) {
-          throw  Exceptions.GenerationError(e);
+          String word = dao.getAssociatedSubject(id);
+          chosenWords.add(word);
+          remaining -= nbOfOccurrences;
         }
+      } catch (ProviderException e) {
+        throw  Exceptions.GenerationError(e);
       }
     }
 
@@ -118,30 +128,7 @@ public class ObservationImpl implements IObservationSvc {
       throw  Exceptions.GenerationError(e);
     }
 
-    //TODO setup the words that the user will see in the Observation bean
+    toCreate.setWords(chosenWords);
     return toCreate;
-  }
-
-  String calculateDataValue (ValueRangeRestriction res) {
-    String dataType = res.getDataType();
-    String rangeValue = null;
-    switch (dataType) {
-      case "positiveInteger":
-        rangeValue = "" + generator.generateIntDataValue(res);
-        break;
-      case "anyURI":
-        break;
-      case "string":
-        rangeValue = "hello my love!";
-        break;
-      default:
-        if (dataType.contains(";")) {
-          String[] possibleValues = dataType.split(";");
-          rangeValue = possibleValues[ThreadLocalRandom.current().nextInt(0, possibleValues.length)];
-        }
-        break;
-    }
-
-    return rangeValue;
   }
 }

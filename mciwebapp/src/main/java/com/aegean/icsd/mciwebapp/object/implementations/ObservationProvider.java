@@ -43,20 +43,13 @@ public class ObservationProvider implements IObservationProvider {
       throw Exceptions.UnableToRetrieveRules(ObservationObj.NAME, e);
     }
 
-    List<String> imageIds = imageProvider.getImagesIds(imageRes.getCardinality());
-
+    String imageId = imageProvider.getImageId();
+    obs.setImageId(imageId);
     try {
       generator.upsertObj(obs);
+      generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), imageId);
     } catch (EngineException e) {
       throw Exceptions.GenerationError(e);
-    }
-
-    for (String imgId : imageIds) {
-      try {
-        generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), imgId);
-      } catch (EngineException e) {
-        throw Exceptions.GenerationError(e);
-      }
     }
 
     return obs.getId();

@@ -2,8 +2,9 @@ package com.aegean.icsd.ontology.queries;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,11 +14,11 @@ import com.aegean.icsd.ontology.queries.beans.Triplet;
 
 public class SelectQuery {
   private String command;
-  private Map<String, String> prefixes = new HashMap<>();
-  private Map<String, List<Triplet>> conditions = new HashMap<>();
-  private Map<String, String> iriParams = new HashMap<>();
-  private Map<String, String> literalParams = new HashMap<>();
-  private List<String> selectParams = new ArrayList<>();
+  private Map<String, String> prefixes = new LinkedHashMap<>();
+  private Map<String, List<Triplet>> conditions = new LinkedHashMap<>();
+  private Map<String, String> iriParams = new LinkedHashMap<>();
+  private Map<String, String> literalParams = new LinkedHashMap<>();
+  private List<String> selectParams = new LinkedList<>();
 
   private SelectQuery() { }
 
@@ -47,15 +48,16 @@ public class SelectQuery {
 
 
   public static class Builder {
-    private List<String> params = new ArrayList<>();
-    private Map<String, List<Triplet>> conditions = new HashMap<>();
-    private Map<String, String> prefixes = new HashMap<>();
-    private List<String> filters = new ArrayList<>();
-    private Map<String, String> iriParams = new HashMap<>();
-    private Map<String, String> literalParams = new HashMap<>();
+    private List<String> params = new LinkedList<>();
+    private Map<String, List<Triplet>> conditions = new LinkedHashMap<>();
+    private Map<String, String> prefixes = new LinkedHashMap<>();
+    private List<String> filters = new LinkedList<>();
+    private Map<String, String> iriParams = new LinkedHashMap<>();
+    private Map<String, String> literalParams = new LinkedHashMap<>();
     private boolean isAscOrdered = false;
     private String orderFiled = null;
     private int limit = -1;
+    private boolean distinct = false;
 
     public enum Operator {
       GT, LT, EQ
@@ -78,6 +80,11 @@ public class SelectQuery {
 
     public Builder select(String... paramNames) {
       params.addAll(Arrays.asList(paramNames));
+      return this;
+    }
+
+    public Builder setDistinct(boolean distinct) {
+      this.distinct = distinct;
       return this;
     }
 
@@ -162,6 +169,9 @@ public class SelectQuery {
 
     void buildSelectParams(StringBuilder builder) {
       builder.append("SELECT").append(" ");
+      if (distinct) {
+        builder.append("DISTINCT").append(" ");
+      }
       for (String param : params) {
         if (StringUtils.isEmpty(param)) {
           continue;
@@ -176,7 +186,7 @@ public class SelectQuery {
 
       for (Map.Entry<String, List<Triplet>> entry : conditions.entrySet()) {
         String whereClause = buildWhereClause(entry);
-        builder.append(whereClause).append("\n");
+        builder.append(whereClause).append("\n\t");
       }
 
       for(String filter : filters) {
@@ -207,16 +217,13 @@ public class SelectQuery {
     String buildWhereClause(Map.Entry<String, List<Triplet>> entry) {
       StringBuilder builder = new StringBuilder();
       builder.append(removeParamChars(entry.getKey())).append(" ");
-//      builder.append(entry.getKey()).append(" ");
       Iterator<Triplet> it = entry.getValue().iterator();
       while (it.hasNext()) {
         Triplet triplet = it.next();
         builder.append(removeParamChars(triplet.getPredicate())).append(" ")
-//        builder.append(triplet.getPredicate()).append(" ")
           .append(removeParamChars(triplet.getObject()));
-//          .append(triplet.getObject());
         if(it.hasNext()) {
-          builder.append(";").append("\n").append("\t");
+          builder.append(";").append("\n\t\t");
         }
       }
       builder.append(" ").append(".");

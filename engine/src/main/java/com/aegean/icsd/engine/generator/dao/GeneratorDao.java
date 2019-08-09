@@ -14,36 +14,8 @@ import com.aegean.icsd.ontology.queries.beans.InsertParam;
 @Repository
 public class GeneratorDao implements IGeneratorDao {
 
-  static final String HAS_PLAYER = "hasPlayer";
-  static final String HAS_LEVEL = "hasLevel";
-  static final String HAS_GAME_ID = "hasGameId";
-
   @Autowired
   private IOntology ontology;
-
-  @Override
-  public boolean generateBasicGame(GameInfo info) throws EngineException {
-    String prefixedFullGameName = ontology.getPrefixedEntity(Utils.getFullGameName(info.getGameName(), info.getDifficulty()));
-
-    InsertQuery ins = new InsertQuery.Builder()
-      .insertEntry(ontology.getPrefixedEntity(info.getId()), prefixedFullGameName)
-      .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(HAS_PLAYER)),
-        InsertParam.createValue(info.getPlayerName(), info.getPlayerName().getClass()))
-      .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(HAS_GAME_ID)),
-        InsertParam.createValue(info.getId(), info.getId().getClass()))
-      .build();
-
-    try {
-      return ontology.insert(ins);
-    } catch (OntologyException e) {
-      throw DaoExceptions.InsertQuery("Game: " + prefixedFullGameName, e);
-    }
-  }
-
-  @Override
-  public boolean createStringValueRelation(String id, String name, String rangeValue) throws EngineException {
-    return createRelation(id, name, rangeValue,false, String.class);
-  }
 
   @Override
   public boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)

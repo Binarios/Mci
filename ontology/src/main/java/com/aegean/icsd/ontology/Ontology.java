@@ -134,7 +134,7 @@ public class Ontology implements IOntology {
         if (String.class.equals(param.getValueClass())) {
           sparql.setLiteral(param.getName(), param.getValue().toString());
         } else if (Long.class.equals(param.getValueClass())) {
-          sparql.setLiteral(param.getName(), (Long)param.getValue());
+          sparql.setLiteral(param.getName(), Long.parseLong(param.getValue().toString()));
         } else if (Boolean.class.equals(param.getValueClass())) {
           sparql.setLiteral(param.getName(), (Boolean) param.getValue());
         }

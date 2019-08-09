@@ -1,8 +1,11 @@
 package com.aegean.icsd.mciwebapp;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -54,20 +57,28 @@ public class WebAppConfig implements WebMvcConfigurer {
   @Bean
   public WordConfiguration getWordConfiguration() {
     WordConfiguration config = new WordConfiguration();
-    config.setLocation(env.getProperty("loc"));
-    config.setDelimiter(env.getProperty("delimiter"));
-    int valueIndex = 1;
-    if (env.getProperty("valueIndex") != null) {
-      valueIndex = Integer.parseInt(env.getProperty("valueIndex"));
-    }
-    config.setValueIndex(valueIndex);
+    config.setLocation(getPropertyValue("loc"));
+    config.setDelimiter(getPropertyValue("delimiter"));
+    config.setValueIndex(Integer.parseInt(getPropertyValue("valueIndex")));
     return config;
   }
 
   @Bean
   public ImageConfiguration getImageConfiguration() {
     ImageConfiguration config = new ImageConfiguration();
-    config.setLocation(env.getProperty("loc"));
+    config.setLocation(getPropertyValue("loc"));
+    config.setDelimiter(getPropertyValue("delimiter"));
+    config.setUrlIndex(Integer.parseInt(getPropertyValue("index.url")));
+    config.setTitleIndex(Integer.parseInt(getPropertyValue("index.title")));
+    config.setSubjectIndex(Integer.parseInt(getPropertyValue("index.subject")));
     return config;
+  }
+
+  private String getPropertyValue (String propertyName) {
+    String value = env.getProperty(propertyName);
+    if (StringUtils.isEmpty(value)) {
+      throw new IllegalArgumentException(String.format("Property %s not found in configuration", propertyName));
+    }
+    return value;
   }
 }

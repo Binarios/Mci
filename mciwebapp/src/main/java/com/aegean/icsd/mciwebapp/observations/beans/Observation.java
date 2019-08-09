@@ -1,5 +1,7 @@
 package com.aegean.icsd.mciwebapp.observations.beans;
 
+import java.util.List;
+
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
@@ -36,6 +38,8 @@ public class Observation {
 
   @DataProperty("hasTotalImages")
   private int totalImages;
+
+  private List<String> words;
 
   public String getId() {
     return id;
@@ -99,5 +103,13 @@ public class Observation {
 
   public void setTotalImages(int totalImages) {
     this.totalImages = totalImages;
+  }
+
+  public List<String> getWords() {
+    return words;
+  }
+
+  public void setWords(List<String> words) {
+    this.words = words;
   }
 }

@@ -80,16 +80,6 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public boolean createValueRelation(String id, EntityProperty onProperty, String rangeValue) throws EngineException {
-    try {
-      boolean success = dao.createStringValueRelation(id, onProperty.getName(), rangeValue);
-      return success;
-    } catch (EngineException e) {
-      throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);
-    }
-  }
-
-  @Override
   public boolean createObjRelation(String id, EntityProperty onProperty, String objId) throws EngineException {
     try {
       boolean success = dao.createObjRelation(id, onProperty.getName(), objId);
@@ -136,25 +126,6 @@ public class Generator implements IGenerator {
     }
 
     return rangeValue;
-  }
-
-  @Override
-  public List<EntityRestriction> calculateExactCardinality(List<EntityRestriction> restrictions) {
-    List<EntityRestriction> simplifiedRestrictionList = new ArrayList<>();
-    Map<String, List<EntityRestriction>> groupedRestrictions = restrictions.stream()
-      .collect(Collectors.groupingBy(x -> x.getOnProperty().getName() + ":" + x.getOnProperty().getRange()));
-
-    for (Map.Entry<String, List<EntityRestriction>> grp : groupedRestrictions.entrySet()) {
-      int cardinality = calculateMinMaxCardinality(grp.getValue());
-      EntityRestriction er = grp.getValue().get(0);
-      if (cardinality > 0) {
-        er.setCardinality(cardinality);
-        er.setType(RestrictionType.EXACTLY);
-      }
-      simplifiedRestrictionList.add(er);
-    }
-
-    return simplifiedRestrictionList;
   }
 
   int calculateCardinality(List<EntityRestriction> restrictions) {
