@@ -14,6 +14,7 @@ public class Word {
   private String id;
 
   @Key
+  @DataProperty("hasStringValue")
   private String value;
 
   public String getId() {

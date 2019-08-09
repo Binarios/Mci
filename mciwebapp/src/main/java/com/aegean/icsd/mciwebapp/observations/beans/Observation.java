@@ -34,6 +34,9 @@ public class Observation {
   @DataProperty("completedDate")
   private String completedDate;
 
+  @DataProperty("hasTotalImages")
+  private int totalImages;
+
   public String getId() {
     return id;
   }
@@ -90,4 +93,11 @@ public class Observation {
     this.completedDate = completedDate;
   }
 
+  public int getTotalImages() {
+    return totalImages;
+  }
+
+  public void setTotalImages(int totalImages) {
+    this.totalImages = totalImages;
+  }
 }

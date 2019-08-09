@@ -42,6 +42,7 @@ public class Rules implements IRules {
 
   @Override
   public EntityRestriction getEntityRestriction(String entityName, String restrictionName) throws RulesException {
+    //TODO: this doesn't work properly when there are MIN/MAX/ONLY combinations
     EntityRules rules = getEntityRules(entityName);
     return rules.getRestrictions().stream()
       .filter(x -> restrictionName.equals(x.getOnProperty().getName()))
