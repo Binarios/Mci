@@ -59,4 +59,4 @@ build/
 ### VS Code ###
 .vscode/
 
-/*.csv
+./objects

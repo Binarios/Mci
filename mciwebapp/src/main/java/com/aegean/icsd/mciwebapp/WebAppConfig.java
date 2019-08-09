@@ -1,6 +1,5 @@
 package com.aegean.icsd.mciwebapp;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,7 +17,8 @@ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerCo
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.aegean.icsd.mciwebapp.object.WordConfiguration;
+import com.aegean.icsd.mciwebapp.object.configurations.ImageConfiguration;
+import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.internal.bind.DateTypeAdapter;
@@ -26,9 +26,10 @@ import com.google.gson.internal.bind.DateTypeAdapter;
 @Configuration
 @EnableWebMvc
 @ComponentScan({"com.aegean.icsd.engine", "com.aegean.icsd.mciwebapp"})
-@PropertySources(
-  @PropertySource("classpath:com/aegean/icsd/mciwebapp/providers/word.properties")
-)
+@PropertySources({
+  @PropertySource("classpath:com/aegean/icsd/mciwebapp/providers/words.properties"),
+  @PropertySource("classpath:com/aegean/icsd/mciwebapp/providers/images.properties")
+})
 public class WebAppConfig implements WebMvcConfigurer {
 
   @Autowired
@@ -60,6 +61,13 @@ public class WebAppConfig implements WebMvcConfigurer {
       valueIndex = Integer.parseInt(env.getProperty("valueIndex"));
     }
     config.setValueIndex(valueIndex);
+    return config;
+  }
+
+  @Bean
+  public ImageConfiguration getImageConfiguration() {
+    ImageConfiguration config = new ImageConfiguration();
+    config.setLocation(env.getProperty("loc"));
     return config;
   }
 }
