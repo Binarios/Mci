@@ -25,12 +25,12 @@ class Exceptions {
     return new EngineException(CODE_NAME + "." + 5, String.format("Could not create an object of type: %s", type));
   }
 
-  static EngineException UnableToReadAnnotation(String annotation) {
-    return new EngineException(CODE_NAME + "." + 6, String.format("Annotation <%s> was not found in the provided bean.", annotation));
+  static EngineException UnableToRetrieveDataProperties(Throwable t) {
+    return new EngineException(CODE_NAME + "." + 6, "Could not retrieve the data properties", t);
   }
 
   static EngineException MissingMandatoryRelation(String type, String relationName) {
-    return new EngineException(CODE_NAME + "." + 5, String.format("Missing mandatory relation %s from object %s", relationName, type));
+    return new EngineException(CODE_NAME + "." + 7, String.format("Missing mandatory relation %s from object %s", relationName, type));
   }
 
 

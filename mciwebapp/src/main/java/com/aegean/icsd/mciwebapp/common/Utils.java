@@ -28,10 +28,9 @@ public class Utils {
     long totalNb = streamSupplier.get().count();
     long lineNumber = ThreadLocalRandom.current().nextLong(0, totalNb);
     String line = streamSupplier.get().skip(lineNumber).findFirst().orElse(null);
-    String result = null;
-    if (line != null) {
-      result = line.replace("\\r", "").trim();
+    if (line == null) {
+      throw new IOException("Could not read the line");
     }
-    return result;
+    return line.replace("\\r", "").trim();
   }
 }

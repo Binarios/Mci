@@ -38,16 +38,11 @@ public class WordProvider implements IWordProvider {
     if (number < 0) {
       number = 0;
     }
-    List<Word> words = readWords(number);
-    for (Word word : words) {
-      try {
-        generator.upsertObj(word);
-        objIds.add(word.getId());
-      } catch (EngineException e) {
-        throw  Exceptions.GenerationError(e);
-      }
+    List<String> words = readWords(number);
+    for (String word : words) {
+      String id = getWordFromValue(word);
+      objIds.add(id);
     }
-
     return objIds;
   }
 
@@ -55,36 +50,37 @@ public class WordProvider implements IWordProvider {
   public String getWordFromValue(String value) throws ProviderException {
     Word word = toWord(value);
     try {
-      generator.upsertObj(word);
+      String id = generator.selectObjectId(word);
+      if (id == null) {
+        generator.upsertObj(word);
+      } else {
+        word.setId(id);
+      }
+      return word.getId();
     } catch (EngineException e) {
       throw Exceptions.GenerationError(e);
     }
-    return word.getId();
   }
 
 
 
-  List<Word> readWords(int number) throws ProviderException {
-    List<Word> words = new ArrayList<>();
+  List<String> readWords(int number) throws ProviderException {
+    List<String> words = new ArrayList<>();
     if (number > 0) {
       for (int i = 0; i < number; i++) {
-        String line = null;
+        String line;
         try {
           line = utils.getFileLine(config.getLocation());
         } catch (IOException e) {
           throw Exceptions.UnableToReadFile(config.getLocation(), e);
         }
 
-        if (line != null) {
-          String[] fragments = line.split(config.getDelimiter());
-          String wordRaw = fragments[config.getValueIndex()];
-          Word word = words.stream().filter(x -> wordRaw.equals(x.getValue())).findFirst().orElse(null);
-          if (word != null) {
-            i--;
-          } else {
-            word = toWord(wordRaw);
-            words.add(word);
-          }
+        String[] fragments = line.split(config.getDelimiter());
+        String wordRaw = fragments[config.getValueIndex()];
+        if (words.contains(wordRaw)) {
+          i--;
+        } else {
+          words.add(wordRaw);
         }
       }
     }

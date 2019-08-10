@@ -20,13 +20,4 @@ class Exceptions {
       "There was a problem retrieving the game rules", t);
   }
 
-  static ObservationsException GenerationError(String msg) {
-    return new ObservationsException(CODE_NAME + "." + 4, String.format("There was a problem during the " +
-      "generation of the game: %s", msg));
-  }
-  static ObservationsException CannotCalculateCardinality(String entity) {
-    return new ObservationsException(CODE_NAME + "." + 5,
-      String.format( "Unable to calculate the cardinality of the entity: %s", entity));
-  }
-
 }

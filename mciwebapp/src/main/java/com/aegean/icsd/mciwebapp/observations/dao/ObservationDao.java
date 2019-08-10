@@ -32,38 +32,84 @@ public class ObservationDao implements IObservationDao {
   private IGenerator generator;
 
   @Override
-  public String getLastCompletedLevel(Difficulty difficulty, String playerName) {
-    GameInfo individualInfo = generator.getLastGeneratedIndividual(gameName, difficulty, playerName);
-    String lastLevel = "0";
-    if (individualInfo != null) {
-      lastLevel = individualInfo.getLevel();
+  public int getLastCompletedLevel(Difficulty difficulty, String playerName) throws ObservationsException {
+    SelectQuery query = new SelectQuery.Builder()
+      .select("level")
+      .whereHasType("obs", ont.getPrefixedEntity(gameName))
+      .where("obs", "hasDifficulty", "difficulty")
+      .where("obs", "hasPlayer", "playerName")
+      .where("obs", "hasLevel", "level")
+      .orderByDesc("level")
+      .limit(1)
+      .addIriParam("hasDifficulty", ont.getPrefixedEntity("hasDifficulty"))
+      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasLevel", ont.getPrefixedEntity("hasLevel"))
+      .addLiteralParam("difficulty", difficulty.name())
+      .addLiteralParam("playerName", playerName)
+      .build();
+
+    try {
+      int level = 0;
+      JsonArray results = ont.select(query);
+      if (results.size() > 0) {
+        level = results.get(0).getAsJsonObject().get("level").getAsInt();
+      }
+      return level;
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToRetrieveLastLevel(gameName, difficulty, playerName, e);
     }
-    return lastLevel;
   }
 
   @Override
-  public String getAssociatedSubject(String observationObjId) throws ObservationsException {
+  public List<String> getAssociatedSubjects(String id) throws ObservationsException {
 
     SelectQuery query = new SelectQuery.Builder()
       .select("word")
       .setDistinct(true)
-      .where("obsObj", "hasId", "id")
+      .where("obs", "hasId", "id")
+      .where("obs", "hasObservation", "obsObj")
       .where("obsObj", "hasImage", "image")
       .where("image", "hasImageSubject", "subject")
       .where("subject", "hasStringValue", "word")
       .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasObservation", ont.getPrefixedEntity("hasObservation"))
       .addIriParam("hasImageSubject", ont.getPrefixedEntity("hasImageSubject"))
       .addIriParam("hasStringValue", ont.getPrefixedEntity("hasStringValue"))
-      .addLiteralParam("id", observationObjId)
+      .addLiteralParam("id", id)
       .build();
 
     try {
       JsonArray results = ont.select(query);
-      String word = results.get(0).getAsJsonObject().get("word").getAsString();
-      return word;
+      List<String> words = new ArrayList<>();
+      for (JsonElement elem : results) {
+        if (!elem.isJsonNull()) {
+          words.add(elem.getAsJsonObject().get("word").getAsString());
+        }
+      }
+      return words;
     } catch (OntologyException e) {
-      throw Exceptions.FailedToRetrieveWords(observationObjId ,e);
+      throw Exceptions.FailedToRetrieveWords(id ,e);
     }
   }
 
+  @Override
+  public String getImagePath(String id) throws ObservationsException {
+    SelectQuery query = new SelectQuery.Builder()
+      .select("path")
+      .where("obsObj", "hasId", "id")
+      .where("obsObj", "hasImage", "image")
+      .where("image", "hasAssetPath", "path")
+      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
+      .addIriParam("hasAssetPath", ont.getPrefixedEntity("hasAssetPath"))
+      .addLiteralParam("id", id)
+      .build();
+
+    try {
+      JsonArray results = ont.select(query);
+      return  results.get(0).getAsJsonObject().get("path").getAsString();
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToRetrievePaths(id ,e);
+    }
+  }
 }

@@ -1,5 +1,9 @@
 package com.aegean.icsd.engine.generator.dao;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -9,7 +13,10 @@ import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.InsertQuery;
+import com.aegean.icsd.ontology.queries.SelectQuery;
 import com.aegean.icsd.ontology.queries.beans.InsertParam;
+
+import com.google.gson.JsonArray;
 
 @Repository
 public class GeneratorDao implements IGeneratorDao {
@@ -38,6 +45,51 @@ public class GeneratorDao implements IGeneratorDao {
       return ontology.insert(ins);
     } catch (OntologyException e) {
       throw DaoExceptions.InsertQuery("Object: " + id, e);
+    }
+  }
+
+  @Override
+  public String selectObjectId(Map<String, Object> propValues) throws EngineException {
+    SelectQuery.Builder builder = new SelectQuery.Builder().select("id");
+
+    for (Map.Entry<String, Object> propValue : propValues.entrySet()) {
+      String property = propValue.getKey();
+      Object value = propValue.getValue();
+      if (value == null) {
+        continue;
+      }
+
+      if (List.class.isAssignableFrom(value.getClass())) {
+        List valueList = (List) value;
+        for (Object val : valueList) {
+          String propVar = UUID.randomUUID().toString().replace("-", "");
+          String valueVar = UUID.randomUUID().toString().replace("-", "");
+          builder.where("sub", propVar, valueVar);
+          builder.addIriParam(propVar, ontology.getPrefixedEntity(property));
+          builder.addLiteralParam(valueVar, val.toString());
+        }
+      } else {
+        String propVar = UUID.randomUUID().toString().replace("-", "");
+        String valueVar = UUID.randomUUID().toString().replace("-", "");
+        builder.where("sub", propVar, valueVar);
+        builder.addIriParam(propVar, ontology.getPrefixedEntity(property));
+        builder.addLiteralParam(valueVar, value.toString());
+      }
+      builder.where("sub", "hasId", "id");
+      builder.addIriParam("hasId", ontology.getPrefixedEntity("hasId"));
+    }
+
+    SelectQuery q = builder.build();
+
+    try {
+      String id = null;
+      JsonArray result = ontology.select(q);
+      if (result.size() != 0) {
+        id = result.get(0).getAsJsonObject().get("id").getAsString();
+      }
+      return id;
+    } catch (OntologyException e) {
+      throw DaoExceptions.InsertQuery("No extra msg", e);
     }
   }
 

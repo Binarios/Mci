@@ -54,13 +54,14 @@ public class SelectQuery {
     private List<String> filters = new LinkedList<>();
     private Map<String, String> iriParams = new LinkedHashMap<>();
     private Map<String, String> literalParams = new LinkedHashMap<>();
+    private List<SelectQuery> subQueries = new LinkedList<>();
     private boolean isAscOrdered = false;
     private String orderFiled = null;
     private int limit = -1;
     private boolean distinct = false;
 
     public enum Operator {
-      GT, LT, EQ
+      GT, LT, EQ, CONTAINS, NOT_CONTAINS
     }
 
     public Builder addPrefix (String prefix, String Uri) {
@@ -100,6 +101,25 @@ public class SelectQuery {
       return this;
     }
 
+    public Builder where(SelectQuery subquery) {
+      subQueries.add(subquery);
+      return this;
+    }
+
+    public Builder whereHasType(String subject, String type) {
+      Triplet t = new Triplet(subject, "rdfType", "class");
+      if (conditions.containsKey(subject)) {
+        conditions.get(subject).add(t);
+      } else {
+        List<Triplet> entries = new ArrayList<>();
+        entries.add(t);
+        conditions.put(subject, entries);
+      }
+      addIriParam("rdfType", "rdf:type");
+      addIriParam("class", type);
+      return this;
+    }
+
     public Builder regexFilter(String value, String pattern) {
       this.regexFilter(value, pattern, null);
       return this;
@@ -116,17 +136,24 @@ public class SelectQuery {
     }
 
     public Builder filter(String var, Operator operator, String value) {
-
-      String filter = "FILTER (" + var;
+      String filter = null;
+      String escapedVar = removeParamChars(var);
+      String escapedVal = removeParamChars(value);
       switch (operator) {
         case EQ:
-          filter += " = " + value + ")";
+          filter = "FILTER (" + escapedVar +"=" + escapedVal + ")";
           break;
         case GT:
-          filter += " > " + value + ")";
+          filter = "FILTER (" + escapedVar +">" + escapedVal + ")";
           break;
         case LT:
-          filter += " < " + value + ")";
+          filter = "FILTER (" + escapedVar +"<" + escapedVal + ")";
+          break;
+        case CONTAINS:
+          filter = "FILTER (CONTAINS(" + escapedVar +", " + escapedVal + "))";
+          break;
+        case NOT_CONTAINS:
+          filter = "FILTER (!CONTAINS(" + escapedVar +", " + escapedVal + "))";
           break;
         default:
           break;
@@ -187,6 +214,10 @@ public class SelectQuery {
       for (Map.Entry<String, List<Triplet>> entry : conditions.entrySet()) {
         String whereClause = buildWhereClause(entry);
         builder.append(whereClause).append("\n\t");
+      }
+
+      for (SelectQuery subQ : subQueries) {
+        builder.append("{\n\t").append(subQ.command).append("\n\t}").append("\n\t");
       }
 
       for(String filter : filters) {

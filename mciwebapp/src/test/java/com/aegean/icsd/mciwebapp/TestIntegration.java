@@ -52,12 +52,13 @@ public class TestIntegration {
   public void testObsIns() throws ObservationsException {
     String playerName = "TestUser";
 
-    Observation obs = observationImpl.createObservation(playerName, Difficulty.EASY);
+    Observation obs = observationImpl.createObservation(playerName, Difficulty.HARD);
 
     Assertions.assertNotNull(obs);
     Assertions.assertEquals(playerName, obs.getPlayerName());
-    Assertions.assertEquals(Difficulty.EASY, obs.getDifficulty());
+    Assertions.assertEquals(Difficulty.HARD, obs.getDifficulty());
     Assertions.assertEquals(180000, obs.getMaxCompletionTime());
-    Assertions.assertEquals(3, obs.getWords().size());
+    Assertions.assertEquals(4, obs.getWords().size());
+    Assertions.assertEquals(4, obs.getImagePaths().size());
   }
 }

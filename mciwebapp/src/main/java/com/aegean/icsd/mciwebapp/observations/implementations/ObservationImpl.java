@@ -47,12 +47,10 @@ public class ObservationImpl implements IObservationSvc {
 
   @Override
   public Observation createObservation(String playerName, Difficulty difficulty) throws ObservationsException {
-
     if (difficulty == null
       || StringUtils.isEmpty(playerName)) {
       throw Exceptions.InvalidRequest();
     }
-
     EntityRules entityRules;
     try {
       entityRules = rules.getGameRules(gameName, difficulty);
@@ -60,8 +58,8 @@ public class ObservationImpl implements IObservationSvc {
       throw Exceptions.UnableToRetrieveGameRules(e);
     }
 
-    String lastCompletedLevel = dao.getLastCompletedLevel(difficulty, playerName);
-    String newLevel = "" + Integer.parseInt(lastCompletedLevel) + 1;
+    int lastCompletedLevel = dao.getLastCompletedLevel(difficulty, playerName);
+    int newLevel = lastCompletedLevel + 1;
 
     EntityRestriction maxCompleteTimeRes;
     try {
@@ -92,7 +90,7 @@ public class ObservationImpl implements IObservationSvc {
     toCreate.setTotalImages(generator.generateIntDataValue(totalImages.getDataRange()));
 
     List<String> obsIds = new ArrayList<>();
-    List<String> chosenWords = new ArrayList<>();
+    List<String> imagePaths = new ArrayList<>();
 
     int remaining = toCreate.getTotalImages();
     for (int i = 0; i < hasObservationRes.getCardinality(); i++) {
@@ -106,14 +104,16 @@ public class ObservationImpl implements IObservationSvc {
       }
       try {
         String id = observationProvider.getObservationId(nbOfOccurrences);
-        if (obsIds.contains(id)) {
+        //TODO search for imagePath on id. The select returns the imagePath. Then if the list imagePaths contains the returned value,
+        // do i--
+        String path = dao.getImagePath(id);
+        if (obsIds.contains(id) || imagePaths.contains(path)) {
           i--;
         } else {
           obsIds.add(id);
-          String word = dao.getAssociatedSubject(id);
-          chosenWords.add(word);
-          remaining -= nbOfOccurrences;
+          imagePaths.add(path);
         }
+        remaining -= nbOfOccurrences;
       } catch (ProviderException e) {
         throw  Exceptions.GenerationError(e);
       }
@@ -128,6 +128,8 @@ public class ObservationImpl implements IObservationSvc {
       throw  Exceptions.GenerationError(e);
     }
 
+    List<String> chosenWords = dao.getAssociatedSubjects(toCreate.getId());
+    toCreate.setImagePaths(imagePaths);
     toCreate.setWords(chosenWords);
     return toCreate;
   }

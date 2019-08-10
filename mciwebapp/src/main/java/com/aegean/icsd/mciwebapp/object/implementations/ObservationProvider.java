@@ -1,7 +1,5 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +12,7 @@ import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
+import com.aegean.icsd.ontology.queries.SelectQuery;
 
 @Service
 public class ObservationProvider implements IObservationProvider {
@@ -29,7 +28,6 @@ public class ObservationProvider implements IObservationProvider {
 
   @Override
   public String getObservationId(int totalImageNumber) throws ProviderException {
-
     if (totalImageNumber < 0) {
       totalImageNumber = 0;
     }
@@ -42,9 +40,7 @@ public class ObservationProvider implements IObservationProvider {
     } catch (RulesException e) {
       throw Exceptions.UnableToRetrieveRules(ObservationObj.NAME, e);
     }
-
     String imageId = imageProvider.getImageId();
-    obs.setImageId(imageId);
     try {
       generator.upsertObj(obs);
       generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), imageId);

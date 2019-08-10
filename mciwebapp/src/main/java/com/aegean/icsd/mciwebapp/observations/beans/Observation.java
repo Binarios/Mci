@@ -24,20 +24,23 @@ public class Observation {
   @DataProperty("hasPlayer")
   private String playerName;
 
+  @Key
+  @DataProperty("hasLevel")
+  private int level;
+
   @DataProperty("maxCompletionTime")
   private Long maxCompletionTime;
 
   @DataProperty("isCompletedIn")
   private String completionTime;
 
-  @DataProperty("hasLevel")
-  private String level;
-
   @DataProperty("completedDate")
   private String completedDate;
 
   @DataProperty("hasTotalImages")
   private int totalImages;
+
+  private List<String> imagePaths;
 
   private List<String> words;
 
@@ -81,11 +84,11 @@ public class Observation {
     this.completionTime = completionTime;
   }
 
-  public String getLevel() {
+  public int getLevel() {
     return level;
   }
 
-  public void setLevel(String level) {
+  public void setLevel(int level) {
     this.level = level;
   }
 
@@ -111,5 +114,13 @@ public class Observation {
 
   public void setWords(List<String> words) {
     this.words = words;
+  }
+
+  public List<String> getImagePaths() {
+    return imagePaths;
+  }
+
+  public void setImagePaths(List<String> imagePaths) {
+    this.imagePaths = imagePaths;
   }
 }

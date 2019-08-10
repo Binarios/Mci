@@ -1,20 +1,15 @@
 package com.aegean.icsd.engine.generator.implementations;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.engine.common.Utils;
-import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
-import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
@@ -75,8 +70,15 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public GameInfo getLastGeneratedIndividual(String gameName, Difficulty difficulty, String playerName) {
-    return null;
+  public String selectObjectId(Object object) throws EngineException {
+    Map<String, Object> propValues;
+    try {
+      propValues = ano.getDataProperties(object);
+    } catch (EngineException e) {
+      throw  Exceptions.UnableToRetrieveDataProperties(e);
+    }
+    String id = dao.selectObjectId(propValues);
+    return id;
   }
 
   @Override
@@ -136,7 +138,6 @@ public class Generator implements IGenerator {
     }
     return cardinality;
   }
-
 
   int calculateMinMaxCardinality(List<EntityRestriction> restrictions) {
     int min = Integer.MAX_VALUE;

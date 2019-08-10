@@ -48,46 +48,45 @@ public class ImageProvider implements IImageProvider {
   public String getImageId() throws ProviderException {
     Image img = new Image();
 
-    String line = null;
+    String line;
     try {
       line = utils.getFileLine(config.getLocation());
     } catch (IOException e) {
       throw Exceptions.UnableToReadFile(config.getLocation(), e);
     }
 
-    if (line != null) {
-      String[] fragments = line.split(config.getDelimiter());
-      String url = fragments[config.getUrlIndex()];
-      img.setPath(url);
-      img.setImageName(extractNameFromUrl(url));
+    String[] fragments = line.split(config.getDelimiter());
+    String url = fragments[config.getUrlIndex()];
+    img.setPath(url);
 
-      EntityRestriction imageSubjRes;
-      EntityRestriction imageTitleRes;
-      try {
-        imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasImageSubject");
-        imageTitleRes = rules.getEntityRestriction(Image.NAME, "hasImageTitle");
-      } catch (RulesException e) {
-        throw Exceptions.GenerationError(e);
-      }
-
-      String title = fragments[config.getTitleIndex()];
-      String subject = fragments[config.getSubjectIndex()];
-
-      try {
-        generator.upsertObj(img);
-
-        String titleId = wordProvider.getWordFromValue(title);
-        String subjectId = wordProvider.getWordFromValue(subject);
-
-        generator.createObjRelation(img.getId(), imageTitleRes.getOnProperty(), titleId);
-        generator.createObjRelation(img.getId(), imageSubjRes.getOnProperty(), subjectId);
-      } catch (EngineException e) {
-        throw Exceptions.GenerationError(e);
-      }
-
+    EntityRestriction imageSubjRes;
+    EntityRestriction imageTitleRes;
+    try {
+      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasImageSubject");
+      imageTitleRes = rules.getEntityRestriction(Image.NAME, "hasImageTitle");
+    } catch (RulesException e) {
+      throw Exceptions.GenerationError(e);
     }
 
-    return img.getId();
+    String title = fragments[config.getTitleIndex()];
+    String subject = fragments[config.getSubjectIndex()];
+
+    try {
+      String id = generator.selectObjectId(img);
+      if (id == null) {
+        generator.upsertObj(img);
+      } else {
+        img.setId(id);
+      }
+
+      String titleId = wordProvider.getWordFromValue(title);
+      String subjectId = wordProvider.getWordFromValue(subject);
+      generator.createObjRelation(img.getId(), imageTitleRes.getOnProperty(), titleId);
+      generator.createObjRelation(img.getId(), imageSubjRes.getOnProperty(), subjectId);
+      return img.getId();
+    } catch (EngineException e) {
+      throw Exceptions.GenerationError(e);
+    }
   }
 
   private String extractNameFromUrl(String url) {
