@@ -63,6 +63,7 @@ import com.aegean.icsd.ontology.beans.FusekiResponse;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
+import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.InsertQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 import com.aegean.icsd.ontology.queries.beans.InsertParam;
@@ -83,6 +84,54 @@ public class FusekiOntology implements IOntology {
 
   private OntModel model;
   private HttpClient client;
+
+  @Override
+  public boolean ask(AskQuery ask) throws OntologyException {
+    ParameterizedSparqlString sparql = getPrefixedSparql(new HashMap<>());
+    sparql.setCommandText(ask.getCommand());
+
+    for (Map.Entry<String, String> entry : ask.getIriParams().entrySet()) {
+      sparql.setIri(entry.getKey(), entry.getValue());
+    }
+
+    for (Map.Entry<String, String> entry : ask.getStrLiteralParams().entrySet()) {
+      sparql.setLiteral(entry.getKey(), entry.getValue());
+    }
+
+    for (Map.Entry<String, Integer> entry : ask.getIntLiteralParams().entrySet()) {
+      sparql.setLiteral(entry.getKey(), entry.getValue());
+    }
+
+    String query;
+    try {
+      query = sparql.asQuery().toString();
+    } catch (QueryException ex) {
+      throw new OntologyException("ASK.1", "Error when constructing the query", ex);
+    }
+
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(ontologyProps.getDatasetLocation() + "/query"))
+      .timeout(Duration.ofMinutes(5))
+      .header("Content-Type", "application/x-www-form-urlencoded")
+      .header("Accept", "application/sparql-results+json,*/*;q=0.9")
+      .POST(HttpRequest.BodyPublishers.ofString("query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
+      .build();
+
+    try {
+
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      if (response.statusCode() >= 400) {
+        throw new OntologyException("SEL.400", "Error when executing the query");
+      }
+      String body = response.body();
+      FusekiResponse res = new Gson().fromJson(body, FusekiResponse.class);
+      return res.getAskResponse();
+    } catch (IOException | InterruptedException e) {
+      throw new OntologyException("ASK.999", "Error when executing the query", e);
+    }
+  }
+
+
 
   @Override
   public JsonArray select(SelectQuery selectQuery) throws OntologyException {

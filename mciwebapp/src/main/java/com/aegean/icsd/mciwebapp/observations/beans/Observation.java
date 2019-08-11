@@ -30,7 +30,7 @@ public class Observation {
   private Long maxCompletionTime;
 
   @DataProperty("isCompletedIn")
-  private String completionTime;
+  private Long completionTime;
 
   @DataProperty("completedDate")
   private String completedDate;
@@ -70,11 +70,11 @@ public class Observation {
     this.maxCompletionTime = maxCompletionTime;
   }
 
-  public String getCompletionTime() {
+  public Long getCompletionTime() {
     return completionTime;
   }
 
-  public void setCompletionTime(String completionTime) {
+  public void setCompletionTime(Long completionTime) {
     this.completionTime = completionTime;
   }
 

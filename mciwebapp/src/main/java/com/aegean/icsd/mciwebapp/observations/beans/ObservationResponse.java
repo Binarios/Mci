@@ -4,8 +4,11 @@ import java.util.List;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 
+import openllet.core.utils.Bool;
+
 public class ObservationResponse {
   private Observation observation;
+  private Boolean solved;
   private List<ObservationItem> items;
   private List<String> words;
 
@@ -31,5 +34,13 @@ public class ObservationResponse {
 
   public void setObservation(Observation observation) {
     this.observation = observation;
+  }
+
+  public Boolean getSolved() {
+    return solved;
+  }
+
+  public void setSolved(Boolean solved) {
+    this.solved = solved;
   }
 }

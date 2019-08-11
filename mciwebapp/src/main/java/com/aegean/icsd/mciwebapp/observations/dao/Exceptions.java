@@ -36,4 +36,10 @@ class Exceptions {
   public static MciException FailedToRetrieveObservationItems(String id, Throwable e) {
     return new MciException(CODE_NAME + "." + 6, String.format("Could not retrieve the items of game with id %s ", id), e);
   }
+
+  public static MciException FailedToAskTheSolution(String id, String player, String word, Integer occurrences, Throwable e) {
+    return new MciException(CODE_NAME + "." + 7,
+      String.format("Failed to ask the solution of the game with id %s for player %s. " +
+        "The asked word was %s with occurences %s ", id, player, word, occurrences), e);
+  }
 }

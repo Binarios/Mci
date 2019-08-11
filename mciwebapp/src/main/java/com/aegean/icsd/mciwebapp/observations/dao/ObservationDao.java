@@ -17,6 +17,7 @@ import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
@@ -244,6 +245,38 @@ public class ObservationDao implements IObservationDao {
       return items;
     } catch (OntologyException e) {
       throw Exceptions.FailedToRetrieveObservationItems(id, e);
+    }
+  }
+
+  @Override
+  public boolean solveGame(String id, String player, String word, Integer occurrences) throws MciException {
+
+    AskQuery ask = new AskQuery.Builder()
+      .is("s", "hasId", "id")
+      .is("s", "hasObservation", "obs")
+      .is("s", "hasPlayer", "player")
+      .is("obs", "hasImage", "img")
+      .is("obs", "hasTotalImages", "occurrences")
+      .is("img", "hasImageSubject", "sub")
+      .is("sub", "hasStringValue", "word")
+      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasObservation", ont.getPrefixedEntity("hasObservation"))
+      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
+      .addIriParam("hasImageSubject", ont.getPrefixedEntity("hasImageSubject"))
+      .addIriParam("hasTotalImages", ont.getPrefixedEntity("hasTotalImages"))
+      .addIriParam("hasStringValue", ont.getPrefixedEntity("hasStringValue"))
+      .addLiteralParam("occurrences", occurrences)
+      .addLiteralParam("word", word)
+      .addLiteralParam("id", id)
+      .addLiteralParam("player", player)
+      .build();
+
+    try {
+      boolean result = ont.ask(ask);
+      return result;
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToAskTheSolution(id, player, word, occurrences, e);
     }
   }
 }

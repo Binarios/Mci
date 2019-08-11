@@ -1,7 +1,9 @@
 package com.aegean.icsd.mciwebapp.observations.implementations;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.StringUtils;
@@ -77,6 +79,46 @@ public class ObservationImpl implements IObservationSvc {
     List<ObservationItem> images = dao.getObservationItems(id);
 
     return toResponse(obs, images, chosenWords);
+  }
+
+  @Override
+  public ObservationResponse solveGame(String id, String player, Long completionTime,
+                                       Map<String, Integer> solution) throws MciException {
+    if (StringUtils.isEmpty(id)
+      || StringUtils.isEmpty(player)
+      || completionTime == null
+      || solution.isEmpty()) {
+      throw Exceptions.InvalidRequest();
+    }
+
+    Observation obs = dao.getById(id, player);
+    if (obs == null) {
+      throw Exceptions.UnableToRetrieveGame(id, player);
+    }
+    if (completionTime > obs.getMaxCompletionTime()) {
+      throw Exceptions.SurpassedMaxCompletionTime(id, obs.getMaxCompletionTime());
+    }
+    if (!StringUtils.isEmpty(obs.getCompletedDate())) {
+      throw Exceptions.GameIsAlreadySolvedAt(id, obs.getCompletedDate());
+    }
+
+    boolean solved = true;
+
+    for (Map.Entry<String, Integer> subSolution : solution.entrySet()) {
+      solved &= dao.solveGame(id, player, subSolution.getKey(), subSolution.getValue());
+    }
+
+    if (solved) {
+      obs.setCompletedDate(String.valueOf(System.currentTimeMillis()));
+      obs.setCompletionTime(completionTime);
+      try {
+        generator.upsertObj(obs);
+      } catch (EngineException e) {
+        throw  Exceptions.GenerationError(e);
+      }
+    }
+
+    return toResponse(obs,null, null);
   }
 
 
@@ -176,6 +218,7 @@ public class ObservationImpl implements IObservationSvc {
 
   ObservationResponse toResponse(Observation obs, List<ObservationItem> images, List<String> words) {
     ObservationResponse resp = new ObservationResponse();
+    resp.setSolved(!StringUtils.isEmpty(obs.getCompletedDate()));
     resp.setObservation(obs);
     if (images != null) {
       resp.setItems(images);

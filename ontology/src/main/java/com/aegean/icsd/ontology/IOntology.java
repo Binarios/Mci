@@ -3,6 +3,7 @@ package com.aegean.icsd.ontology;
 
 import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.InsertQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
@@ -21,4 +22,6 @@ public interface IOntology {
   Class<?> getJavaClassFromOwlType (String owlType);
 
   String removePrefix(String prefixedEntity);
+
+  boolean ask(AskQuery ask) throws OntologyException;
 }

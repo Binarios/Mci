@@ -91,9 +91,13 @@ public class ObservationsController {
   }
 
   @PutMapping(value = "/{id}",
+          consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseStatus(HttpStatus.CREATED)
-  public Response<ObservationResponse> updateObservation(@PathVariable("id") UUID id, @RequestBody Observation observation) {
-    return new Response<>(new ObservationResponse());
+  @ResponseStatus(HttpStatus.OK)
+  public Response<ObservationResponse> updateObservation(@PathVariable("id") String id,
+                                                         @RequestBody ObservationRequest req,
+                                                         @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+    ObservationResponse response = observationImpl.solveGame(id, player, req.getCompletionTime(), req.getSolution());
+    return new Response<>(response);
   }
 }

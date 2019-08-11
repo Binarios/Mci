@@ -20,4 +20,6 @@ public interface IObservationDao {
   Observation getById(String id, String player) throws MciException;
 
   List<ObservationItem> getObservationItems(String id) throws MciException;
+
+  boolean solveGame(String id, String player, String key, Integer value) throws MciException;
 }

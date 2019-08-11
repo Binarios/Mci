@@ -52,6 +52,7 @@ import com.aegean.icsd.ontology.beans.DatasetProperties;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.beans.InsertParam;
 import com.aegean.icsd.ontology.queries.InsertQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
@@ -62,7 +63,7 @@ import openllet.jena.PelletReasonerFactory;
 
 //@Service
 @Deprecated(since = "Use FusekiOntology", forRemoval = true)
-public class Ontology implements IOntology {
+public class Ontology {
 
   private static Logger LOGGER = Logger.getLogger(Ontology.class);
 
@@ -72,7 +73,7 @@ public class Ontology implements IOntology {
   private OntModel model;
   private Dataset ds;
 
-  @Override
+//  @Override
   public JsonArray select(SelectQuery selectQuery) throws OntologyException {
     JsonArray array = new JsonArray();
 
@@ -124,7 +125,7 @@ public class Ontology implements IOntology {
     return array;
   }
 
-  @Override
+//  @Override
   public boolean insert(InsertQuery insertQuery) throws OntologyException {
     ParameterizedSparqlString sparql = getPrefixedSparql(insertQuery.getPrefixes());
     sparql.setCommandText(insertQuery.getCommand());
@@ -164,7 +165,7 @@ public class Ontology implements IOntology {
     return true;
   }
 
-  @Override
+//  @Override
   public ClassSchema getClassSchema(String className) throws OntologyException {
     LOGGER.info(String.format("Reading ontology schema for class %s", className));
     ClassSchema result = new ClassSchema();
@@ -181,12 +182,12 @@ public class Ontology implements IOntology {
     return result;
   }
 
-  @Override
+//  @Override
   public String getPrefixedEntity(String entityName) {
     return ontologyProps.getPrefix() + ":" + entityName;
   }
 
-  @Override
+//  @Override
   public Class<?> getJavaClassFromOwlType(String owlType) {
     Class<?> rangeClass = null;
     switch (owlType) {
@@ -209,10 +210,6 @@ public class Ontology implements IOntology {
     return rangeClass;
   }
 
-  @Override
-  public String removePrefix(String prefixedEntity) {
-    throw new NotImplementedException("");
-  }
 
   List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {
     List<PropertySchema> properties = new ArrayList<>();
