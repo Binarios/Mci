@@ -2,6 +2,8 @@ package com.aegean.icsd.engine.rules.beans;
 
 import java.util.List;
 
+import com.aegean.icsd.engine.common.beans.Difficulty;
+
 public class GameRules {
   /**
    * The game name
@@ -11,17 +13,17 @@ public class GameRules {
   /**
    * The difficulty
    */
-  private String difficulty;
+  private Difficulty difficulty;
 
   /**
    * List with all the restriction for the game
    */
-  private List<GameRestriction> gameRestrictions;
+  private List<EntityRestriction> restrictions;
 
   /**
    * List of all properties associated with the game
    */
-  private List<GameProperty> properties;
+  private List<EntityProperty> properties;
 
   public String getGameName() {
     return gameName;
@@ -31,27 +33,27 @@ public class GameRules {
     this.gameName = gameName;
   }
 
-  public String getDifficulty() {
+  public Difficulty getDifficulty() {
     return difficulty;
   }
 
-  public void setDifficulty(String difficulty) {
+  public void setDifficulty(Difficulty difficulty) {
     this.difficulty = difficulty;
   }
 
-  public List<GameRestriction> getGameRestrictions() {
-    return gameRestrictions;
+  public List<EntityRestriction> getRestrictions() {
+    return restrictions;
   }
 
-  public void setGameRestrictions(List<GameRestriction> gameRestrictions) {
-    this.gameRestrictions = gameRestrictions;
+  public void setRestrictions(List<EntityRestriction> restrictions) {
+    this.restrictions = restrictions;
   }
 
-  public List<GameProperty> getProperties() {
+  public List<EntityProperty> getProperties() {
     return properties;
   }
 
-  public void setProperties(List<GameProperty> properties) {
+  public void setProperties(List<EntityProperty> properties) {
     this.properties = properties;
   }
 }

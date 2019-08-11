@@ -16,6 +16,7 @@ import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.Assertions;
@@ -31,18 +32,18 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.aegean.icsd.ontology.beans.Cardinality;
-import com.aegean.icsd.ontology.beans.DataRangeRestrinction;
+import com.aegean.icsd.ontology.beans.CardinalitySchema;
+import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
-import com.aegean.icsd.ontology.beans.Individual;
-import com.aegean.icsd.ontology.beans.IndividualProperty;
-import com.aegean.icsd.ontology.beans.IndividualRestriction;
+import com.aegean.icsd.ontology.beans.ClassSchema;
+import com.aegean.icsd.ontology.beans.PropertySchema;
+import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-
 
 @ExtendWith(MockitoExtension.class)
 @Execution(ExecutionMode.CONCURRENT)
@@ -55,6 +56,30 @@ public class TestOntology {
   @Mock(lenient = true)
   private DatasetProperties ds;
 
+  @Mock
+  private OntProperty ontPropertyMock;
+
+  @Mock
+  private OntResource resourceMock;
+
+  @Mock
+  private OntClass ontClassMock;
+
+  @Mock
+  private Literal literalMock;
+
+  @Mock
+  private List listMock;
+
+  @Mock
+  private ListIterator itMock;
+
+  @Mock
+  private  Restriction resMock;
+
+  @Mock
+  private RDFNode nodeMock;
+
   @BeforeEach
   public void setup() {
     given(ds.getOntologyName()).willReturn("games");
@@ -62,73 +87,60 @@ public class TestOntology {
     given(ds.getOntologyLocation()).willReturn("../../MciOntology/games.owl");
     given(ds.getOntologyType()).willReturn("ttl");
     given(ds.getNamespace()).willReturn("http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#");
+    given(ds.getPrefix()).willReturn("mci");
   }
 
   @Test
   public void testGenerateObjectProperty() {
-    OntProperty objectPropertyMock = mock(OntProperty.class);
-    OntResource resourceMock = mock(OntResource.class);
-    OntClass ontClassMock = mock(OntClass.class);
-
     String objectPropertyMockName = "testPropName";
     String rangeMockName = "Sound";
 
-    given(objectPropertyMock.getLocalName()).willReturn(objectPropertyMockName);
-    given(objectPropertyMock.isObjectProperty()).willReturn(true);
-    given(objectPropertyMock.getRange()).willReturn(resourceMock);
+    given(ontPropertyMock.getLocalName()).willReturn(objectPropertyMockName);
+    given(ontPropertyMock.isObjectProperty()).willReturn(true);
+    given(ontPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
     given(ontClassMock.isEnumeratedClass()).willReturn(false);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
 
-    IndividualProperty prop = ont.generateProperty(objectPropertyMock);
+    PropertySchema prop = ont.getPropertySchema(ontPropertyMock);
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(objectPropertyMockName, prop.getName());
-    Assertions.assertEquals("ObjectProperty", prop.getType());
+    Assertions.assertTrue(prop.isObjectProperty());
     Assertions.assertEquals(rangeMockName, prop.getRange());
   }
 
   @Test
   public void testGenerateDataTypeProperty() {
-    OntProperty objectPropertyMock = mock(OntProperty.class);
-    OntResource resourceMock = mock(OntResource.class);
-    OntClass ontClassMock = mock(OntClass.class);
-
     String propertyMockName = "testPropName";
     String rangeMockName = "xsd:integer";
 
-    given(objectPropertyMock.getLocalName()).willReturn(propertyMockName);
-    given(objectPropertyMock.isObjectProperty()).willReturn(false);
-    given(objectPropertyMock.getRange()).willReturn(resourceMock);
+    given(ontPropertyMock.getLocalName()).willReturn(propertyMockName);
+    given(ontPropertyMock.isObjectProperty()).willReturn(false);
+    given(ontPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
     given(ontClassMock.isEnumeratedClass()).willReturn(false);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
 
-    IndividualProperty prop = ont.generateProperty(objectPropertyMock);
+    PropertySchema prop = ont.getPropertySchema(ontPropertyMock);
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(propertyMockName, prop.getName());
-    Assertions.assertEquals("DataTypeProperty", prop.getType());
+    Assertions.assertFalse(prop.isObjectProperty());
     Assertions.assertEquals(rangeMockName, prop.getRange());
   }
+
   @Test
   public void testGenerateEnumeratedDataTypeProperty() {
-    OntProperty objectPropertyMock = mock(OntProperty.class);
-    OntResource resourceMock = mock(OntResource.class);
-    OntClass ontClassMock = mock(OntClass.class);
     EnumeratedClass enumMock = mock(EnumeratedClass.class);
     RDFList rdfListMock = mock(RDFList.class);
-    List<RDFNode> listMock = mock(List.class);
-    ListIterator<RDFNode> itMock = mock(ListIterator.class);
-    RDFNode nodeMock = mock(RDFNode.class);
-    Literal literalMock = mock(Literal.class);
 
     String propertyMockName = "testPropName";
     String rangeMockName = "testEnum";
 
-    given(objectPropertyMock.getLocalName()).willReturn(propertyMockName);
-    given(objectPropertyMock.isObjectProperty()).willReturn(false);
-    given(objectPropertyMock.getRange()).willReturn(resourceMock);
+    given(ontPropertyMock.getLocalName()).willReturn(propertyMockName);
+    given(ontPropertyMock.isObjectProperty()).willReturn(false);
+    given(ontPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
     given(ontClassMock.isEnumeratedClass()).willReturn(true);
     given(ontClassMock.asEnumeratedClass()).willReturn(enumMock);
@@ -140,37 +152,37 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(rangeMockName);
 
-    IndividualProperty prop = ont.generateProperty(objectPropertyMock);
+    PropertySchema prop = ont.getPropertySchema(ontPropertyMock);
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(propertyMockName, prop.getName());
-    Assertions.assertEquals("DataTypeProperty", prop.getType());
+    Assertions.assertFalse(prop.isObjectProperty());
     Assertions.assertEquals(rangeMockName, prop.getRange());
   }
 
   @Test
   public void testGenerateDataRangeRestrictions() {
-
     String predicate = "maxExclusive";
     String value = "1800";
     String type = "string";
 
-    OntClass ontClassMock = mock(OntClass.class);
     Property predicateMock = mock(Property.class);
-    Literal objectMock = mock(Literal.class);
     Statement statementMock = mock(Statement.class);
-    List<Statement> statementsMock = new ArrayList<>();
-    statementsMock.add(statementMock);
+    StmtIterator itMock = mock(StmtIterator.class);
 
+    given(ontClassMock.getPropertyResourceValue(eq(OWL2.onDataRange))).willReturn(resourceMock);
+    given(resourceMock.getPropertyResourceValue(eq(OWL2.withRestrictions))).willReturn(resourceMock);
+    given(resourceMock.getPropertyResourceValue(eq(RDF.first))).willReturn(resourceMock);
+    given(resourceMock.listProperties()).willReturn(itMock);
+    given(itMock.hasNext()).willReturn(true, false);
+    given(itMock.nextStatement()).willReturn(statementMock);
     given(statementMock.getPredicate()).willReturn(predicateMock);
     given(predicateMock.getLocalName()).willReturn(predicate);
-    given(statementMock.getLiteral()).willReturn(objectMock);
-    given(objectMock.getString()).willReturn(value);
-    given(objectMock.getDatatypeURI()).willReturn(type);
+    given(statementMock.getLiteral()).willReturn(literalMock);
+    given(literalMock.getString()).willReturn(value);
+    given(literalMock.getDatatypeURI()).willReturn(type);
 
-    Mockito.doReturn(statementsMock).when(ont).readDataRangeRestrictions(ontClassMock);
-
-    List<DataRangeRestrinction> res = ont.generateDataRangeRestrictions(ontClassMock);
+    List<DataRangeRestrinctionSchema> res = ont.generateDataRangeRestrictions(ontClassMock);
 
     Assertions.assertNotNull(res);
     Assertions.assertEquals(1,res.size() );
@@ -181,15 +193,12 @@ public class TestOntology {
 
   @Test
   public void testGenerateAllValuesRestrictions() throws OntologyException {
-    Restriction resMock = mock(Restriction.class);
-    OntProperty onPropMock = mock(OntProperty.class);
-
-    given(resMock.getOnProperty()).willReturn(onPropMock);
+    given(resMock.getOnProperty()).willReturn(ontPropertyMock);
     given(resMock.isAllValuesFromRestriction()).willReturn(true);
 
-    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
+    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
 
-    IndividualRestriction res = ont.generateRestriction(resMock);
+    RestrictionSchema res = ont.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals("only", res.getType());
   }
@@ -198,22 +207,18 @@ public class TestOntology {
   public void testGenerateHasValuesRestrictions() throws OntologyException {
     String value = "5";
 
-    Restriction resMock = mock(Restriction.class);
-    OntProperty onPropMock = mock(OntProperty.class);
     HasValueRestriction hasValueMock = mock(HasValueRestriction.class);
-    RDFNode nodeMock = mock(RDFNode.class);
-    Literal literalMock = mock(Literal.class);
 
-    given(resMock.getOnProperty()).willReturn(onPropMock);
+    given(resMock.getOnProperty()).willReturn(ontPropertyMock);
     given(resMock.isHasValueRestriction()).willReturn(true);
     given(resMock.asHasValueRestriction()).willReturn(hasValueMock);
     given(hasValueMock.getHasValue()).willReturn(nodeMock);
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
+    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
 
-    IndividualRestriction res = ont.generateRestriction(resMock);
+    RestrictionSchema res = ont.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals("value", res.getType());
     Assertions.assertEquals(value, res.getExactValue());
@@ -221,44 +226,35 @@ public class TestOntology {
 
   @Test
   public void testGenerateSomeValuesRestrictions() throws OntologyException {
-    Restriction resMock = mock(Restriction.class);
-    OntProperty onPropMock = mock(OntProperty.class);
-
-    given(resMock.getOnProperty()).willReturn(onPropMock);
+    given(resMock.getOnProperty()).willReturn(ontPropertyMock);
     given(resMock.isSomeValuesFromRestriction()).willReturn(true);
 
-    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
+    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
 
-    IndividualRestriction res = ont.generateRestriction(resMock);
+    RestrictionSchema res = ont.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals("some", res.getType());
   }
 
   @Test
   public void testGenerateCardinalityRestrictions() throws OntologyException {
-    Restriction resMock = mock(Restriction.class);
-    OntProperty onPropMock = mock(OntProperty.class);
-
-    given(resMock.getOnProperty()).willReturn(onPropMock);
+    given(resMock.getOnProperty()).willReturn(ontPropertyMock);
     given(resMock.isHasValueRestriction()).willReturn(false);
     given(resMock.isSomeValuesFromRestriction()).willReturn(false);
     given(resMock.isAllValuesFromRestriction()).willReturn(false);
 
-    Mockito.doReturn(new IndividualProperty()).when(ont).generateProperty(onPropMock);
-    Mockito.doReturn(new Cardinality()).when(ont).generateOwl2Cardinality(resMock);
-    Mockito.doReturn(IndividualRestriction.EXACTLY_TYPE).when(ont).generateOwl2RestrictionType(resMock);
+    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
+    Mockito.doReturn(new CardinalitySchema()).when(ont).getOwl2CardinalitySchema(resMock);
+    Mockito.doReturn(RestrictionSchema.EXACTLY_TYPE).when(ont).getOwl2RestrictionType(resMock);
 
-    IndividualRestriction res = ont.generateRestriction(resMock);
+    RestrictionSchema res = ont.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
-    Assertions.assertEquals(IndividualRestriction.EXACTLY_TYPE, res.getType());
+    Assertions.assertEquals(RestrictionSchema.EXACTLY_TYPE, res.getType());
   }
 
   @Test
   public void testGenerateMaxCardinality() throws OntologyException {
     String value = "5";
-    Restriction resMock = mock(Restriction.class);
-    RDFNode nodeMock = mock(RDFNode.class);
-    Literal literalMock = mock(Literal.class);
 
     given(resMock.getPropertyValue(OWL2.qualifiedCardinality)).willReturn(null);
     given(resMock.getPropertyValue(OWL2.maxQualifiedCardinality)).willReturn(nodeMock);
@@ -268,7 +264,7 @@ public class TestOntology {
 
     Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
 
-    Cardinality res = ont.generateOwl2Cardinality(resMock);
+    CardinalitySchema res = ont.getOwl2CardinalitySchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(value, res.getOccurrence());
   }
@@ -276,9 +272,6 @@ public class TestOntology {
   @Test
   public void testGenerateMinCardinality() throws OntologyException {
     String value = "5";
-    Restriction resMock = mock(Restriction.class);
-    RDFNode nodeMock = mock(RDFNode.class);
-    Literal literalMock = mock(Literal.class);
 
     given(resMock.getPropertyValue(OWL2.qualifiedCardinality)).willReturn(null);
     given(resMock.getPropertyValue(OWL2.maxQualifiedCardinality)).willReturn(null);
@@ -288,7 +281,7 @@ public class TestOntology {
 
     Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
 
-    Cardinality res = ont.generateOwl2Cardinality(resMock);
+    CardinalitySchema res = ont.getOwl2CardinalitySchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(value, res.getOccurrence());
   }
@@ -296,10 +289,6 @@ public class TestOntology {
   @Test
   public void testGenerateExactlyCardinality() throws OntologyException {
     String value = "5";
-    Restriction resMock = mock(Restriction.class);
-    RDFNode nodeMock = mock(RDFNode.class);
-    Literal literalMock = mock(Literal.class);
-
     given(resMock.getPropertyValue(OWL2.qualifiedCardinality)).willReturn(nodeMock);
     given(resMock.getPropertyValue(OWL2.maxQualifiedCardinality)).willReturn(null);
     given(resMock.getPropertyValue(OWL2.minQualifiedCardinality)).willReturn(null);
@@ -308,7 +297,7 @@ public class TestOntology {
 
     Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
 
-    Cardinality res = ont.generateOwl2Cardinality(resMock);
+    CardinalitySchema res = ont.getOwl2CardinalitySchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(value, res.getOccurrence());
   }
@@ -318,22 +307,20 @@ public class TestOntology {
     String ontClassMockName = "Sound";
     String propertyMockName = "hasAssetPath";
 
-    OntClass ontClassMock = mock(OntClass.class);
-
-    List<IndividualProperty> props = new ArrayList<>();
-    IndividualProperty prop = generateDataProperty(propertyMockName, "asdf");
+    List<PropertySchema> props = new ArrayList<>();
+    PropertySchema prop = generateDataProperty(propertyMockName, "asdf");
     props.add(prop);
 
     Mockito.doReturn(ontClassMock).when(ont).getOntClass(ontClassMockName);
-    Mockito.doReturn(props).when(ont).generateDeclaredProperties(ontClassMock);
-    Mockito.doReturn(new ArrayList<>()).when(ont).generateRestrictions(ontClassMock);
-    Mockito.doReturn(new ArrayList<>()).when(ont).generateEqualityRestrictions(ontClassMock);
+    Mockito.doReturn(props).when(ont).getDeclaredPropertiesSchemas(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).getRestrictionSchemas(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).getEqualityRestrictionSchemas(ontClassMock);
 
-    Individual result = ont.generateIndividual(ontClassMockName);
+    ClassSchema result = ont.getClassSchema(ontClassMockName);
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(ontClassMockName, result.getClassName());
-    List<IndividualProperty> propResults = result.getProperties();
+    List<PropertySchema> propResults = result.getProperties();
     Assertions.assertEquals(1, propResults.size());
     Assertions.assertEquals(propertyMockName, propResults.get(0).getName());
 
@@ -344,53 +331,49 @@ public class TestOntology {
     String ontClassMockName = "Sound";
     String propertyMockName = "hasAssetPath";
 
-    OntClass ontClassMock = mock(OntClass.class);
-
-    IndividualProperty prop = generateDataProperty(propertyMockName, "asdf");
-    List<IndividualProperty> props = new ArrayList<>();
+    PropertySchema prop = generateDataProperty(propertyMockName, "asdf");
+    List<PropertySchema> props = new ArrayList<>();
     props.add(prop);
 
-    IndividualProperty objProp = generateObjectProperty("restriction", "className");
-    IndividualRestriction res = new IndividualRestriction();
-    res.setOnIndividualProperty(objProp);
-    List<IndividualRestriction> restrictions = new ArrayList<>();
+    PropertySchema objProp = generateObjectProperty("restriction", "className");
+    RestrictionSchema res = new RestrictionSchema();
+    res.setOnPropertySchema(objProp);
+    List<RestrictionSchema> restrictions = new ArrayList<>();
     restrictions.add(res);
 
     Mockito.doReturn(ontClassMock).when(ont).getOntClass(ontClassMockName);
-    Mockito.doReturn(props).when(ont).generateDeclaredProperties(ontClassMock);
-    Mockito.doReturn(restrictions).when(ont).generateRestrictions(ontClassMock);
-    Mockito.doReturn(new ArrayList<>()).when(ont).generateEqualityRestrictions(ontClassMock);
+    Mockito.doReturn(props).when(ont).getDeclaredPropertiesSchemas(ontClassMock);
+    Mockito.doReturn(restrictions).when(ont).getRestrictionSchemas(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(ont).getEqualityRestrictionSchemas(ontClassMock);
 
-    Individual result = ont.generateIndividual(ontClassMockName);
+    ClassSchema result = ont.getClassSchema(ontClassMockName);
     Assertions.assertNotNull(result);
     Assertions.assertEquals(ontClassMockName, result.getClassName());
-    List<IndividualProperty> propsRes = result.getProperties();
+    List<PropertySchema> propsRes = result.getProperties();
     Assertions.assertEquals(1, propsRes.size());
     Assertions.assertEquals(propertyMockName, propsRes.get(0).getName());
   }
 
   @Test
   public void testNonRecursiveGenerateEqualityRestriction() throws OntologyException {
-    List<IndividualRestriction> result = new ArrayList<>();
+    List<RestrictionSchema> result = new ArrayList<>();
 
-    IndividualRestriction test = new IndividualRestriction();
+    RestrictionSchema test = new RestrictionSchema();
     test.setType("some");
 
     Resource intersectionOf = mock(Resource.class);
     Resource first = mock(Resource.class);
-    OntClass firstClass = mock(OntClass.class);
-    Restriction res = mock(Restriction.class);
 
     given(intersectionOf.getPropertyResourceValue(eq(RDF.first))).willReturn(first);
     given(first.canAs(OntClass.class)).willReturn(true);
-    given(first.as(OntClass.class)).willReturn(firstClass);
-    given(firstClass.isRestriction()).willReturn(true);
-    given(firstClass.asRestriction()).willReturn(res);
+    given(first.as(OntClass.class)).willReturn(ontClassMock);
+    given(ontClassMock.isRestriction()).willReturn(true);
+    given(ontClassMock.asRestriction()).willReturn(resMock);
     given(intersectionOf.getPropertyResourceValue(eq(RDF.rest))).willReturn(null);
 
-    Mockito.doReturn(test).when(ont).generateRestriction(res);
+    Mockito.doReturn(test).when(ont).getRestrictionSchema(resMock);
 
-    ont.generateEqualityRestriction(intersectionOf, result);
+    ont.getEqualityRestrictionSchema(intersectionOf, result);
 
     Assertions.assertEquals(1, result.size());
     Assertions.assertEquals(test.getType(), result.get(0).getType());
@@ -398,9 +381,9 @@ public class TestOntology {
 
   @Test
   public void testRecursiveGenerateEqualityRestriction() throws OntologyException {
-    List<IndividualRestriction> result = new ArrayList<>();
+    List<RestrictionSchema> result = new ArrayList<>();
 
-    IndividualRestriction test = new IndividualRestriction();
+    RestrictionSchema test = new RestrictionSchema();
     test.setType("some");
 
     Resource intersectionOf = mock(Resource.class);
@@ -422,39 +405,44 @@ public class TestOntology {
     given(secondClass.isRestriction()).willReturn(true);
     given(secondClass.asRestriction()).willReturn(res);
 
-    Mockito.doReturn(test).when(ont).generateRestriction(res);
+    Mockito.doReturn(test).when(ont).getRestrictionSchema(res);
 
-    ont.generateEqualityRestriction(intersectionOf, result);
+    ont.getEqualityRestrictionSchema(intersectionOf, result);
 
     Assertions.assertEquals(2, result.size());
     Assertions.assertEquals(test.getType(), result.get(0).getType());
   }
 
-
   @Test
   @Disabled("Exploring the Jena API")
   public void test() throws OntologyException {
     ont.setupModel();
-    String className = "EasyFindTheSound";
-
-    ont.generateIndividual(className);
-
+    String className = "Number";
+    ont.getClassSchema(className);
   }
 
-  private IndividualProperty generateDataProperty (String name, String className) {
-    IndividualProperty obj = new IndividualProperty();
+  private PropertySchema generateDataProperty (String name, String className) {
+    PropertySchema obj = new PropertySchema();
     obj.setName(name);
-    obj.setType("DataTypeProperty");
+    obj.setObjectProperty(false);
     obj.setRange(className);
     return obj;
   }
 
-  private IndividualProperty generateObjectProperty (String name, String className) {
-    IndividualProperty obj = new IndividualProperty();
+  private PropertySchema generateObjectProperty (String name, String className) {
+    PropertySchema obj = new PropertySchema();
     obj.setName(name);
-    obj.setType("ObjectProperty");
+    obj.setObjectProperty(true);
     obj.setRange(className);
     return obj;
+  }
+
+  private InsertParam generateInsertParam(String name, String value, boolean isIri) {
+    InsertParam param = new InsertParam();
+    param.setIriParam(isIri);
+    param.setName(name);
+    param.setValue(value);
+    return param;
   }
 }
 

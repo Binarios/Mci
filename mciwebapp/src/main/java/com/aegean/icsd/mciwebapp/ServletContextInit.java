@@ -8,13 +8,14 @@ import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
+import com.aegean.icsd.engine.EngineConfiguration;
+
 public class ServletContextInit implements WebApplicationInitializer {
 
   @Override
   public void onStartup(ServletContext container) {
     AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
-    context.register(WebAppConfig.class);
-
+    context.register(EngineConfiguration.class, WebAppConfig.class);
     container.addListener(new ContextLoaderListener(context));
     DispatcherServlet dispatcherServlet = new DispatcherServlet(context);
     ServletRegistration.Dynamic dispatcher = container.addServlet("mci", dispatcherServlet);

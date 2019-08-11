@@ -4,19 +4,17 @@ import org.apache.commons.lang3.StringUtils;
 
 public enum RestrictionType {
 
-  ONLY("only", 1),
-  VALUE("value", 2),
-  EXACTLY("exactly", 3),
-  MIN("min",4),
-  MAX("max",5),
-  SOME("some", 6);
+  ONLY("only"),
+  VALUE("value"),
+  EXACTLY("exactly"),
+  MIN("min"),
+  MAX("max"),
+  SOME("some");
 
   private String name;
-  private int order;
 
-  RestrictionType(String name, int order) {
+  RestrictionType(String name) {
     this.name = name;
-    this.order = order;
   }
 
   public static RestrictionType fromString(String name) {
@@ -37,9 +35,5 @@ public enum RestrictionType {
 
   public String getName() {
     return this.name;
-  }
-
-  public int getOrder() {
-    return this.order;
   }
 }

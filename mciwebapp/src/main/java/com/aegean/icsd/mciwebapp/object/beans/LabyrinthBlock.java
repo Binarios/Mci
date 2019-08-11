@@ -2,10 +2,10 @@ package com.aegean.icsd.mciwebapp.object.beans;
 
 import java.util.List;
 
-import com.aegean.icsd.engine.annotations.DataProperty;
-import com.aegean.icsd.engine.annotations.Entity;
-import com.aegean.icsd.engine.annotations.Id;
-import com.aegean.icsd.engine.annotations.Key;
+import com.aegean.icsd.engine.core.annotations.DataProperty;
+import com.aegean.icsd.engine.core.annotations.Entity;
+import com.aegean.icsd.engine.core.annotations.Id;
+import com.aegean.icsd.engine.core.annotations.Key;
 
 @Entity(LabyrinthBlock.NAME)
 public class LabyrinthBlock {

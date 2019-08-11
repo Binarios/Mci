@@ -1,15 +1,18 @@
 package com.aegean.icsd;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import com.aegean.icsd.ontology.OntologyConfiguration;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
 
 @ExtendWith(MockitoExtension.class)
+@Disabled
 public class TestSpringConfig {
 
   @Test

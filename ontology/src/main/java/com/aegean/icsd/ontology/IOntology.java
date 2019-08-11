@@ -1,19 +1,27 @@
 package com.aegean.icsd.ontology;
 
-import java.util.List;
 
-import org.apache.jena.query.ParameterizedSparqlString;
-
-import com.aegean.icsd.ontology.beans.Individual;
+import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.AskQuery;
+import com.aegean.icsd.ontology.queries.InsertQuery;
+import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 
 public interface IOntology {
 
-  JsonArray executeSelect(ParameterizedSparqlString sparql, List<String> colNames) throws OntologyException;
+  JsonArray select(SelectQuery query) throws OntologyException;
 
-  boolean executeUpdate(ParameterizedSparqlString sparql) throws OntologyException;
+  boolean insert(InsertQuery query) throws OntologyException;
 
-  Individual generateIndividual(String className) throws OntologyException;
+  ClassSchema getClassSchema(String className) throws OntologyException;
+
+  String getPrefixedEntity(String entity);
+
+  Class<?> getJavaClassFromOwlType (String owlType);
+
+  String removePrefix(String prefixedEntity);
+
+  boolean ask(AskQuery ask) throws OntologyException;
 }
