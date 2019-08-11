@@ -6,6 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ import com.aegean.icsd.ontology.beans.OntologyException;
 
 @Service
 public class Rules implements IRules {
+  private static Logger LOGGER = Logger.getLogger(Rules.class);
 
   @Autowired
   private IOntology ontology;
@@ -43,6 +45,7 @@ public class Rules implements IRules {
   @Override
   public EntityRestriction getEntityRestriction(String entityName, String restrictionName) throws RulesException {
     //TODO: this doesn't work properly when there are MIN/MAX/ONLY combinations
+    LOGGER.info(String.format("Retrieving restriction %s of %s", restrictionName, entityName));
     EntityRules rules = getEntityRules(entityName);
     return rules.getRestrictions().stream()
       .filter(x -> restrictionName.equals(x.getOnProperty().getName()))
@@ -52,6 +55,8 @@ public class Rules implements IRules {
 
   @Override
   public EntityRules getEntityRules(String entityName) throws RulesException {
+    LOGGER.info(String.format("Retrieving rules for %s", entityName));
+
     ClassSchema entitySchema;
     try {
       entitySchema = ontology.getClassSchema(entityName);

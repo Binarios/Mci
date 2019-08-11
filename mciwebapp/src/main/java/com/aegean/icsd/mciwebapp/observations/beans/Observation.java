@@ -40,10 +40,6 @@ public class Observation {
   @DataProperty("hasTotalImages")
   private int totalImages;
 
-  private List<String> imagePaths;
-
-  private List<String> words;
-
   public String getId() {
     return id;
   }
@@ -106,21 +102,5 @@ public class Observation {
 
   public void setTotalImages(int totalImages) {
     this.totalImages = totalImages;
-  }
-
-  public List<String> getWords() {
-    return words;
-  }
-
-  public void setWords(List<String> words) {
-    this.words = words;
-  }
-
-  public List<String> getImagePaths() {
-    return imagePaths;
-  }
-
-  public void setImagePaths(List<String> imagePaths) {
-    this.imagePaths = imagePaths;
   }
 }

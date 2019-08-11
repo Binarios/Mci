@@ -2,6 +2,7 @@ package com.aegean.icsd.mciwebapp.object.configurations;
 
 public class WordConfiguration {
   private String location;
+  private String filename;
   private String delimiter;
   private int valueIndex;
 
@@ -28,5 +29,13 @@ public class WordConfiguration {
 
   public void setValueIndex(int valueIndex) {
     this.valueIndex = valueIndex;
+  }
+
+  public String getFilename() {
+    return filename;
+  }
+
+  public void setFilename(String filename) {
+    this.filename = filename;
   }
 }

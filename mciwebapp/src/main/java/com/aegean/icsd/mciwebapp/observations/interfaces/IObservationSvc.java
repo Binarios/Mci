@@ -1,9 +1,9 @@
 package com.aegean.icsd.mciwebapp.observations.interfaces;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.mciwebapp.observations.beans.Observation;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
-
+import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 public interface IObservationSvc {
-  Observation createObservation(String playerName, Difficulty difficulty) throws ObservationsException;
+  ObservationResponse createObservation(String playerName, Difficulty difficulty) throws MciException;
+
 }

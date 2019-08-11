@@ -1,5 +1,6 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,8 @@ import com.aegean.icsd.ontology.queries.SelectQuery;
 @Service
 public class ObservationProvider implements IObservationProvider {
 
+  private static Logger LOGGER = Logger.getLogger(ObservationProvider.class);
+
   @Autowired
   private IImageProvider imageProvider;
 
@@ -28,6 +31,7 @@ public class ObservationProvider implements IObservationProvider {
 
   @Override
   public String getObservationId(int totalImageNumber) throws ProviderException {
+    LOGGER.info("Creating Observation Object");
     if (totalImageNumber < 0) {
       totalImageNumber = 0;
     }

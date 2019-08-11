@@ -1,16 +1,18 @@
 package com.aegean.icsd.mciwebapp.common.beans;
 
-import java.util.List;
-
 public class Response<T> {
   private T payload;
-  private List<Error> errors;
+  private AppError error;
 
   public Response(T payload) {
     this.payload = payload;
   }
 
-  public Response(List<Error> errors) {
-    this.errors = errors;
+  public AppError getError() {
+    return error;
+  }
+
+  public void setError(AppError appError) {
+    this.error = appError;
   }
 }

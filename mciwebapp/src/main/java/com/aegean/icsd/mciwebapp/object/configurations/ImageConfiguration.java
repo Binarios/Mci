@@ -1,9 +1,8 @@
 package com.aegean.icsd.mciwebapp.object.configurations;
 
-import java.util.List;
-
 public class ImageConfiguration {
   private String location;
+  private String filename;
   private String delimiter;
   private int urlIndex;
   private int titleIndex;
@@ -47,5 +46,13 @@ public class ImageConfiguration {
 
   public void setSubjectIndex(int subjectIndex) {
     this.subjectIndex = subjectIndex;
+  }
+
+  public String getFilename() {
+    return filename;
+  }
+
+  public void setFilename(String filename) {
+    this.filename = filename;
   }
 }

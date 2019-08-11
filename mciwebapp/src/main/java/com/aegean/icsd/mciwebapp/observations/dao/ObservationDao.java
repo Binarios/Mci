@@ -7,18 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.engine.common.beans.EngineException;
-import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
-import com.aegean.icsd.mciwebapp.observations.beans.Observation;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
+import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 @Repository
 public class ObservationDao implements IObservationDao {
@@ -32,7 +28,7 @@ public class ObservationDao implements IObservationDao {
   private IGenerator generator;
 
   @Override
-  public int getLastCompletedLevel(Difficulty difficulty, String playerName) throws ObservationsException {
+  public int getLastCompletedLevel(Difficulty difficulty, String playerName) throws MciException {
     SelectQuery query = new SelectQuery.Builder()
       .select("level")
       .whereHasType("obs", ont.getPrefixedEntity(gameName))
@@ -61,7 +57,7 @@ public class ObservationDao implements IObservationDao {
   }
 
   @Override
-  public List<String> getAssociatedSubjects(String id) throws ObservationsException {
+  public List<String> getAssociatedSubjects(String id) throws MciException {
 
     SelectQuery query = new SelectQuery.Builder()
       .select("word")
@@ -93,7 +89,7 @@ public class ObservationDao implements IObservationDao {
   }
 
   @Override
-  public String getImagePath(String id) throws ObservationsException {
+  public String getImagePath(String id) throws MciException {
     SelectQuery query = new SelectQuery.Builder()
       .select("path")
       .where("obsObj", "hasId", "id")

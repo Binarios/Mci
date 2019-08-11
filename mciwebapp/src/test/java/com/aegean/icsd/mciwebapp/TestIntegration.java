@@ -6,29 +6,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import com.aegean.icsd.ontology.OntologyConfiguration;
-import com.aegean.icsd.engine.EngineConfiguration;
+import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.engine.rules.implementations.Rules;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
-import com.aegean.icsd.mciwebapp.observations.beans.Observation;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
-import com.aegean.icsd.mciwebapp.observations.implementations.ObservationImpl;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 import com.aegean.icsd.ontology.IOntology;
-import com.aegean.icsd.ontology.Ontology;
 
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { WebAppConfig.class})
 @WebAppConfiguration
+@Disabled
 public class TestIntegration {
 
   @Autowired
@@ -49,16 +43,16 @@ public class TestIntegration {
 
   @Test
   @Disabled("Unstable")
-  public void testObsIns() throws ObservationsException {
+  public void testObsIns() throws MciException {
     String playerName = "TestUser";
 
-    Observation obs = observationImpl.createObservation(playerName, Difficulty.HARD);
+    ObservationResponse obs = observationImpl.createObservation(playerName, Difficulty.HARD);
 
     Assertions.assertNotNull(obs);
-    Assertions.assertEquals(playerName, obs.getPlayerName());
+    Assertions.assertEquals(playerName, obs.getPlayer());
     Assertions.assertEquals(Difficulty.HARD, obs.getDifficulty());
     Assertions.assertEquals(180000, obs.getMaxCompletionTime());
     Assertions.assertEquals(4, obs.getWords().size());
-    Assertions.assertEquals(4, obs.getImagePaths().size());
+    Assertions.assertEquals(4, obs.getItems().size());
   }
 }

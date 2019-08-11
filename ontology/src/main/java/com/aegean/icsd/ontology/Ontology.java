@@ -164,6 +164,7 @@ public class Ontology implements IOntology {
 
   @Override
   public ClassSchema getClassSchema(String className) throws OntologyException {
+    LOGGER.info(String.format("Reading ontology schema for class %s", className));
     ClassSchema result = new ClassSchema();
     result.setClassName(className);
     OntClass entity = getOntClass(className);
@@ -426,6 +427,7 @@ public class Ontology implements IOntology {
 
   @PostConstruct
   void setupModel () {
+    LOGGER.info("START: Setting up the model");
     String ontologyName = this.ontologyProps.getOntologyName();
 
     ModelMaker maker= ModelFactory.createMemModelMaker();
@@ -434,17 +436,24 @@ public class Ontology implements IOntology {
     spec.setImportModelMaker(maker);
     Model base = maker.createModel( ontologyName );
     this.model = ModelFactory.createOntologyModel(spec, base);
-    this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
+//    this.model.read("file:" + this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
+    LOGGER.info("START: Reading the model from :" + this.ontologyProps.getOntologyLocation());
+    this.model.read(this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
+    LOGGER.info("END: Reading the model from :" + this.ontologyProps.getOntologyLocation());
+    LOGGER.info("START: Reading TDB2 from :" + this.ontologyProps.getDatasetLocation());
     ds = TDB2Factory.connectDataset(this.ontologyProps.getDatasetLocation());
     ds.begin(ReadWrite.READ);
     boolean found = ds.containsNamedModel(ontologyProps.getOntologyName());
     ds.end();
+    LOGGER.info("END: Reading TDB2 from :" + this.ontologyProps.getDatasetLocation());
 
     if (!found) {
+      LOGGER.info("START: Init TDB2 in :" + this.ontologyProps.getDatasetLocation());
       ds.begin(ReadWrite.WRITE);
       ds.addNamedModel(ontologyProps.getOntologyName(), ModelFactory.createOntologyModel());
       ds.commit();
       ds.end();
+      LOGGER.info("END: Init TDB2 in :" + this.ontologyProps.getDatasetLocation());
     }
   }
 

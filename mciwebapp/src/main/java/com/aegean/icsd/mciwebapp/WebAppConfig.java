@@ -1,8 +1,6 @@
 package com.aegean.icsd.mciwebapp;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +38,7 @@ public class WebAppConfig implements WebMvcConfigurer {
 
   @Override
   public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
-    configurer.enable();
+     configurer.enable();
   }
 
   @Override
@@ -57,20 +55,22 @@ public class WebAppConfig implements WebMvcConfigurer {
   @Bean
   public WordConfiguration getWordConfiguration() {
     WordConfiguration config = new WordConfiguration();
-    config.setLocation(getPropertyValue("loc"));
-    config.setDelimiter(getPropertyValue("delimiter"));
-    config.setValueIndex(Integer.parseInt(getPropertyValue("valueIndex")));
+    config.setLocation(getPropertyValue("word.loc"));
+    config.setFilename(getPropertyValue("word.filename"));
+    config.setDelimiter(getPropertyValue("word.delimiter"));
+    config.setValueIndex(Integer.parseInt(getPropertyValue("word.valueIndex")));
     return config;
   }
 
   @Bean
   public ImageConfiguration getImageConfiguration() {
     ImageConfiguration config = new ImageConfiguration();
-    config.setLocation(getPropertyValue("loc"));
-    config.setDelimiter(getPropertyValue("delimiter"));
-    config.setUrlIndex(Integer.parseInt(getPropertyValue("index.url")));
-    config.setTitleIndex(Integer.parseInt(getPropertyValue("index.title")));
-    config.setSubjectIndex(Integer.parseInt(getPropertyValue("index.subject")));
+    config.setLocation(getPropertyValue("image.loc"));
+    config.setFilename(getPropertyValue("image.filename"));
+    config.setDelimiter(getPropertyValue("image.delimiter"));
+    config.setUrlIndex(Integer.parseInt(getPropertyValue("image.index.url")));
+    config.setTitleIndex(Integer.parseInt(getPropertyValue("image.index.title")));
+    config.setSubjectIndex(Integer.parseInt(getPropertyValue("image.index.subject")));
     return config;
   }
 

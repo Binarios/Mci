@@ -209,19 +209,19 @@ public class SelectQuery {
     }
 
     void buildWhereClauses(StringBuilder builder) {
-      builder.append("WHERE").append(" ").append("{").append("\n\t");
+      builder.append("WHERE").append(" ").append("{").append("\n");
 
       for (Map.Entry<String, List<Triplet>> entry : conditions.entrySet()) {
         String whereClause = buildWhereClause(entry);
-        builder.append(whereClause).append("\n\t");
+        builder.append("\t").append(whereClause).append("\n");
       }
 
       for (SelectQuery subQ : subQueries) {
-        builder.append("{\n\t").append(subQ.command).append("\n\t}").append("\n\t");
+        builder.append("\t{\n\t").append(subQ.command).append("\n\t}\n");
       }
 
       for(String filter : filters) {
-        builder.append(filter).append("\n");
+        builder.append("\t").append(filter).append("\n");
       }
 
       builder.append("}").append("\n");

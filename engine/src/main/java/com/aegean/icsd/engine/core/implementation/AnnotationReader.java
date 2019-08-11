@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
@@ -23,9 +24,12 @@ import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 @Service
 public class AnnotationReader implements IAnnotationReader {
 
+  private static Logger LOGGER = Logger.getLogger(AnnotationReader.class);
+
   @Override
   public String setEntityId(Object object) throws EngineException {
     String objName = getEntityValue(object);
+    LOGGER.debug(String.format("Setting Entity ID for object %s", objName));
     List<String> keys = new LinkedList<>();
     Field idField = null;
     for (Field field : object.getClass().getDeclaredFields()) {
@@ -51,11 +55,13 @@ public class AnnotationReader implements IAnnotationReader {
 
     String id = idSanitizer(objName + "_" + masterKey);
     invokeFieldSetter(idField, object, id);
+    LOGGER.debug(String.format("Entity ID for object %s: %s", objName, id));
     return id;
   }
 
   @Override
   public String getEntityValue(Object object) throws EngineException {
+    LOGGER.debug("Reading object entity name");
     if (!object.getClass().isAnnotationPresent(Entity.class)) {
       throw Exceptions.UnableToReadAnnotation(Entity.class.getSimpleName());
     }
@@ -65,6 +71,7 @@ public class AnnotationReader implements IAnnotationReader {
 
   @Override
   public Map<String, Object> getDataProperties(Object object) throws EngineException {
+    LOGGER.debug("Retrieving dataProperty Annotations");
     Map<String, Object> relations = new HashMap<>();
     for (Field field : object.getClass().getDeclaredFields()) {
       if (!field.isAnnotationPresent(DataProperty.class)) {

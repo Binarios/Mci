@@ -13,6 +13,7 @@
   <packaging>war</packaging>
 
   <properties>
+    <webapp.name>mci</webapp.name>
   </properties>
 
   <dependencies>
@@ -62,6 +63,6 @@
   </dependencies>
 
   <build>
-    <finalName>mciwebapp</finalName>
+    <finalName>${webapp.name}</finalName>
   </build>
 </project>

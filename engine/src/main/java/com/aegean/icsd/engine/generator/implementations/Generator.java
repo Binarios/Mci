@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ import com.aegean.icsd.engine.rules.interfaces.IRules;
 
 @Service
 public class Generator implements IGenerator {
+  private static Logger LOGGER = Logger.getLogger(Generator.class);
 
   @Autowired
   private IRules rules;
@@ -36,8 +38,10 @@ public class Generator implements IGenerator {
 
   @Override
   public String upsertObj(Object object) throws EngineException {
+    LOGGER.debug("Upserting new Object");
     String id = ano.setEntityId(object);
     String name = ano.getEntityValue(object);
+    LOGGER.info(String.format("Upserting new %s with id %s", name, id));
     Map<String, Object> relations = ano.getDataProperties(object);
     EntityRules er;
     try {
@@ -83,6 +87,7 @@ public class Generator implements IGenerator {
 
   @Override
   public boolean createObjRelation(String id, EntityProperty onProperty, String objId) throws EngineException {
+    LOGGER.info(String.format("Associating %s with %s throught the relation %s ", id, objId, onProperty.getName()));
     try {
       boolean success = dao.createObjRelation(id, onProperty.getName(), objId);
       return success;

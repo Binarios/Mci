@@ -3,9 +3,9 @@ package com.aegean.icsd.mciwebapp.observations.implementations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +16,12 @@ import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RulesException;
-import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationsException;
+import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
+import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.observations.dao.IObservationDao;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
@@ -28,6 +29,7 @@ import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 @Service
 public class ObservationImpl implements IObservationSvc {
 
+  private static Logger LOGGER = Logger.getLogger(ObservationImpl.class);
   private final String gameName = "Observation";
 
   @Autowired
@@ -46,11 +48,14 @@ public class ObservationImpl implements IObservationSvc {
   private IAnnotationReader ano;
 
   @Override
-  public Observation createObservation(String playerName, Difficulty difficulty) throws ObservationsException {
-    if (difficulty == null
-      || StringUtils.isEmpty(playerName)) {
+  public ObservationResponse createObservation(String playerName, Difficulty difficulty) throws MciException {
+    LOGGER.info(String.format("Creating Observation game for player %s at the difficulty %s",
+      playerName, difficulty.name()));
+
+    if (StringUtils.isEmpty(playerName)) {
       throw Exceptions.InvalidRequest();
     }
+
     EntityRules entityRules;
     try {
       entityRules = rules.getGameRules(gameName, difficulty);
@@ -90,7 +95,7 @@ public class ObservationImpl implements IObservationSvc {
     toCreate.setTotalImages(generator.generateIntDataValue(totalImages.getDataRange()));
 
     List<String> obsIds = new ArrayList<>();
-    List<String> imagePaths = new ArrayList<>();
+    List<ObservationItem> images = new ArrayList<>();
 
     int remaining = toCreate.getTotalImages();
     for (int i = 0; i < hasObservationRes.getCardinality(); i++) {
@@ -104,14 +109,16 @@ public class ObservationImpl implements IObservationSvc {
       }
       try {
         String id = observationProvider.getObservationId(nbOfOccurrences);
-        //TODO search for imagePath on id. The select returns the imagePath. Then if the list imagePaths contains the returned value,
-        // do i--
         String path = dao.getImagePath(id);
-        if (obsIds.contains(id) || imagePaths.contains(path)) {
+        ObservationItem found =  images.stream().filter(x -> x.getImage().equals(path)).findFirst().orElse(null);
+        if (obsIds.contains(id) || found != null) {
           i--;
         } else {
           obsIds.add(id);
-          imagePaths.add(path);
+          ObservationItem item = new ObservationItem();
+          item.setImage(path);
+          item.setTotalInstances(nbOfOccurrences);
+          images.add(item);
         }
         remaining -= nbOfOccurrences;
       } catch (ProviderException e) {
@@ -129,8 +136,20 @@ public class ObservationImpl implements IObservationSvc {
     }
 
     List<String> chosenWords = dao.getAssociatedSubjects(toCreate.getId());
-    toCreate.setImagePaths(imagePaths);
-    toCreate.setWords(chosenWords);
-    return toCreate;
+    ObservationResponse response = toResponse(toCreate, images, chosenWords);
+
+    return response;
+  }
+
+  ObservationResponse toResponse(Observation obs, List<ObservationItem> images, List<String> words) {
+    ObservationResponse resp = new ObservationResponse();
+    resp.setId(obs.getId());
+    resp.setDifficulty(obs.getDifficulty());
+    resp.setLevel(obs.getLevel());
+    resp.setPlayer(obs.getPlayerName());
+    resp.setMaxCompletionTime(obs.getMaxCompletionTime());
+    resp.setItems(images);
+    resp.setWords(words);
+    return resp;
   }
 }

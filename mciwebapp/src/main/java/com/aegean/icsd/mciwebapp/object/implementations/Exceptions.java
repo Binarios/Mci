@@ -23,8 +23,8 @@ class Exceptions {
       String.format("There was a problem retrieving the rules of %s", entity), t);
   }
 
-  static ProviderException UnableToFindObjectProvider(String object) {
+  static ProviderException UnableToGetFileFromUrl(String url, String file, Throwable t) {
     return new ProviderException(CODE_NAME + "." + 5,
-      String.format("Cannot find the object provider for the object %s", object));
+      String.format("Unable to get the requested file: %s from the url: %s", file, url), t);
   }
 }

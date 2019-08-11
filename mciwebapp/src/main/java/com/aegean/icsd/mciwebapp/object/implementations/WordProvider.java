@@ -1,27 +1,24 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
-import com.aegean.icsd.mciwebapp.common.Utils;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
+import com.aegean.icsd.mciwebapp.object.interfaces.IObjectFileProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 
 @Service
 public class WordProvider implements IWordProvider {
+
+  private static Logger LOGGER = Logger.getLogger(WordProvider.class);
 
   @Autowired
   private WordConfiguration config;
@@ -30,10 +27,11 @@ public class WordProvider implements IWordProvider {
   private IGenerator generator;
 
   @Autowired
-  private Utils utils;
+  private IObjectFileProvider fileProvider;
 
   @Override
   public List<String> getWordsIds(int number) throws ProviderException {
+    LOGGER.info(String.format("Requested %s Words", number));
     List<String> objIds = new ArrayList<>();
     if (number < 0) {
       number = 0;
@@ -48,6 +46,7 @@ public class WordProvider implements IWordProvider {
 
   @Override
   public String getWordFromValue(String value) throws ProviderException {
+    LOGGER.info(String.format("Requested word with value %s", value));
     Word word = toWord(value);
     try {
       String id = generator.selectObjectId(word);
@@ -68,13 +67,7 @@ public class WordProvider implements IWordProvider {
     List<String> words = new ArrayList<>();
     if (number > 0) {
       for (int i = 0; i < number; i++) {
-        String line;
-        try {
-          line = utils.getFileLine(config.getLocation());
-        } catch (IOException e) {
-          throw Exceptions.UnableToReadFile(config.getLocation(), e);
-        }
-
+        String line = fileProvider.getFileLineFromUrl(config.getLocation() + "/" + config.getFilename());
         String[] fragments = line.split(config.getDelimiter());
         String wordRaw = fragments[config.getValueIndex()];
         if (words.contains(wordRaw)) {
