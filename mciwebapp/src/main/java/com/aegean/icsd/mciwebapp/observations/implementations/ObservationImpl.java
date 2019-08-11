@@ -62,6 +62,25 @@ public class ObservationImpl implements IObservationSvc {
   }
 
   @Override
+  public ObservationResponse getObservation(String id, String player) throws MciException {
+    if (StringUtils.isEmpty(id)
+      || StringUtils.isEmpty(player)) {
+      throw Exceptions.InvalidRequest();
+    }
+
+    Observation obs = dao.getById(id, player);
+    if (obs == null) {
+      throw Exceptions.UnableToRetrieveGame(id, player);
+    }
+
+    List<String> chosenWords = dao.getAssociatedSubjects(obs.getId());
+    List<ObservationItem> images = dao.getObservationItems(id);
+
+    return toResponse(obs, images, chosenWords);
+  }
+
+
+  @Override
   public ObservationResponse createObservation(String playerName, Difficulty difficulty) throws MciException {
     LOGGER.info(String.format("Creating Observation game for player %s at the difficulty %s",
       playerName, difficulty.name()));

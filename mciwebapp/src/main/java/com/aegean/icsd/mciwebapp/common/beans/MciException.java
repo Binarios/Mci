@@ -1,6 +1,6 @@
 package com.aegean.icsd.mciwebapp.common.beans;
 
-public class MciException extends Throwable {
+public class MciException extends Exception {
 
   private String code;
 

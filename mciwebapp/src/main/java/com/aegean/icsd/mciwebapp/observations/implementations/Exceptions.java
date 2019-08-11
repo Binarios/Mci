@@ -20,4 +20,9 @@ class Exceptions {
       "There was a problem retrieving the game rules", t);
   }
 
+  static MciException UnableToRetrieveGame(String id, String player) {
+    return new MciException(CODE_NAME + "." + 4,
+     String.format("Game with id %s and player %s doesn't exist", id, player));
+  }
+
 }

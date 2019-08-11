@@ -14,6 +14,7 @@ import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
+import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.SelectQuery;
@@ -125,9 +126,7 @@ public class ObservationDao implements IObservationDao {
       .whereHasType("obs", ont.getPrefixedEntity(gameName))
       .where("obs", "hasPlayer", "player")
       .where("obs", "p", "o")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
-      .addIriParam("hasAssetPath", ont.getPrefixedEntity("hasAssetPath"))
+      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
       .addLiteralParam("player", playerName)
       .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
       .build();
@@ -167,4 +166,84 @@ public class ObservationDao implements IObservationDao {
     }
   }
 
+  @Override
+  public Observation getById(String id, String player) throws MciException {
+    SelectQuery query = new SelectQuery.Builder()
+      .select("obs", "p", "o")
+      .whereHasType("obs", ont.getPrefixedEntity(gameName))
+      .where("obs", "hasPlayer", "player")
+      .where("obs", "hasId", "id")
+      .where("obs", "p", "o")
+      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
+      .addLiteralParam("player", player)
+      .addLiteralParam("id", id)
+      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
+      .build();
+
+    try {
+      JsonArray results = ont.select(query);
+      Observation observation = null;
+      if (results.size() > 0) {
+        Map<String, JsonArray> groupedByNodeName = new HashMap<>();
+        for (JsonElement element : results) {
+          JsonObject obj = element.getAsJsonObject();
+          String nodeName = obj.get("obs").getAsString();
+          if (groupedByNodeName.containsKey(nodeName)) {
+            JsonArray existing = groupedByNodeName.get(nodeName);
+            existing.add(element);
+          } else {
+            JsonArray obsArray = new JsonArray();
+            obsArray.add(element);
+            groupedByNodeName.put(nodeName, obsArray);
+          }
+        }
+        for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
+          observation = new Observation();
+          for (JsonElement element : entry.getValue()) {
+            JsonObject obj = element.getAsJsonObject();
+            String prefixedDataProperty = obj.get("p").getAsString();
+            String dataProperty = ont.removePrefix(prefixedDataProperty);
+            String value = obj.get("o").getAsString();
+            ano.setDataPropertyValue(observation,  dataProperty, value);
+          }
+        }
+      }
+      return  observation;
+    } catch (OntologyException | EngineException e) {
+      throw Exceptions.FailedToRetrieveGames(player, e);
+    }
+  }
+
+  @Override
+  public List<ObservationItem> getObservationItems(String id) throws MciException {
+    SelectQuery q = new SelectQuery.Builder()
+      .select("nb", "path")
+      .where("s", "hasId", "id")
+      .where("s", "hasObservation", "obs")
+      .where("obs", "hasImage", "img")
+      .where("obs", "hasTotalImages", "nb")
+      .where("img", "hasAssetPath", "path")
+      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasObservation", ont.getPrefixedEntity("hasObservation"))
+      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
+      .addIriParam("hasTotalImages", ont.getPrefixedEntity("hasTotalImages"))
+      .addIriParam("hasAssetPath", ont.getPrefixedEntity("hasAssetPath"))
+      .addLiteralParam("id", id)
+      .build();
+
+    try {
+      List<ObservationItem> items = new ArrayList<>();
+      JsonArray results = ont.select(q);
+      for (JsonElement entry : results) {
+        ObservationItem item = new ObservationItem();
+        item.setTotalInstances(entry.getAsJsonObject().get("nb").getAsInt());
+        item.setImage(entry.getAsJsonObject().get("path").getAsString());
+        items.add(item);
+      }
+      return items;
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToRetrieveObservationItems(id, e);
+    }
+  }
 }

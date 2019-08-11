@@ -2,7 +2,7 @@ package com.aegean.icsd.mciwebapp.observations.beans;
 
 public class ObservationItem {
   private String image;
-  private int totalInstances;
+  private Integer totalInstances;
 
   public String getImage() {
     return image;
@@ -12,11 +12,11 @@ public class ObservationItem {
     this.image = image;
   }
 
-  public int getTotalInstances() {
+  public Integer getTotalInstances() {
     return totalInstances;
   }
 
-  public void setTotalInstances(int totalInstances) {
+  public void setTotalInstances(Integer totalInstances) {
     this.totalInstances = totalInstances;
   }
 }

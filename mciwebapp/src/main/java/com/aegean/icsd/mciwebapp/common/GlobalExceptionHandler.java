@@ -13,7 +13,7 @@ import com.aegean.icsd.mciwebapp.common.beans.AppError;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
 
-@ControllerAdvice
+@ControllerAdvice("com.aegean.icsd.mciwebapp")
 public class GlobalExceptionHandler {
 
   private static Logger LOGGER = Logger.getLogger(GlobalExceptionHandler.class);

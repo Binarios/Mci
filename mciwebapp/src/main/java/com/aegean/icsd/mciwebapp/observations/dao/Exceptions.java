@@ -32,4 +32,8 @@ class Exceptions {
   public static MciException FailedToRetrieveGames(String player, Throwable e) {
     return new MciException(CODE_NAME + "." + 5, String.format("Could not retrieve the games of player %s ", player), e);
   }
+
+  public static MciException FailedToRetrieveObservationItems(String id, Throwable e) {
+    return new MciException(CODE_NAME + "." + 6, String.format("Could not retrieve the items of game with id %s ", id), e);
+  }
 }

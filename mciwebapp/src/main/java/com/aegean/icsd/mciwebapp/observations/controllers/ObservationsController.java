@@ -85,8 +85,9 @@ public class ObservationsController {
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
   public Response<ObservationResponse> getObservation(@PathVariable("id") String id,
-                                                      @RequestHeader("X-INFO-PLAYER") String player) {
-    return new Response<>(new ObservationResponse());
+                                                      @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+    ObservationResponse obs = observationImpl.getObservation(id, player);
+    return new Response<>(obs);
   }
 
   @PutMapping(value = "/{id}",

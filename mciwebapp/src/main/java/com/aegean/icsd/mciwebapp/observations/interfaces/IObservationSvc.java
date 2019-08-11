@@ -10,4 +10,6 @@ public interface IObservationSvc {
   List<ObservationResponse> getObservations(String playerName) throws MciException;
 
   ObservationResponse createObservation(String playerName, Difficulty difficulty) throws MciException;
+
+  ObservationResponse getObservation(String id, String player) throws MciException;
 }
