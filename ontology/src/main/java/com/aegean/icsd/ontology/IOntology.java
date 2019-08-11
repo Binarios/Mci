@@ -19,4 +19,6 @@ public interface IOntology {
   String getPrefixedEntity(String entity);
 
   Class<?> getJavaClassFromOwlType (String owlType);
+
+  String removePrefix(String prefixedEntity);
 }

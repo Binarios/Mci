@@ -1,7 +1,5 @@
 package com.aegean.icsd.mciwebapp.observations.beans;
 
-import java.util.List;
-
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
@@ -26,7 +24,7 @@ public class Observation {
 
   @Key
   @DataProperty("hasLevel")
-  private int level;
+  private Integer level;
 
   @DataProperty("maxCompletionTime")
   private Long maxCompletionTime;
@@ -38,7 +36,7 @@ public class Observation {
   private String completedDate;
 
   @DataProperty("hasTotalImages")
-  private int totalImages;
+  private Integer totalImages;
 
   public String getId() {
     return id;
@@ -80,11 +78,11 @@ public class Observation {
     this.completionTime = completionTime;
   }
 
-  public int getLevel() {
+  public Integer getLevel() {
     return level;
   }
 
-  public void setLevel(int level) {
+  public void setLevel(Integer level) {
     this.level = level;
   }
 
@@ -96,11 +94,11 @@ public class Observation {
     this.completedDate = completedDate;
   }
 
-  public int getTotalImages() {
+  public Integer getTotalImages() {
     return totalImages;
   }
 
-  public void setTotalImages(int totalImages) {
+  public void setTotalImages(Integer totalImages) {
     this.totalImages = totalImages;
   }
 }

@@ -28,4 +28,8 @@ class Exceptions {
     return new MciException(CODE_NAME + "." + 4, String.format("There was a problem when retrieving the images associated to the " +
       "id %s.",id), e);
   }
+
+  public static MciException FailedToRetrieveGames(String player, Throwable e) {
+    return new MciException(CODE_NAME + "." + 5, String.format("Could not retrieve the games of player %s ", player), e);
+  }
 }

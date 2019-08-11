@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 
 public interface IObservationDao {
 
@@ -12,4 +13,6 @@ public interface IObservationDao {
   List<String> getAssociatedSubjects(String id) throws MciException;
 
   String getImagePath(String id) throws MciException;
+
+  List<Observation> getGamesForPlayer(String playerName) throws MciException;
 }

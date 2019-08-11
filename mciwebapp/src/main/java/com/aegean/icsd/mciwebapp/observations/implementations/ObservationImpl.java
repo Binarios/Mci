@@ -48,6 +48,20 @@ public class ObservationImpl implements IObservationSvc {
   private IAnnotationReader ano;
 
   @Override
+  public List<ObservationResponse> getObservations(String playerName) throws MciException {
+    if (StringUtils.isEmpty(playerName)) {
+      throw Exceptions.InvalidRequest();
+    }
+
+    List<Observation> observations = dao.getGamesForPlayer(playerName);
+    List<ObservationResponse> res = new ArrayList<>();
+    for (Observation observation : observations) {
+      res.add(toResponse(observation, null, null));
+    }
+    return res;
+  }
+
+  @Override
   public ObservationResponse createObservation(String playerName, Difficulty difficulty) throws MciException {
     LOGGER.info(String.format("Creating Observation game for player %s at the difficulty %s",
       playerName, difficulty.name()));
@@ -143,13 +157,13 @@ public class ObservationImpl implements IObservationSvc {
 
   ObservationResponse toResponse(Observation obs, List<ObservationItem> images, List<String> words) {
     ObservationResponse resp = new ObservationResponse();
-    resp.setId(obs.getId());
-    resp.setDifficulty(obs.getDifficulty());
-    resp.setLevel(obs.getLevel());
-    resp.setPlayer(obs.getPlayerName());
-    resp.setMaxCompletionTime(obs.getMaxCompletionTime());
-    resp.setItems(images);
-    resp.setWords(words);
+    resp.setObservation(obs);
+    if (images != null) {
+      resp.setItems(images);
+    }
+    if (words != null) {
+      resp.setWords(words);
+    }
     return resp;
   }
 }

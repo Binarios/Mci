@@ -61,7 +61,7 @@ public class SelectQuery {
     private boolean distinct = false;
 
     public enum Operator {
-      GT, LT, EQ, CONTAINS, NOT_CONTAINS
+      GT, LT, EQ, CONTAINS, NOT_CONTAINS,IS_LITERAL
     }
 
     public Builder addPrefix (String prefix, String Uri) {
@@ -155,6 +155,8 @@ public class SelectQuery {
         case NOT_CONTAINS:
           filter = "FILTER (!CONTAINS(" + escapedVar +", " + escapedVal + "))";
           break;
+        case IS_LITERAL:
+          filter = "FILTER (isLiteral(" + escapedVar +"))";
         default:
           break;
       }

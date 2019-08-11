@@ -1,20 +1,26 @@
 package com.aegean.icsd.mciwebapp.observations.dao;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.engine.common.beans.EngineException;
+import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 @Repository
 public class ObservationDao implements IObservationDao {
@@ -26,6 +32,9 @@ public class ObservationDao implements IObservationDao {
 
   @Autowired
   private IGenerator generator;
+
+  @Autowired
+  private IAnnotationReader ano;
 
   @Override
   public int getLastCompletedLevel(Difficulty difficulty, String playerName) throws MciException {
@@ -108,4 +117,54 @@ public class ObservationDao implements IObservationDao {
       throw Exceptions.FailedToRetrievePaths(id ,e);
     }
   }
+
+  @Override
+  public List<Observation> getGamesForPlayer(String playerName) throws MciException {
+    SelectQuery query = new SelectQuery.Builder()
+      .select("obs", "p", "o")
+      .whereHasType("obs", ont.getPrefixedEntity(gameName))
+      .where("obs", "hasPlayer", "player")
+      .where("obs", "p", "o")
+      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
+      .addIriParam("hasAssetPath", ont.getPrefixedEntity("hasAssetPath"))
+      .addLiteralParam("player", playerName)
+      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
+      .build();
+
+    try {
+      JsonArray results = ont.select(query);
+      List<Observation> observations = new ArrayList<>();
+      Map<String, JsonArray> groupedByNodeName = new HashMap<>();
+      for (JsonElement element : results) {
+        JsonObject obj = element.getAsJsonObject();
+        String nodeName = obj.get("obs").getAsString();
+        if (groupedByNodeName.containsKey(nodeName)) {
+          JsonArray existing = groupedByNodeName.get(nodeName);
+          existing.add(element);
+        } else {
+          JsonArray obsArray = new JsonArray();
+          obsArray.add(element);
+          groupedByNodeName.put(nodeName, obsArray);
+        }
+      }
+
+      for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
+        Observation obs = new Observation();
+        for (JsonElement element : entry.getValue()) {
+          JsonObject obj = element.getAsJsonObject();
+          String prefixedDataProperty = obj.get("p").getAsString();
+          String dataProperty = ont.removePrefix(prefixedDataProperty);
+          String value = obj.get("o").getAsString();
+          ano.setDataPropertyValue(obs,  dataProperty, value);
+        }
+        observations.add(obs);
+      }
+
+      return  observations;
+    } catch (OntologyException | EngineException e) {
+      throw Exceptions.FailedToRetrieveGames(playerName, e);
+    }
+  }
+
 }

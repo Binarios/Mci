@@ -71,7 +71,7 @@ public class AnnotationReader implements IAnnotationReader {
 
   @Override
   public Map<String, Object> getDataProperties(Object object) throws EngineException {
-    LOGGER.debug("Retrieving dataProperty Annotations");
+    LOGGER.debug("Reading data properties");
     Map<String, Object> relations = new HashMap<>();
     for (Field field : object.getClass().getDeclaredFields()) {
       if (!field.isAnnotationPresent(DataProperty.class)) {
@@ -92,6 +92,40 @@ public class AnnotationReader implements IAnnotationReader {
       }
     }
     return relations;
+  }
+
+  @Override
+  public void setDataPropertyValue(Object object, String property, Object value) throws EngineException {
+    for (Field field : object.getClass().getDeclaredFields()) {
+      if (!field.isAnnotationPresent(DataProperty.class)) {
+        continue;
+      }
+      DataProperty dataProperty = field.getAnnotation(DataProperty.class);
+      boolean found = false;
+      for (String prop : dataProperty.value()) {
+        found = prop.equals(property);
+        if (found) {
+          break;
+        }
+      }
+      if (found) {
+        Class<?> fieldClass = field.getType();
+        if(Integer.class.isAssignableFrom(fieldClass)) {
+          invokeFieldSetter(field, object, Integer.parseInt(value.toString()));
+        }
+        if(Long.class.isAssignableFrom(fieldClass)) {
+          invokeFieldSetter(field, object, Long.parseLong(value.toString()));
+        }
+        if(String.class.isAssignableFrom(fieldClass)) {
+          invokeFieldSetter(field, object, value.toString());
+        }
+        if(Enum.class.isAssignableFrom(fieldClass)) {
+          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase()));
+        }
+
+        break;
+      }
+    }
   }
 
   Object invokeFieldGetter (Field field, Object object) throws EngineException {

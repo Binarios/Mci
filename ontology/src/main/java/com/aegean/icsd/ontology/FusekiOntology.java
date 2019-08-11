@@ -1,13 +1,23 @@
 package com.aegean.icsd.ontology;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.Authenticator;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -49,28 +59,30 @@ import com.aegean.icsd.ontology.beans.CardinalitySchema;
 import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
-import com.aegean.icsd.ontology.beans.RestrictionSchema;
-import com.aegean.icsd.ontology.beans.PropertySchema;
+import com.aegean.icsd.ontology.beans.FusekiResponse;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.ontology.queries.beans.InsertParam;
+import com.aegean.icsd.ontology.beans.PropertySchema;
+import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.queries.InsertQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
+import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import openllet.jena.PelletReasonerFactory;
 
-//@Service
-@Deprecated(since = "Use FusekiOntology", forRemoval = true)
-public class Ontology implements IOntology {
+@Service
+public class FusekiOntology implements IOntology {
 
-  private static Logger LOGGER = Logger.getLogger(Ontology.class);
+  private static Logger LOGGER = Logger.getLogger(FusekiOntology.class);
 
   @Autowired
   private DatasetProperties ontologyProps;
 
   private OntModel model;
-  private Dataset ds;
+  private HttpClient client;
 
   @Override
   public JsonArray select(SelectQuery selectQuery) throws OntologyException {
@@ -87,39 +99,40 @@ public class Ontology implements IOntology {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
 
-    Query selectRequest;
+    String query;
     try {
-      selectRequest = QueryFactory.create(sparql.asQuery().toString());
+      query = sparql.asQuery().toString();
     } catch (QueryException ex ) {
       throw new OntologyException("SEL.1", "Error when constructing the query", ex);
     }
 
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(ontologyProps.getDatasetLocation() + "/query"))
+      .timeout(Duration.ofMinutes(5))
+      .header("Content-Type", "application/x-www-form-urlencoded")
+      .header("Accept", "application/sparql-results+json,*/*;q=0.9")
+      .POST(HttpRequest.BodyPublishers.ofString("query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
+      .build();
+
     try {
-      ds.begin(ReadWrite.READ);
-      QueryExecution queryProcessor = QueryExecutionFactory.create(selectRequest, ds);
-      ResultSet resultSet = queryProcessor.execSelect();
-      List<String> varNames = resultSet.getResultVars();
-      while (resultSet.hasNext()) {
-        QuerySolution solution = resultSet.next();
-        JsonObject obj = new JsonObject();
-        for (String varName : varNames) {
-          String var = "?" + varName;
-          RDFNode node = solution.get(var);
-          if (node != null && node.isResource()) {
-            obj.addProperty(varName, node.asResource().getLocalName());
-          }
-          if (node != null && node.isLiteral()) {
-            obj.addProperty(varName, node.asLiteral().getString());
-          }
-        }
-        if (obj.entrySet().size() > 0) {
-          array.add(obj);
-        }
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      if (response.statusCode() >= 400) {
+        throw new OntologyException("SEL.400", "Error when executing the query");
       }
-    } catch (Exception ex) {
-      throw new OntologyException("SEL.1", "Error when reading from TDB2", ex);
-    } finally {
-      ds.end();
+
+     String body = response.body();
+     FusekiResponse res = new Gson().fromJson(body, FusekiResponse.class);
+     List<String> varNames = res.getHead().getVars();
+     for (JsonElement elem : res.getResults().getBindings()) {
+       JsonObject resultObj = new JsonObject();
+       for (String varName : varNames) {
+         String value = elem.getAsJsonObject().get(varName).getAsJsonObject().get("value").getAsString();
+         resultObj.addProperty(varName, value);
+       }
+       array.add(resultObj);
+     }
+    } catch (IOException | InterruptedException e) {
+      throw new OntologyException("SEL.1", "Error when executing the query", e);
     }
     return array;
   }
@@ -143,25 +156,29 @@ public class Ontology implements IOntology {
       }
     }
 
-    UpdateRequest updateRequest;
+    String query;
     try {
-      updateRequest = UpdateFactory.create(sparql.asUpdate().toString());
+      query = sparql.asUpdate().toString();
     } catch (QueryException ex ) {
       throw new OntologyException("INS.1", "Error when constructing the query", ex);
     }
-    try {
-      ds.begin(ReadWrite.WRITE);
-      UpdateProcessor updateProcessor = UpdateExecutionFactory.create(updateRequest, ds);
-      updateProcessor.execute();
-      ds.commit();
-    } catch (Exception ex) {
-      ds.abort();
-      throw new OntologyException("INS.2", "Error when inserting the triple", ex);
-    }  finally {
-      ds.end();
-    }
 
-    return true;
+    HttpRequest request = HttpRequest.newBuilder()
+      .uri(URI.create(ontologyProps.getDatasetLocation() + "/update"))
+      .timeout(Duration.ofMinutes(5))
+      .header("Content-Type", "application/x-www-form-urlencoded")
+      .POST(HttpRequest.BodyPublishers.ofString("update=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
+      .build();
+
+    try {
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      if (response.statusCode() != 200) {
+        throw new OntologyException("INS.2", "Error when inserting the data");
+      }
+      return true;
+    } catch (IOException | InterruptedException e) {
+      throw new OntologyException("INS.99", "Error when executing the query", e);
+    }
   }
 
   @Override
@@ -211,7 +228,14 @@ public class Ontology implements IOntology {
 
   @Override
   public String removePrefix(String prefixedEntity) {
-    throw new NotImplementedException("");
+    String[] chunks = prefixedEntity.split(":");
+    String entity = "";
+    if (chunks.length == 1) {
+      entity = prefixedEntity;
+    } else {
+      entity = chunks[1].replace(">", "");
+    }
+    return entity;
   }
 
   List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {
@@ -435,32 +459,21 @@ public class Ontology implements IOntology {
   @PostConstruct
   void setupModel () {
     LOGGER.info("START: Setting up the model");
-    String ontologyName = this.ontologyProps.getOntologyName();
+    String ontologyName = ontologyProps.getOntologyName();
 
     ModelMaker maker= ModelFactory.createMemModelMaker();
     OntModelSpec spec = new OntModelSpec(PelletReasonerFactory.THE_SPEC);
     spec.setBaseModelMaker(maker);
     spec.setImportModelMaker(maker);
     Model base = maker.createModel( ontologyName );
-    this.model = ModelFactory.createOntologyModel(spec, base);
-    LOGGER.info("START: Reading the model from :" + this.ontologyProps.getOntologyLocation());
-    this.model.read(this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
-    LOGGER.info("END: Reading the model from :" + this.ontologyProps.getOntologyLocation());
-    LOGGER.info("START: Reading TDB2 from :" + this.ontologyProps.getDatasetLocation());
-    ds = TDB2Factory.connectDataset(this.ontologyProps.getDatasetLocation());
-    ds.begin(ReadWrite.READ);
-    boolean found = ds.containsNamedModel(ontologyProps.getOntologyName());
-    ds.end();
-    LOGGER.info("END: Reading TDB2 from :" + this.ontologyProps.getDatasetLocation());
-
-    if (!found) {
-      LOGGER.info("START: Init TDB2 in :" + this.ontologyProps.getDatasetLocation());
-      ds.begin(ReadWrite.WRITE);
-      ds.addNamedModel(ontologyProps.getOntologyName(), ModelFactory.createOntologyModel());
-      ds.commit();
-      ds.end();
-      LOGGER.info("END: Init TDB2 in :" + this.ontologyProps.getDatasetLocation());
-    }
+    model = ModelFactory.createOntologyModel(spec, base);
+    LOGGER.info("START: Reading the model from :" + ontologyProps.getOntologyLocation());
+    model.read(ontologyProps.getOntologyLocation(), ontologyProps.getOntologyType());
+    LOGGER.info("END: Reading the model from :" + ontologyProps.getOntologyLocation());
+    client = HttpClient.newBuilder()
+      .version(HttpClient.Version.HTTP_2)
+      .followRedirects(HttpClient.Redirect.NEVER)
+      .build();
   }
 
 }
