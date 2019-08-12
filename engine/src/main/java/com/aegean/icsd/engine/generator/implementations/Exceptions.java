@@ -33,6 +33,9 @@ class Exceptions {
     return new EngineException(CODE_NAME + "." + 7, String.format("Missing mandatory relation %s from object %s", relationName, type));
   }
 
+  static EngineException ConstructorNotFound(String gameName, Throwable t) {
+    return new EngineException(CODE_NAME + "." + 8, String.format("Could not find class for game %s", gameName), t);
+  }
 
   static EngineException GenericError(Throwable t) {
     return new EngineException(CODE_NAME + "." + 100, "There was a generic error. See including trace for more details", t);

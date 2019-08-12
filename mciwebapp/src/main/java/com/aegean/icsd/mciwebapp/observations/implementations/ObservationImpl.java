@@ -55,7 +55,13 @@ public class ObservationImpl implements IObservationSvc {
       throw Exceptions.InvalidRequest();
     }
 
-    List<Observation> observations = dao.getGamesForPlayer(playerName);
+    List<Observation> observations = null;
+    try {
+      observations = generator.getGamesForPlayer(gameName, playerName, Observation.class);
+    } catch (EngineException e) {
+      throw Exceptions.FailedToRetrieveGames(playerName, e);
+    }
+
     List<ObservationResponse> res = new ArrayList<>();
     for (Observation observation : observations) {
       res.add(toResponse(observation, null, null));
@@ -138,7 +144,12 @@ public class ObservationImpl implements IObservationSvc {
       throw Exceptions.UnableToRetrieveGameRules(e);
     }
 
-    int lastCompletedLevel = dao.getLastCompletedLevel(difficulty, playerName);
+    int lastCompletedLevel;
+    try {
+      lastCompletedLevel = generator.getLastCompletedLevel(gameName, difficulty, playerName);
+    } catch (EngineException e) {
+      throw Exceptions.FailedToRetrieveLastLevel(gameName, difficulty, playerName, e);
+    }
     int newLevel = lastCompletedLevel + 1;
 
     EntityRestriction maxCompleteTimeRes;

@@ -1,10 +1,9 @@
-package com.aegean.icsd.mciwebapp.observations.implementations;
+package com.aegean.icsd.mciwebapp.wordpuzzle.implementations;
 
-import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 
 class Exceptions {
-  private static final String CODE_NAME = "OBS";
+  private static final String CODE_NAME = "WOR_PUZ";
 
   static MciException InvalidRequest() {
     return new MciException(CODE_NAME + "." + 1, "The request is invalid. " +
@@ -35,16 +34,4 @@ class Exceptions {
     return new MciException(CODE_NAME + "." + 5,
       String.format("The completion time of game with id %s is greater than the allowed of %s", id, maxCompletionTime));
   }
-
-  static MciException FailedToRetrieveLastLevel(String gameName, Difficulty difficulty,
-      String playerName, Throwable t) {
-    return new MciException(CODE_NAME + "." + 6, String.format("Unable to retrieve the last completed level for" +
-        " the game \"%s\" with difficulty \"%s\" and player \"%s\"", gameName, difficulty.name(), playerName)
-        , t);
-  }
-
-  public static MciException FailedToRetrieveGames(String player, Throwable e) {
-    return new MciException(CODE_NAME + "." + 7, String.format("Could not retrieve the games of player %s ", player), e);
-  }
-
 }

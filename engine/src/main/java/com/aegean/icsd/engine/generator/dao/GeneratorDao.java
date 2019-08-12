@@ -1,5 +1,7 @@
 package com.aegean.icsd.engine.generator.dao;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -7,9 +9,8 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.aegean.icsd.engine.common.Utils;
+import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
-import com.aegean.icsd.engine.generator.beans.GameInfo;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.InsertQuery;
@@ -17,6 +18,8 @@ import com.aegean.icsd.ontology.queries.SelectQuery;
 import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 @Repository
 public class GeneratorDao implements IGeneratorDao {
@@ -94,6 +97,67 @@ public class GeneratorDao implements IGeneratorDao {
   }
 
   @Override
+  public int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException {
+    SelectQuery query = new SelectQuery.Builder()
+        .select("level")
+        .whereHasType("obs", ontology.getPrefixedEntity(gameName))
+        .where("obs", "hasDifficulty", "difficulty")
+        .where("obs", "hasPlayer", "playerName")
+        .where("obs", "hasLevel", "level")
+        .orderByDesc("level")
+        .limit(1)
+        .addIriParam("hasDifficulty", ontology.getPrefixedEntity("hasDifficulty"))
+        .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+        .addIriParam("hasLevel", ontology.getPrefixedEntity("hasLevel"))
+        .addLiteralParam("difficulty", difficulty.name())
+        .addLiteralParam("playerName", playerName)
+        .build();
+
+    try {
+      int level = 0;
+      JsonArray results = ontology.select(query);
+      if (results.size() > 0) {
+        level = results.get(0).getAsJsonObject().get("level").getAsInt();
+      }
+      return level;
+    } catch (OntologyException e) {
+      throw DaoExceptions.FailedToRetrieveLastLevel(gameName, difficulty, playerName, e);
+    }
+  }
+
+  @Override
+  public Map<String, JsonArray> getGamesForPlayer(String gameName, String playerName) throws EngineException {
+    SelectQuery query = new SelectQuery.Builder().select("obs", "p", "o")
+        .whereHasType("obs", ontology.getPrefixedEntity(gameName))
+        .where("obs", "hasPlayer", "player")
+        .where("obs", "p", "o")
+        .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+        .addLiteralParam("player", playerName)
+        .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
+        .build();
+
+    try {
+      JsonArray results = ontology.select(query);
+      Map<String, JsonArray> groupedByNodeName = new HashMap<>();
+      for (JsonElement element : results) {
+        JsonObject obj = element.getAsJsonObject();
+        String nodeName = obj.get("obs").getAsString();
+        if (groupedByNodeName.containsKey(nodeName)) {
+          JsonArray existing = groupedByNodeName.get(nodeName);
+          existing.add(element);
+        } else {
+          JsonArray obsArray = new JsonArray();
+          obsArray.add(element);
+          groupedByNodeName.put(nodeName, obsArray);
+        }
+      }
+      return groupedByNodeName;
+    } catch (OntologyException e) {
+     throw DaoExceptions.FailedToRetrieveGames(playerName, e);
+    }
+  }
+
+    @Override
   public Class<?> getJavaClass(String range) {
     return ontology.getJavaClassFromOwlType(range);
   }
