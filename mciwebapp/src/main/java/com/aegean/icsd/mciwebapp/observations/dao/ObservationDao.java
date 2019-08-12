@@ -92,55 +92,6 @@ public class ObservationDao implements IObservationDao {
   }
 
   @Override
-  public Observation getById(String id, String player) throws MciException {
-    SelectQuery query = new SelectQuery.Builder()
-      .select("obs", "p", "o")
-      .whereHasType("obs", ont.getPrefixedEntity(gameName))
-      .where("obs", "hasPlayer", "player")
-      .where("obs", "hasId", "id")
-      .where("obs", "p", "o")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
-      .addLiteralParam("player", player)
-      .addLiteralParam("id", id)
-      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
-      .build();
-
-    try {
-      JsonArray results = ont.select(query);
-      Observation observation = null;
-      if (results.size() > 0) {
-        Map<String, JsonArray> groupedByNodeName = new HashMap<>();
-        for (JsonElement element : results) {
-          JsonObject obj = element.getAsJsonObject();
-          String nodeName = obj.get("obs").getAsString();
-          if (groupedByNodeName.containsKey(nodeName)) {
-            JsonArray existing = groupedByNodeName.get(nodeName);
-            existing.add(element);
-          } else {
-            JsonArray obsArray = new JsonArray();
-            obsArray.add(element);
-            groupedByNodeName.put(nodeName, obsArray);
-          }
-        }
-        for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
-          observation = new Observation();
-          for (JsonElement element : entry.getValue()) {
-            JsonObject obj = element.getAsJsonObject();
-            String prefixedDataProperty = obj.get("p").getAsString();
-            String dataProperty = ont.removePrefix(prefixedDataProperty);
-            String value = obj.get("o").getAsString();
-            ano.setDataPropertyValue(observation,  dataProperty, value);
-          }
-        }
-      }
-      return  observation;
-    } catch (OntologyException | EngineException e) {
-      throw Exceptions.FailedToRetrieveGames(player, e);
-    }
-  }
-
-  @Override
   public List<ObservationItem> getObservationItems(String id) throws MciException {
     SelectQuery q = new SelectQuery.Builder()
       .select("nb", "path")

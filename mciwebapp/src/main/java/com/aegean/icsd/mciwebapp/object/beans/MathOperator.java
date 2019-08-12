@@ -2,30 +2,18 @@ package com.aegean.icsd.mciwebapp.object.beans;
 
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
-import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.annotations.Key;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 
 @Entity(MathOperator.NAME)
-public class MathOperator {
+public class MathOperator extends BaseGameObject {
   public static final String NAME = "MathOperator";
-
-  @Id
-  @DataProperty("hasId")
-  private String id;
 
   @Key
   private String symbolName;
 
   @DataProperty("hasSymbol")
   private String symbol;
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
 
   public String getSymbolName() {
     return symbolName;

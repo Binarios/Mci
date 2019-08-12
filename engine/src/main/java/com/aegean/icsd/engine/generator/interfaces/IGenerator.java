@@ -5,6 +5,7 @@ import java.util.List;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 
@@ -21,6 +22,8 @@ public interface IGenerator {
   <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
       throws EngineException;
 
-  int generateIntDataValue(ValueRangeRestriction res);
+  <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass)
+    throws EngineException;
 
+  int generateIntDataValue(ValueRangeRestriction res);
 }

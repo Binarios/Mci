@@ -18,6 +18,7 @@ public class SelectQuery {
   private Map<String, List<Triplet>> conditions = new LinkedHashMap<>();
   private Map<String, String> iriParams = new LinkedHashMap<>();
   private Map<String, String> literalParams = new LinkedHashMap<>();
+  private Map<String, Integer> intLiteralParams = new LinkedHashMap<>();
   private List<String> selectParams = new LinkedList<>();
 
   private SelectQuery() { }
@@ -46,6 +47,10 @@ public class SelectQuery {
     return selectParams;
   }
 
+  public Map<String, Integer> getIntLiteralParams() {
+    return intLiteralParams;
+  }
+
 
   public static class Builder {
     private List<String> params = new LinkedList<>();
@@ -54,6 +59,7 @@ public class SelectQuery {
     private List<String> filters = new LinkedList<>();
     private Map<String, String> iriParams = new LinkedHashMap<>();
     private Map<String, String> literalParams = new LinkedHashMap<>();
+    private Map<String, Integer> intLiteralParams = new LinkedHashMap<>();
     private List<SelectQuery> subQueries = new LinkedList<>();
     private boolean isAscOrdered = false;
     private String orderFiled = null;
@@ -76,6 +82,11 @@ public class SelectQuery {
 
     public Builder addLiteralParam(String param, String value) {
       literalParams.put(param, value);
+      return this;
+    }
+
+    public Builder addLiteralParam(String param, Integer value) {
+      intLiteralParams.put(param, value);
       return this;
     }
 
@@ -165,6 +176,27 @@ public class SelectQuery {
       return this;
     }
 
+    public Builder filterByStrLength(String var, Operator operator, String value) {
+      String filter = null;
+      String escapedVar = removeParamChars(var);
+      String escapedVal = removeParamChars(value);
+      switch (operator) {
+        case EQ:
+          filter = "FILTER (STRLEN(" + escapedVar +")=" + escapedVal + ")";
+          break;
+        case GT:
+          filter = "FILTER (STRLEN(" + escapedVar +")>" + escapedVal + ")";
+          break;
+        case LT:
+          filter = "FILTER (STRLEN(" + escapedVar +")<" + escapedVal + ")";
+          break;
+        default:
+          break;
+      }
+
+      filters.add(filter);
+      return this;
+    }
     public Builder orderByDesc(String field) {
       return this.orderBy(field, false);
     }
@@ -191,6 +223,7 @@ public class SelectQuery {
       query.conditions = conditions;
       query.iriParams = iriParams;
       query.literalParams = literalParams;
+      query.intLiteralParams = intLiteralParams;
       query.selectParams = params;
 
       return query;
@@ -215,15 +248,21 @@ public class SelectQuery {
 
       for (Map.Entry<String, List<Triplet>> entry : conditions.entrySet()) {
         String whereClause = buildWhereClause(entry);
-        builder.append("\t").append(whereClause).append("\n");
+        if (!StringUtils.isEmpty(whereClause)) {
+          builder.append("\t").append(whereClause).append("\n");
+        }
       }
 
       for (SelectQuery subQ : subQueries) {
-        builder.append("\t{\n\t").append(subQ.command).append("\n\t}\n");
+        if (subQ != null && !StringUtils.isEmpty(subQ.command)) {
+          builder.append("\t{\n\t").append(subQ.command).append("\n\t}\n");
+        }
       }
 
       for(String filter : filters) {
-        builder.append("\t").append(filter).append("\n");
+        if (!StringUtils.isEmpty(filter)) {
+          builder.append("\t").append(filter).append("\n");
+        }
       }
 
       builder.append("}").append("\n");

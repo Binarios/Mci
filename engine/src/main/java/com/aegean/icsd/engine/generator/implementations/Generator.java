@@ -1,7 +1,5 @@
 package com.aegean.icsd.engine.generator.implementations;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -27,11 +25,6 @@ import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.ontology.IOntology;
-import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.ontology.queries.SelectQuery;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 @Service
 public class Generator implements IGenerator {
@@ -118,28 +111,12 @@ public class Generator implements IGenerator {
   @Override
   public <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
       throws EngineException {
+    return  dao.getGamesForPlayer(gameName, playerName, gameObjClass);
+  }
 
-    List<T> games = new ArrayList<>();
-    Map<String, JsonArray> groupedByNodeName = dao.getGamesForPlayer(gameName, playerName);
-    for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
-      T game;
-      try {
-        game = gameObjClass.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw Exceptions.ConstructorNotFound(gameName, e);
-      }
-
-      for (JsonElement element : entry.getValue()) {
-        JsonObject obj = element.getAsJsonObject();
-        String prefixedDataProperty = obj.get("p").getAsString();
-        String dataProperty = ont.removePrefix(prefixedDataProperty);
-        String value = obj.get("o").getAsString();
-        ano.setDataPropertyValue(game,  dataProperty, value);
-      }
-      games.add(game);
-    }
-
-    return  games;
+  @Override
+  public <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass) throws EngineException {
+    return dao.getGameWithId(id, playerName, gameObjClass);
   }
 
   @Override
@@ -238,13 +215,5 @@ public class Generator implements IGenerator {
     return cardinality;
   }
 
-  <T> T mapJsonToObject(JsonObject json, Class<T> objectClass)
-      throws IllegalAccessException, InstantiationException, EngineException {
-    T object = objectClass.newInstance();
-    String prefixedDataProperty = json.get("p").getAsString();
-    String dataProperty = ont.removePrefix(prefixedDataProperty);
-    String value = json.get("o").getAsString();
-    ano.setDataPropertyValue(json,  dataProperty, value);
-    return object;
-  }
+
 }

@@ -2,16 +2,12 @@ package com.aegean.icsd.mciwebapp.object.beans;
 
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
-import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.annotations.Key;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 
 @Entity(Block.NAME)
-public class Block {
+public class Block extends BaseGameObject {
   public static final String NAME = "Block";
-
-  @Id
-  @DataProperty("hasId")
-  private String id;
 
   @Key
   @DataProperty("isMovingBlock")
@@ -31,14 +27,6 @@ public class Block {
 
   public void setMoving(Boolean moving) {
     this.moving = moving;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
   }
 
   public String getMovement() {

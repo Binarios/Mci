@@ -1,8 +1,8 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +12,7 @@ import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
+import com.aegean.icsd.mciwebapp.object.dao.IObjectsDao;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObjectFileProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 
@@ -24,25 +25,13 @@ public class WordProvider implements IWordProvider {
   private WordConfiguration config;
 
   @Autowired
+  private IObjectsDao dao;
+
+  @Autowired
   private IGenerator generator;
 
   @Autowired
   private IObjectFileProvider fileProvider;
-
-  @Override
-  public List<String> getWordsIds(int number) throws ProviderException {
-    LOGGER.info(String.format("Requested %s Words", number));
-    List<String> objIds = new ArrayList<>();
-    if (number < 0) {
-      number = 0;
-    }
-    List<String> words = readWords(number);
-    for (String word : words) {
-      String id = getWordFromValue(word);
-      objIds.add(id);
-    }
-    return objIds;
-  }
 
   @Override
   public String getWordFromValue(String value) throws ProviderException {
@@ -61,24 +50,15 @@ public class WordProvider implements IWordProvider {
     }
   }
 
-
-
-  List<String> readWords(int number) throws ProviderException {
-    List<String> words = new ArrayList<>();
-    if (number > 0) {
-      for (int i = 0; i < number; i++) {
-        String line = fileProvider.getFileLineFromUrl(config.getLocation() + "/" + config.getFilename());
-        String[] fragments = line.split(config.getDelimiter());
-        String wordRaw = fragments[config.getValueIndex()];
-        if (words.contains(wordRaw)) {
-          i--;
-        } else {
-          words.add(wordRaw);
-        }
-      }
+  @Override
+  public List<String> getWordIdsWithLength(int length) throws ProviderException {
+    List<String> ids = null;
+    if (length > 0) {
+      ids = dao.getWordIdsWithLength(length);
     }
-    return words;
+    return ids;
   }
+
 
   Word toWord(String value) {
     Word word = new Word();

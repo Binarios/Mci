@@ -1,5 +1,6 @@
 package com.aegean.icsd.engine.generator.dao;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
+import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
+import com.aegean.icsd.engine.generator.beans.BaseGame;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.InsertQuery;
@@ -27,15 +30,18 @@ public class GeneratorDao implements IGeneratorDao {
   @Autowired
   private IOntology ontology;
 
+  @Autowired
+  private IAnnotationReader ano;
+
   @Override
   public boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)
     throws EngineException {
-    return createRelation(id, name, rangeValue,false, valueClass);
+    return createRelation(id, name, rangeValue, false, valueClass);
   }
 
   @Override
   public boolean createObjRelation(String id, String name, String objId) throws EngineException {
-    return createRelation(id, name, objId,true, null);
+    return createRelation(id, name, objId, true, null);
   }
 
   @Override
@@ -99,19 +105,19 @@ public class GeneratorDao implements IGeneratorDao {
   @Override
   public int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException {
     SelectQuery query = new SelectQuery.Builder()
-        .select("level")
-        .whereHasType("obs", ontology.getPrefixedEntity(gameName))
-        .where("obs", "hasDifficulty", "difficulty")
-        .where("obs", "hasPlayer", "playerName")
-        .where("obs", "hasLevel", "level")
-        .orderByDesc("level")
-        .limit(1)
-        .addIriParam("hasDifficulty", ontology.getPrefixedEntity("hasDifficulty"))
-        .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
-        .addIriParam("hasLevel", ontology.getPrefixedEntity("hasLevel"))
-        .addLiteralParam("difficulty", difficulty.name())
-        .addLiteralParam("playerName", playerName)
-        .build();
+      .select("level")
+      .whereHasType("obs", ontology.getPrefixedEntity(gameName))
+      .where("obs", "hasDifficulty", "difficulty")
+      .where("obs", "hasPlayer", "playerName")
+      .where("obs", "hasLevel", "level")
+      .orderByDesc("level")
+      .limit(1)
+      .addIriParam("hasDifficulty", ontology.getPrefixedEntity("hasDifficulty"))
+      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasLevel", ontology.getPrefixedEntity("hasLevel"))
+      .addLiteralParam("difficulty", difficulty.name())
+      .addLiteralParam("playerName", playerName)
+      .build();
 
     try {
       int level = 0;
@@ -126,38 +132,71 @@ public class GeneratorDao implements IGeneratorDao {
   }
 
   @Override
-  public Map<String, JsonArray> getGamesForPlayer(String gameName, String playerName) throws EngineException {
+  public <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
+    throws EngineException {
     SelectQuery query = new SelectQuery.Builder().select("obs", "p", "o")
-        .whereHasType("obs", ontology.getPrefixedEntity(gameName))
-        .where("obs", "hasPlayer", "player")
-        .where("obs", "p", "o")
-        .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
-        .addLiteralParam("player", playerName)
-        .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
-        .build();
+      .whereHasType("s", ontology.getPrefixedEntity(gameName))
+      .where("s", "hasPlayer", "player")
+      .where("s", "p", "o")
+      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+      .addLiteralParam("player", playerName)
+      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
+      .build();
 
     try {
       JsonArray results = ontology.select(query);
-      Map<String, JsonArray> groupedByNodeName = new HashMap<>();
-      for (JsonElement element : results) {
-        JsonObject obj = element.getAsJsonObject();
-        String nodeName = obj.get("obs").getAsString();
-        if (groupedByNodeName.containsKey(nodeName)) {
-          JsonArray existing = groupedByNodeName.get(nodeName);
-          existing.add(element);
-        } else {
-          JsonArray obsArray = new JsonArray();
-          obsArray.add(element);
-          groupedByNodeName.put(nodeName, obsArray);
+      List<T> games = new ArrayList<>();
+      JsonObject toMap = new JsonObject();
+      Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
+      for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
+        try {
+          T game = mapJsonToObject(entry.getValue(), gameObjClass);
+          games.add(game);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+          throw DaoExceptions.ConstructorNotFound(gameName, e);
         }
       }
-      return groupedByNodeName;
+
+      return games;
     } catch (OntologyException e) {
-     throw DaoExceptions.FailedToRetrieveGames(playerName, e);
+      throw DaoExceptions.FailedToRetrieveGames(playerName, e);
     }
   }
 
-    @Override
+  @Override
+  public <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass) throws EngineException {
+    SelectQuery query = new SelectQuery.Builder()
+      .select("s", "p", "o")
+      .where("s", "hasPlayer", "player")
+      .where("s", "hasId", "id")
+      .where("s", "p", "o")
+      .addIriParam("hasId", ontology.getPrefixedEntity("hasId"))
+      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+      .addLiteralParam("player", playerName)
+      .addLiteralParam("id", id)
+      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
+      .build();
+
+    try {
+      JsonArray results = ontology.select(query);
+      T game = null;
+      if (results.size() > 0) {
+        Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
+        for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
+          try {
+            game = mapJsonToObject(entry.getValue(), gameObjClass);
+          } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            throw DaoExceptions.ConstructorNotFound(id, e);
+          }
+        }
+      }
+      return game;
+    } catch (OntologyException | EngineException e) {
+      throw DaoExceptions.FailedToRetrieveGames(playerName, e);
+    }
+  }
+
+  @Override
   public Class<?> getJavaClass(String range) {
     return ontology.getJavaClassFromOwlType(range);
   }
@@ -180,5 +219,35 @@ public class GeneratorDao implements IGeneratorDao {
     } catch (OntologyException e) {
       throw DaoExceptions.InsertQuery("Game: " + id, e);
     }
+  }
+
+  <T> T mapJsonToObject(JsonArray dataProperties, Class<T> objectClass)
+    throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, EngineException {
+    T object = objectClass.getDeclaredConstructor().newInstance();
+    for (JsonElement element : dataProperties) {
+      JsonObject obj = element.getAsJsonObject();
+      String prefixedDataProperty = obj.get("p").getAsString();
+      String dataProperty = ontology.removePrefix(prefixedDataProperty);
+      String value = obj.get("o").getAsString();
+      ano.setDataPropertyValue(object, dataProperty, value);
+    }
+    return object;
+  }
+
+  Map<String, JsonArray> groupByNodeName(String nodeParam, JsonArray results) {
+    Map<String, JsonArray> groupedByNodeName = new HashMap<>();
+    for (JsonElement element : results) {
+      JsonObject obj = element.getAsJsonObject();
+      String nodeName = obj.get(nodeParam).getAsString();
+      if (groupedByNodeName.containsKey(nodeName)) {
+        JsonArray existing = groupedByNodeName.get(nodeName);
+        existing.add(element);
+      } else {
+        JsonArray obsArray = new JsonArray();
+        obsArray.add(element);
+        groupedByNodeName.put(nodeName, obsArray);
+      }
+    }
+    return groupedByNodeName;
   }
 }
