@@ -3,6 +3,7 @@ package com.aegean.icsd.engine.core.implementation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -32,7 +33,8 @@ public class AnnotationReader implements IAnnotationReader {
     LOGGER.debug(String.format("Setting Entity ID for object %s", objName));
     List<String> keys = new LinkedList<>();
     Field idField = null;
-    for (Field field : object.getClass().getDeclaredFields()) {
+    List<Field> totalFields = getTotalFields(object);
+    for (Field field : totalFields) {
       if (field.isAnnotationPresent(Id.class)) {
         idField = field;
       }
@@ -73,7 +75,8 @@ public class AnnotationReader implements IAnnotationReader {
   public Map<String, Object> getDataProperties(Object object) throws EngineException {
     LOGGER.debug("Reading data properties");
     Map<String, Object> relations = new HashMap<>();
-    for (Field field : object.getClass().getDeclaredFields()) {
+    List<Field> totalFields = getTotalFields(object);
+    for (Field field : totalFields) {
       if (!field.isAnnotationPresent(DataProperty.class)) {
         continue;
       }
@@ -96,7 +99,8 @@ public class AnnotationReader implements IAnnotationReader {
 
   @Override
   public void setDataPropertyValue(Object object, String property, Object value) throws EngineException {
-    for (Field field : object.getClass().getDeclaredFields()) {
+    List<Field> totalFields = getTotalFields(object);
+    for (Field field : totalFields) {
       if (!field.isAnnotationPresent(DataProperty.class)) {
         continue;
       }
@@ -131,12 +135,18 @@ public class AnnotationReader implements IAnnotationReader {
   Object invokeFieldGetter (Field field, Object object) throws EngineException {
     try {
       Method getter;
-      if (Boolean.class.equals(field.getType())
-        || boolean.class.equals(field.getType())) {
+      if (Boolean.class.equals(field.getType())) {
         getter = object.getClass().getMethod("is" + StringUtils.capitalize(field.getName()));
+        if (getter == null) {
+          getter = object.getClass().getSuperclass().getMethod("is" + StringUtils.capitalize(field.getName()));
+        }
       } else {
         getter = object.getClass().getMethod("get" + StringUtils.capitalize(field.getName()));
+        if (getter == null) {
+          getter = object.getClass().getSuperclass().getMethod("get" + StringUtils.capitalize(field.getName()));
+        }
       }
+
       return getter.invoke(object);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       throw Exceptions.GenericError(e);
@@ -146,6 +156,9 @@ public class AnnotationReader implements IAnnotationReader {
   void invokeFieldSetter (Field field, Object object, Object...args) throws EngineException {
     try {
       Method setter = object.getClass().getMethod("set" + StringUtils.capitalize(field.getName()), field.getType());
+      if (setter == null) {
+        setter = object.getClass().getSuperclass().getMethod("set" + StringUtils.capitalize(field.getName()));
+      }
       setter.invoke(object, args);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       throw Exceptions.GenericError(e);
@@ -154,5 +167,13 @@ public class AnnotationReader implements IAnnotationReader {
 
   String idSanitizer(String id) {
     return id.replaceAll("[^a-zA-Z\\d]", "_");
+  }
+
+  List<Field> getTotalFields (Object object) {
+    //Arrays.asList returns an unmodifiable List. That is why we create a new one
+    List<Field> totalFields = new ArrayList<>(Arrays.asList(object.getClass().getSuperclass().getDeclaredFields()));
+    List<Field> derivedClassFields = new ArrayList<>(Arrays.asList(object.getClass().getDeclaredFields()));
+    totalFields.addAll(derivedClassFields);
+    return totalFields;
   }
 }

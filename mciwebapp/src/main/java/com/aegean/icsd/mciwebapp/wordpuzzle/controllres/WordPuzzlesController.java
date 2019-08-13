@@ -31,10 +31,10 @@ import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WorldPuzzleRequest;
 import com.aegean.icsd.mciwebapp.wordpuzzle.interfaces.IWordPuzzleSvc;
 
 /**
- * https://localhost:8443/mci/observations
+ * https://localhost:8443/mci/wordPuzzle
  */
 @RestController
-@RequestMapping("observations")
+@RequestMapping("wordPuzzle")
 public class WordPuzzlesController {
 
   private static final Logger LOGGER = LogManager.getLogger(WordPuzzlesController.class);
@@ -45,7 +45,7 @@ public class WordPuzzlesController {
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<WordPuzzleResponse>> getObservation(@RequestParam(name = "difficulty", required = false) String difficulty,
+  public Response<List<WordPuzzleResponse>> getWordPuzzles(@RequestParam(name = "difficulty", required = false) String difficulty,
                                                             @RequestParam(name = "completed", required = false) Boolean completed,
                                                             @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     List<WordPuzzleResponse> responses = wordPuzzleSvc.getWordPuzzles(player);
@@ -73,9 +73,9 @@ public class WordPuzzlesController {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public Response<WordPuzzleResponse> createObservation(@RequestBody WorldPuzzleRequest req,
+  public Response<WordPuzzleResponse> createWordPuzzle(@RequestBody WorldPuzzleRequest req,
                                                          @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    LOGGER.info("createObservation request received");
+    LOGGER.info("createWordPuzzle request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
     WordPuzzleResponse resp = wordPuzzleSvc.createWordPuzzle(player, dif);
     return new Response<>(resp);
@@ -84,7 +84,7 @@ public class WordPuzzlesController {
   @GetMapping(value = "/{id}",
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<WordPuzzleResponse> getObservation(@PathVariable("id") String id,
+  public Response<WordPuzzleResponse> getWordPuzzle(@PathVariable("id") String id,
                                                       @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     WordPuzzleResponse obs = wordPuzzleSvc.getWordPuzzle(id, player);
     return new Response<>(obs);
@@ -94,7 +94,7 @@ public class WordPuzzlesController {
           consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<WordPuzzleResponse> updateObservation(@PathVariable("id") String id,
+  public Response<WordPuzzleResponse> updateWordPuzzle(@PathVariable("id") String id,
                                                          @RequestBody WorldPuzzleRequest req,
                                                          @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     WordPuzzleResponse response = wordPuzzleSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution());

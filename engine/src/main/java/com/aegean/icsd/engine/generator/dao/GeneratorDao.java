@@ -134,7 +134,8 @@ public class GeneratorDao implements IGeneratorDao {
   @Override
   public <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
     throws EngineException {
-    SelectQuery query = new SelectQuery.Builder().select("obs", "p", "o")
+    SelectQuery query = new SelectQuery.Builder()
+      .select("s", "p", "o")
       .whereHasType("s", ontology.getPrefixedEntity(gameName))
       .where("s", "hasPlayer", "player")
       .where("s", "p", "o")
@@ -146,7 +147,6 @@ public class GeneratorDao implements IGeneratorDao {
     try {
       JsonArray results = ontology.select(query);
       List<T> games = new ArrayList<>();
-      JsonObject toMap = new JsonObject();
       Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
       for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
         try {

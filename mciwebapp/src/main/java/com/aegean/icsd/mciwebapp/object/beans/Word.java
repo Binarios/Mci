@@ -13,11 +13,22 @@ public class Word extends BaseGameObject {
   @DataProperty("hasStringValue")
   private String value;
 
+  @DataProperty("hasWordLength")
+  private Integer length;
+
   public String getValue() {
     return value;
   }
 
   public void setValue(String value) {
     this.value = value;
+  }
+
+  public Integer getLength() {
+    return length;
+  }
+
+  public void setLength(Integer length) {
+    this.length = length;
   }
 }

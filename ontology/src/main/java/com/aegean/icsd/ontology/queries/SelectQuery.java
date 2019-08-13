@@ -274,18 +274,22 @@ public class SelectQuery {
         }
       }
 
-      builder.append("\tMINUS {").append("\n");
-      for (Map.Entry<String, List<Triplet>> entry : minusConditions.entrySet()) {
-        String whereClause = buildTripletClause(entry);
-        if (!StringUtils.isEmpty(whereClause)) {
-          builder.append("\t\t").append(whereClause).append("\n");
+      if (!minusConditions.isEmpty()) {
+        builder.append("\tMINUS {").append("\n");
+        for (Map.Entry<String, List<Triplet>> entry : minusConditions.entrySet()) {
+          String whereClause = buildTripletClause(entry);
+          if (!StringUtils.isEmpty(whereClause)) {
+            builder.append("\t\t").append(whereClause).append("\n");
+          }
         }
+        builder.append("\t}\n");
       }
-      builder.append("\t}\n");
 
-      for(String filter : filters) {
-        if (!StringUtils.isEmpty(filter)) {
-          builder.append("\t").append(filter).append("\n");
+      if (filters.size() > 0) {
+        for (String filter : filters) {
+          if (!StringUtils.isEmpty(filter)) {
+            builder.append("\t").append(filter).append("\n");
+          }
         }
       }
 

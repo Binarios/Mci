@@ -2,21 +2,24 @@ package com.aegean.icsd.mciwebapp.object.dao;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 
+@Repository
 public class ObjectsDao implements IObjectsDao {
 
   @Autowired
   private IOntology ont;
 
   @Override
-  public String getWordIdsWithLength(String forEntity, Integer length) throws ProviderException {
+  public String getNonAssociatedWordIdsWithLength(String forEntity, Integer length) throws ProviderException {
     SelectQuery q = new SelectQuery.Builder()
       .select("wordId")
       .whereHasType("s", ont.getPrefixedEntity(forEntity))
@@ -39,7 +42,7 @@ public class ObjectsDao implements IObjectsDao {
       }
       return wordId;
     } catch (OntologyException e) {
-      throw Exceptions.FailedToRetrieveWords(e);
+      throw Exceptions.FailedToRetrieveWords(Word.NAME, e);
     }
   }
 
@@ -62,8 +65,7 @@ public class ObjectsDao implements IObjectsDao {
       }
       return value;
     } catch (OntologyException e) {
-      throw Exceptions.FailedToRetrieveWords(e);
+      throw Exceptions.FailedToRetrieveWords(Word.NAME, e);
     }
   }
-
 }

@@ -311,6 +311,8 @@ public class FusekiOntology implements IOntology {
         Restriction resClass = superClass.asRestriction();
         RestrictionSchema restriction = getRestrictionSchema(resClass);
         restrictions.add(restriction);
+      } else if (superClass.isClass()) {
+        restrictions.addAll(getRestrictionSchemas(superClass));
       }
     }
     return restrictions;

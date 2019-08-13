@@ -57,9 +57,9 @@ public class WordProvider implements IWordProvider {
     if (!StringUtils.isEmpty(criteria.getValue())) {
       id = getWordFromValue(criteria.getValue());
     } else {
-      id = dao.getWordIdsWithLength(criteria.getForEntity(), criteria.getLength());
+      id = dao.getNonAssociatedWordIdsWithLength(criteria.getForEntity(), criteria.getLength());
       if (id == null) {
-        //todo read file and create
+        id = readWord(criteria);
       }
     }
     return id;
@@ -70,9 +70,33 @@ public class WordProvider implements IWordProvider {
     return dao.getWordValue(wordId);
   }
 
+  String readWord(WordCriteria criteria) throws ProviderException {
+    String wordId = null;
+    List<String> lines = fileProvider.getLines(config.getLocation() + "/" + config.getFilename());
+    for (String line : lines) {
+      String[] fragments = line.split(config.getDelimiter());
+      for (String word : fragments) {
+        if (word.length() == criteria.getLength()) {
+          wordId = getWordFromValue(word);
+          break;
+        }
+        if (wordId != null) {
+          break;
+        }
+      }
+    }
+
+    if (wordId == null) {
+      throw Exceptions.UnableToGenerateObject(Word.NAME);
+    }
+
+    return wordId;
+  }
+
   Word toWord(String value) {
     Word word = new Word();
     word.setValue(value);
+    word.setLength(value.length());
     return word;
   }
 }

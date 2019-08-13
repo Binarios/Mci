@@ -27,4 +27,9 @@ class Exceptions {
     return new ProviderException(CODE_NAME + "." + 5,
       String.format("Unable to get the requested file: %s from the url: %s", file, url), t);
   }
+
+  static ProviderException UnableToGenerateObject(String name) {
+    return new ProviderException(CODE_NAME + "." + 6,
+      String.format("Unable to generate a new %s", name));
+  }
 }

@@ -53,7 +53,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     }
     List<WordPuzzle> puzzles = null;
     try {
-      puzzles = generator.getGamesForPlayer(playerName, playerName, WordPuzzle.class);
+      puzzles = generator.getGamesForPlayer(gameName, playerName, WordPuzzle.class);
     } catch (EngineException e) {
       throw Exceptions.FailedToRetrieveGames(playerName, e);
     }
@@ -103,7 +103,6 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     } catch (RulesException e) {
       throw Exceptions.UnableToRetrieveGameRules(e);
     }
-
 
     WordPuzzle puzzle = new WordPuzzle();
     puzzle.setDifficulty(difficulty);
@@ -163,7 +162,45 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
   @Override
   public WordPuzzleResponse solveGame(String id, String player, Long completionTime, String solution)
       throws MciException {
-    return null;
+    if (StringUtils.isEmpty(id)
+      || StringUtils.isEmpty(player)
+      || completionTime == null
+      || solution.isEmpty()) {
+      throw Exceptions.InvalidRequest();
+    }
+
+    WordPuzzle puzzle;
+    try {
+      puzzle = generator.getGameWithId(id, player, WordPuzzle.class);
+    } catch (EngineException e) {
+      throw Exceptions.UnableToRetrieveGame(id, player);
+    }
+
+    if (puzzle == null) {
+      throw Exceptions.UnableToRetrieveGame(id, player);
+    }
+
+    if (completionTime > puzzle.getMaxCompletionTime()) {
+      throw Exceptions.SurpassedMaxCompletionTime(id, puzzle.getMaxCompletionTime());
+    }
+    if (!StringUtils.isEmpty(puzzle.getCompletedDate())) {
+      throw Exceptions.GameIsAlreadySolvedAt(id, puzzle.getCompletedDate());
+    }
+
+    boolean solved = dao.solveGame(puzzle.getId(), player, solution);
+    String correctWord = dao.getWordById(puzzle.getId());
+    if (solved) {
+      puzzle.setCompletionTime(completionTime);
+      puzzle.setCompletedDate(String.valueOf(System.currentTimeMillis()));
+      try {
+        generator.upsertObj(puzzle);
+      } catch (EngineException e) {
+        throw  Exceptions.GenerationError(e);
+      }
+    }
+    WordPuzzleResponse resp = toResponse(puzzle, correctWord);
+    resp.setSolved(solved);
+    return resp;
   }
 
   private WordPuzzleResponse toResponse(WordPuzzle puzzle, String word) {
