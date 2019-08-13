@@ -1,11 +1,10 @@
 package com.aegean.icsd.mciwebapp.object.interfaces;
 
-import java.util.List;
-
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.beans.WordCriteria;
 
 public interface IWordProvider {
   String getWordFromValue(String value) throws ProviderException;
-  List<String> getWordIdsWithLength(int length) throws ProviderException;
-  String createWord(int length);
+  String getWordWithCriteria(WordCriteria criteria) throws ProviderException;
+  String getWordValue(String wordId) throws ProviderException;
 }

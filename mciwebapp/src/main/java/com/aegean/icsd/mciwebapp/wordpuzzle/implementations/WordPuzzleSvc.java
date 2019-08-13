@@ -19,6 +19,9 @@ import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.beans.Word;
+import com.aegean.icsd.mciwebapp.object.beans.WordCriteria;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzle;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzleResponse;
@@ -94,6 +97,14 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
       throw Exceptions.UnableToRetrieveGameRules(e);
     }
 
+    EntityRestriction hasWordRes;
+    try {
+      hasWordRes = rules.getEntityRestriction(fullName, "hasWord");
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveGameRules(e);
+    }
+
+
     WordPuzzle puzzle = new WordPuzzle();
     puzzle.setDifficulty(difficulty);
     puzzle.setPlayerName(playerName);
@@ -101,9 +112,27 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     puzzle.setMaxCompletionTime(Long.parseLong("" + generator.generateIntDataValue(maxCompleteTimeRes.getDataRange())));
     puzzle.setWordLength(generator.generateIntDataValue(wordLengthRes.getDataRange()));
 
-    String word = wordProvider.getWord
+    WordCriteria criteria = new WordCriteria();
+    criteria.setLength(puzzle.getWordLength());
+    criteria.setForEntity(fullName);
 
-    return null;
+    String wordId;
+    String word;
+    try {
+      wordId = wordProvider.getWordWithCriteria(criteria);
+      word = wordProvider.getWordValue(wordId);
+    } catch (ProviderException e) {
+      throw Exceptions.GenerationError(e);
+    }
+
+    try {
+      generator.upsertObj(puzzle);
+      generator.createObjRelation(puzzle.getId(), hasWordRes.getOnProperty(), wordId);
+    } catch (EngineException e) {
+      throw Exceptions.GenerationError(e);
+    }
+
+    return toResponse(puzzle, word);
   }
 
   @Override

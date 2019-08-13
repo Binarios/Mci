@@ -1,9 +1,9 @@
 package com.aegean.icsd.mciwebapp.object.dao;
 
-import java.util.List;
-
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
 public interface IObjectsDao {
-  List<String> getWordIdsWithLength(int length) throws ProviderException;
+  String getWordIdsWithLength(String forEntity, Integer length) throws ProviderException;
+
+  String getWordValue(String wordId) throws ProviderException;
 }

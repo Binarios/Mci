@@ -55,6 +55,7 @@ public class SelectQuery {
   public static class Builder {
     private List<String> params = new LinkedList<>();
     private Map<String, List<Triplet>> conditions = new LinkedHashMap<>();
+    private Map<String, List<Triplet>> minusConditions = new LinkedHashMap<>();
     private Map<String, String> prefixes = new LinkedHashMap<>();
     private List<String> filters = new LinkedList<>();
     private Map<String, String> iriParams = new LinkedHashMap<>();
@@ -176,6 +177,19 @@ public class SelectQuery {
       return this;
     }
 
+    public Builder minus (String subject, String predicate, String object) {
+      if (minusConditions.containsKey(subject)) {
+        minusConditions.get(subject).add(new Triplet(subject, predicate, object));
+      } else {
+        Triplet triplet = new Triplet(subject, predicate, object);
+        List<Triplet> entries = new ArrayList<>();
+        entries.add(triplet);
+        minusConditions.put(subject, entries);
+      }
+      return this;
+    }
+
+
     public Builder filterByStrLength(String var, Operator operator, String value) {
       String filter = null;
       String escapedVar = removeParamChars(var);
@@ -197,6 +211,7 @@ public class SelectQuery {
       filters.add(filter);
       return this;
     }
+
     public Builder orderByDesc(String field) {
       return this.orderBy(field, false);
     }
@@ -247,7 +262,7 @@ public class SelectQuery {
       builder.append("WHERE").append(" ").append("{").append("\n");
 
       for (Map.Entry<String, List<Triplet>> entry : conditions.entrySet()) {
-        String whereClause = buildWhereClause(entry);
+        String whereClause = buildTripletClause(entry);
         if (!StringUtils.isEmpty(whereClause)) {
           builder.append("\t").append(whereClause).append("\n");
         }
@@ -258,6 +273,15 @@ public class SelectQuery {
           builder.append("\t{\n\t").append(subQ.command).append("\n\t}\n");
         }
       }
+
+      builder.append("\tMINUS {").append("\n");
+      for (Map.Entry<String, List<Triplet>> entry : minusConditions.entrySet()) {
+        String whereClause = buildTripletClause(entry);
+        if (!StringUtils.isEmpty(whereClause)) {
+          builder.append("\t\t").append(whereClause).append("\n");
+        }
+      }
+      builder.append("\t}\n");
 
       for(String filter : filters) {
         if (!StringUtils.isEmpty(filter)) {
@@ -286,7 +310,7 @@ public class SelectQuery {
       }
     }
 
-    String buildWhereClause(Map.Entry<String, List<Triplet>> entry) {
+    String buildTripletClause(Map.Entry<String, List<Triplet>> entry) {
       StringBuilder builder = new StringBuilder();
       builder.append(removeParamChars(entry.getKey())).append(" ");
       Iterator<Triplet> it = entry.getValue().iterator();

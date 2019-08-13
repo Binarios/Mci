@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.beans.WordCriteria;
 import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.mciwebapp.object.dao.IObjectsDao;
@@ -51,14 +52,23 @@ public class WordProvider implements IWordProvider {
   }
 
   @Override
-  public List<String> getWordIdsWithLength(int length) throws ProviderException {
-    List<String> ids = null;
-    if (length > 0) {
-      ids = dao.getWordIdsWithLength(length);
+  public String getWordWithCriteria(WordCriteria criteria) throws ProviderException {
+    String id;
+    if (!StringUtils.isEmpty(criteria.getValue())) {
+      id = getWordFromValue(criteria.getValue());
+    } else {
+      id = dao.getWordIdsWithLength(criteria.getForEntity(), criteria.getLength());
+      if (id == null) {
+        //todo read file and create
+      }
     }
-    return ids;
+    return id;
   }
 
+  @Override
+  public String getWordValue(String wordId) throws ProviderException {
+    return dao.getWordValue(wordId);
+  }
 
   Word toWord(String value) {
     Word word = new Word();
