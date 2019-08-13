@@ -190,8 +190,11 @@ public class GeneratorDao implements IGeneratorDao {
           }
         }
       }
+      if (game == null) {
+        throw DaoExceptions.FailedToRetrieveGames(playerName);
+      }
       return game;
-    } catch (OntologyException | EngineException e) {
+    } catch (OntologyException e) {
       throw DaoExceptions.FailedToRetrieveGames(playerName, e);
     }
   }
