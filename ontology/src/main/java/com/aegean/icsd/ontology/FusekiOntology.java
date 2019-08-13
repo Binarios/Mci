@@ -131,8 +131,6 @@ public class FusekiOntology implements IOntology {
     }
   }
 
-
-
   @Override
   public JsonArray select(SelectQuery selectQuery) throws OntologyException {
     JsonArray array = new JsonArray();
@@ -145,6 +143,10 @@ public class FusekiOntology implements IOntology {
     }
 
     for(Map.Entry<String, String> entry : selectQuery.getLiteralParams().entrySet()) {
+      sparql.setLiteral(entry.getKey(), entry.getValue());
+    }
+
+    for(Map.Entry<String, Integer> entry : selectQuery.getIntLiteralParams().entrySet()) {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
 
@@ -309,6 +311,8 @@ public class FusekiOntology implements IOntology {
         Restriction resClass = superClass.asRestriction();
         RestrictionSchema restriction = getRestrictionSchema(resClass);
         restrictions.add(restriction);
+      } else if (superClass.isClass()) {
+        restrictions.addAll(getRestrictionSchemas(superClass));
       }
     }
     return restrictions;

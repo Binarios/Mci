@@ -23,11 +23,10 @@ public class ObjectFileProvider implements IObjectFileProvider {
   private static Logger LOGGER = Logger.getLogger(ObjectFileProvider.class);
 
   @Override
-  public String getFileLineFromUrl(String url) throws ProviderException {
-    LOGGER.info(String.format("Retrieving line from file at %s", url));
+  public List<String> getLines(String url) throws ProviderException {
+    LOGGER.info(String.format("Retrieving lines from file at %s", url));
     String[] chunks = url.split("/");
     String fileName = chunks[chunks.length - 1];
-
     File file;
     List<String> allLines;
     try {
@@ -39,11 +38,17 @@ public class ObjectFileProvider implements IObjectFileProvider {
     } catch (IOException e) {
       throw Exceptions.UnableToGetFileFromUrl(url, fileName, e);
     }
+    return allLines;
+  }
 
-    Supplier<Stream<String>> streamSupplier = allLines::stream;
+  @Override
+  public String getFileLineFromUrl(String url) throws ProviderException {
+    LOGGER.info(String.format("Retrieving line from file at %s", url));
+
+    Supplier<Stream<String>> streamSupplier = getLines(url)::stream;
 
     if (streamSupplier.get() == null ) {
-      throw Exceptions.UnableToReadFile(String.format("Error when reading file at: %s", file.getAbsolutePath()));
+      throw Exceptions.UnableToReadFile(String.format("Error when reading file at: %s", url));
     }
 
     long totalNb = streamSupplier.get().count();

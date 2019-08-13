@@ -9,8 +9,10 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
+import com.aegean.icsd.engine.generator.beans.BaseGame;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
@@ -22,6 +24,7 @@ import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.ontology.IOntology;
 
 @Service
 public class Generator implements IGenerator {
@@ -35,6 +38,10 @@ public class Generator implements IGenerator {
 
   @Autowired
   private IAnnotationReader ano;
+
+  @Autowired
+  private IOntology ont;
+
 
   @Override
   public String upsertObj(Object object) throws EngineException {
@@ -94,6 +101,22 @@ public class Generator implements IGenerator {
     } catch (EngineException e) {
       throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);
     }
+  }
+
+  @Override
+  public int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException {
+    return dao.getLastCompletedLevel(gameName, difficulty, playerName);
+  }
+
+  @Override
+  public <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
+      throws EngineException {
+    return  dao.getGamesForPlayer(gameName, playerName, gameObjClass);
+  }
+
+  @Override
+  public <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass) throws EngineException {
+    return dao.getGameWithId(id, playerName, gameObjClass);
   }
 
   @Override
@@ -191,5 +214,6 @@ public class Generator implements IGenerator {
 
     return cardinality;
   }
+
 
 }

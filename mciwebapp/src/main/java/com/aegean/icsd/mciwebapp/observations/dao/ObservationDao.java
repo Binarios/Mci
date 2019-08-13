@@ -39,35 +39,6 @@ public class ObservationDao implements IObservationDao {
   private IAnnotationReader ano;
 
   @Override
-  public int getLastCompletedLevel(Difficulty difficulty, String playerName) throws MciException {
-    SelectQuery query = new SelectQuery.Builder()
-      .select("level")
-      .whereHasType("obs", ont.getPrefixedEntity(gameName))
-      .where("obs", "hasDifficulty", "difficulty")
-      .where("obs", "hasPlayer", "playerName")
-      .where("obs", "hasLevel", "level")
-      .orderByDesc("level")
-      .limit(1)
-      .addIriParam("hasDifficulty", ont.getPrefixedEntity("hasDifficulty"))
-      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
-      .addIriParam("hasLevel", ont.getPrefixedEntity("hasLevel"))
-      .addLiteralParam("difficulty", difficulty.name())
-      .addLiteralParam("playerName", playerName)
-      .build();
-
-    try {
-      int level = 0;
-      JsonArray results = ont.select(query);
-      if (results.size() > 0) {
-        level = results.get(0).getAsJsonObject().get("level").getAsInt();
-      }
-      return level;
-    } catch (OntologyException e) {
-      throw Exceptions.FailedToRetrieveLastLevel(gameName, difficulty, playerName, e);
-    }
-  }
-
-  @Override
   public List<String> getAssociatedSubjects(String id) throws MciException {
 
     SelectQuery query = new SelectQuery.Builder()
@@ -117,102 +88,6 @@ public class ObservationDao implements IObservationDao {
       return  results.get(0).getAsJsonObject().get("path").getAsString();
     } catch (OntologyException e) {
       throw Exceptions.FailedToRetrievePaths(id ,e);
-    }
-  }
-
-  @Override
-  public List<Observation> getGamesForPlayer(String playerName) throws MciException {
-    SelectQuery query = new SelectQuery.Builder()
-      .select("obs", "p", "o")
-      .whereHasType("obs", ont.getPrefixedEntity(gameName))
-      .where("obs", "hasPlayer", "player")
-      .where("obs", "p", "o")
-      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
-      .addLiteralParam("player", playerName)
-      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
-      .build();
-
-    try {
-      JsonArray results = ont.select(query);
-      List<Observation> observations = new ArrayList<>();
-      Map<String, JsonArray> groupedByNodeName = new HashMap<>();
-      for (JsonElement element : results) {
-        JsonObject obj = element.getAsJsonObject();
-        String nodeName = obj.get("obs").getAsString();
-        if (groupedByNodeName.containsKey(nodeName)) {
-          JsonArray existing = groupedByNodeName.get(nodeName);
-          existing.add(element);
-        } else {
-          JsonArray obsArray = new JsonArray();
-          obsArray.add(element);
-          groupedByNodeName.put(nodeName, obsArray);
-        }
-      }
-
-      for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
-        Observation obs = new Observation();
-        for (JsonElement element : entry.getValue()) {
-          JsonObject obj = element.getAsJsonObject();
-          String prefixedDataProperty = obj.get("p").getAsString();
-          String dataProperty = ont.removePrefix(prefixedDataProperty);
-          String value = obj.get("o").getAsString();
-          ano.setDataPropertyValue(obs,  dataProperty, value);
-        }
-        observations.add(obs);
-      }
-
-      return  observations;
-    } catch (OntologyException | EngineException e) {
-      throw Exceptions.FailedToRetrieveGames(playerName, e);
-    }
-  }
-
-  @Override
-  public Observation getById(String id, String player) throws MciException {
-    SelectQuery query = new SelectQuery.Builder()
-      .select("obs", "p", "o")
-      .whereHasType("obs", ont.getPrefixedEntity(gameName))
-      .where("obs", "hasPlayer", "player")
-      .where("obs", "hasId", "id")
-      .where("obs", "p", "o")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
-      .addLiteralParam("player", player)
-      .addLiteralParam("id", id)
-      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
-      .build();
-
-    try {
-      JsonArray results = ont.select(query);
-      Observation observation = null;
-      if (results.size() > 0) {
-        Map<String, JsonArray> groupedByNodeName = new HashMap<>();
-        for (JsonElement element : results) {
-          JsonObject obj = element.getAsJsonObject();
-          String nodeName = obj.get("obs").getAsString();
-          if (groupedByNodeName.containsKey(nodeName)) {
-            JsonArray existing = groupedByNodeName.get(nodeName);
-            existing.add(element);
-          } else {
-            JsonArray obsArray = new JsonArray();
-            obsArray.add(element);
-            groupedByNodeName.put(nodeName, obsArray);
-          }
-        }
-        for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
-          observation = new Observation();
-          for (JsonElement element : entry.getValue()) {
-            JsonObject obj = element.getAsJsonObject();
-            String prefixedDataProperty = obj.get("p").getAsString();
-            String dataProperty = ont.removePrefix(prefixedDataProperty);
-            String value = obj.get("o").getAsString();
-            ano.setDataPropertyValue(observation,  dataProperty, value);
-          }
-        }
-      }
-      return  observation;
-    } catch (OntologyException | EngineException e) {
-      throw Exceptions.FailedToRetrieveGames(player, e);
     }
   }
 
