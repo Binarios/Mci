@@ -1,12 +1,12 @@
 package com.aegean.icsd.mciwebapp.object.interfaces;
 
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
-import com.aegean.icsd.mciwebapp.object.beans.WordCriteria;
+import com.aegean.icsd.mciwebapp.object.beans.Word;
 
 public interface IWordProvider {
-  String getWordFromValue(String value) throws ProviderException;
+  Word getWordWithValue(String value) throws ProviderException;
 
-  String getWordWithCriteria(WordCriteria criteria) throws ProviderException;
+  Word getNewWordFor(String entityName, int length) throws ProviderException;
 
-  String getWordValue(String wordId) throws ProviderException;
+  Word getWordFromNode(String wordNode) throws ProviderException;
 }

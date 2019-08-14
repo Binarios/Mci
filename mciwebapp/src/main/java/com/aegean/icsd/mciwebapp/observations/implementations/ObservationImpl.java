@@ -16,10 +16,11 @@ import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
-import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
@@ -52,14 +53,14 @@ public class ObservationImpl implements IObservationSvc {
   @Override
   public List<ObservationResponse> getObservations(String playerName) throws MciException {
     if (StringUtils.isEmpty(playerName)) {
-      throw Exceptions.InvalidRequest();
+      throw GameExceptions.InvalidRequest(gameName);
     }
 
     List<Observation> observations = null;
     try {
       observations = generator.getGamesForPlayer(gameName, playerName, Observation.class);
     } catch (EngineException e) {
-      throw Exceptions.FailedToRetrieveGames(playerName, e);
+      throw GameExceptions.FailedToRetrieveGames(gameName, playerName, e);
     }
 
     List<ObservationResponse> res = new ArrayList<>();
@@ -73,18 +74,14 @@ public class ObservationImpl implements IObservationSvc {
   public ObservationResponse getObservation(String id, String player) throws MciException {
     if (StringUtils.isEmpty(id)
       || StringUtils.isEmpty(player)) {
-      throw Exceptions.InvalidRequest();
+      throw GameExceptions.InvalidRequest(gameName);
     }
 
     Observation obs;
     try {
       obs = generator.getGameWithId(id, player, Observation.class);
     } catch (EngineException e) {
-      throw Exceptions.UnableToRetrieveGame(id, player);
-    }
-
-    if (obs == null) {
-      throw Exceptions.UnableToRetrieveGame(id, player);
+      throw GameExceptions.UnableToRetrieveGame(gameName, id, player);
     }
 
     List<String> chosenWords = dao.getAssociatedSubjects(obs.getId());
@@ -100,25 +97,21 @@ public class ObservationImpl implements IObservationSvc {
       || StringUtils.isEmpty(player)
       || completionTime == null
       || solution.isEmpty()) {
-      throw Exceptions.InvalidRequest();
+      throw GameExceptions.InvalidRequest(gameName);
     }
 
     Observation obs;
     try {
       obs = generator.getGameWithId(id, player, Observation.class);
     } catch (EngineException e) {
-      throw Exceptions.UnableToRetrieveGame(id, player);
-    }
-
-    if (obs == null) {
-      throw Exceptions.UnableToRetrieveGame(id, player);
+      throw GameExceptions.UnableToRetrieveGame(gameName, id, player);
     }
 
     if (completionTime > obs.getMaxCompletionTime()) {
-      throw Exceptions.SurpassedMaxCompletionTime(id, obs.getMaxCompletionTime());
+      throw GameExceptions.SurpassedMaxCompletionTime(gameName, id, obs.getMaxCompletionTime());
     }
     if (!StringUtils.isEmpty(obs.getCompletedDate())) {
-      throw Exceptions.GameIsAlreadySolvedAt(id, obs.getCompletedDate());
+      throw GameExceptions.GameIsAlreadySolvedAt(gameName, id, obs.getCompletedDate());
     }
 
     boolean solved = true;
@@ -133,7 +126,7 @@ public class ObservationImpl implements IObservationSvc {
       try {
         generator.upsertObj(obs);
       } catch (EngineException e) {
-        throw  Exceptions.GenerationError(e);
+        throw GameExceptions.GenerationError(gameName, e);
       }
     }
 
@@ -146,7 +139,7 @@ public class ObservationImpl implements IObservationSvc {
       playerName, difficulty.name()));
 
     if (StringUtils.isEmpty(playerName)) {
-      throw Exceptions.InvalidRequest();
+      throw GameExceptions.InvalidRequest(gameName);
     }
     String fullName = Utils.getFullGameName(gameName, difficulty);
 
@@ -154,7 +147,7 @@ public class ObservationImpl implements IObservationSvc {
     try {
       lastCompletedLevel = generator.getLastCompletedLevel(gameName, difficulty, playerName);
     } catch (EngineException e) {
-      throw Exceptions.FailedToRetrieveLastLevel(gameName, difficulty, playerName, e);
+      throw GameExceptions.FailedToRetrieveLastLevel(gameName, difficulty, playerName, e);
     }
     int newLevel = lastCompletedLevel + 1;
 
@@ -162,21 +155,21 @@ public class ObservationImpl implements IObservationSvc {
     try {
       maxCompleteTimeRes = rules.getEntityRestriction(fullName, "maxCompletionTime");
     } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveGameRules(e);
+      throw GameExceptions.UnableToRetrieveGameRules(gameName, e);
     }
 
     EntityRestriction totalImages;
     try {
       totalImages = rules.getEntityRestriction(fullName, "hasTotalImages");
     } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveGameRules(e);
+      throw GameExceptions.UnableToRetrieveGameRules(gameName, e);
     }
 
     EntityRestriction hasObservationRes;
     try {
       hasObservationRes = rules.getEntityRestriction(fullName, "hasObservation");
     } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveGameRules(e);
+      throw GameExceptions.UnableToRetrieveGameRules(gameName, e);
     }
 
     Observation toCreate = new Observation();
@@ -200,13 +193,13 @@ public class ObservationImpl implements IObservationSvc {
         nbOfOccurrences = ThreadLocalRandom.current().nextInt(0, remaining + 1);
       }
       try {
-        String id = observationProvider.getObservationId(nbOfOccurrences);
-        String path = dao.getImagePath(id);
+        ObservationObj obs = observationProvider.getObservation(nbOfOccurrences);
+        String path = dao.getImagePath(obs.getId());
         ObservationItem found =  images.stream().filter(x -> x.getImage().equals(path)).findFirst().orElse(null);
-        if (obsIds.contains(id) || found != null) {
+        if (obsIds.contains(obs.getId()) || found != null) {
           i--;
         } else {
-          obsIds.add(id);
+          obsIds.add(obs.getId());
           ObservationItem item = new ObservationItem();
           item.setImage(path);
           item.setTotalInstances(nbOfOccurrences);
@@ -214,7 +207,7 @@ public class ObservationImpl implements IObservationSvc {
         }
         remaining -= nbOfOccurrences;
       } catch (ProviderException e) {
-        throw  Exceptions.GenerationError(e);
+        throw  GameExceptions.GenerationError(gameName, e);
       }
     }
 
@@ -224,7 +217,7 @@ public class ObservationImpl implements IObservationSvc {
         generator.createObjRelation(toCreate.getId(), hasObservationRes.getOnProperty(), obsId);
       }
     } catch (EngineException e) {
-      throw  Exceptions.GenerationError(e);
+      throw GameExceptions.GenerationError(gameName, e);
     }
 
     List<String> chosenWords = dao.getAssociatedSubjects(toCreate.getId());

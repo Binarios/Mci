@@ -9,6 +9,7 @@ import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciwebapp.object.beans.Image;
 import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
@@ -30,7 +31,7 @@ public class ObservationProvider implements IObservationProvider {
   private IRules rules;
 
   @Override
-  public String getObservationId(int totalImageNumber) throws ProviderException {
+  public ObservationObj getObservation(int totalImageNumber) throws ProviderException {
     LOGGER.info("Creating Observation Object");
     if (totalImageNumber < 0) {
       totalImageNumber = 0;
@@ -44,14 +45,14 @@ public class ObservationProvider implements IObservationProvider {
     } catch (RulesException e) {
       throw Exceptions.UnableToRetrieveRules(ObservationObj.NAME, e);
     }
-    String imageId = imageProvider.getImageId();
+    Image image = imageProvider.getImage();
     try {
       generator.upsertObj(obs);
-      generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), imageId);
+      generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), image.getId());
     } catch (EngineException e) {
       throw Exceptions.GenerationError(e);
     }
 
-    return obs.getId();
+    return obs;
   }
 }

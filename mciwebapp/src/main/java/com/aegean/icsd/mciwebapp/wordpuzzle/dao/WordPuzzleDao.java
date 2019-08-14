@@ -45,15 +45,13 @@ public class WordPuzzleDao implements IWordPuzzleDao {
   }
 
   @Override
-  public String getWordById(String id) throws MciException {
+  public String getAssociatedWordNodeById(String id) throws MciException {
     SelectQuery q = new SelectQuery.Builder()
-      .select("value")
+      .select("wordNode")
       .where("g", "hasId", "id")
-      .where("g", "hasWord", "word")
-      .where("word", "hasStringValue", "value")
+      .where("g", "hasWord", "wordNode")
       .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
       .addIriParam("hasWord", ont.getPrefixedEntity("hasWord"))
-      .addIriParam("hasStringValue", ont.getPrefixedEntity("hasStringValue"))
       .addLiteralParam("id", id)
       .build();
 
@@ -61,7 +59,7 @@ public class WordPuzzleDao implements IWordPuzzleDao {
       JsonArray result = ont.select(q);
       String value = "";
       if (result.size() > 0) {
-        value = result.get(0).getAsJsonObject().get("value").getAsString();
+        value = result.get(0).getAsJsonObject().get("wordNode").getAsString();
       }
       return value;
     } catch (OntologyException e) {

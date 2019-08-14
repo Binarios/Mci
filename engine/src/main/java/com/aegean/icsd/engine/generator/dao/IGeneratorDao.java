@@ -7,9 +7,9 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
 
-import com.google.gson.JsonArray;
-
 public interface IGeneratorDao {
+
+  Map<String, Object> selectObject(Map<String, Object> relations) throws EngineException;
 
   boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)
     throws EngineException;
@@ -28,5 +28,4 @@ public interface IGeneratorDao {
 
   Class<?> getJavaClass(String range);
 
-  String selectObjectId(Map<String, Object> propValues) throws EngineException;
 }

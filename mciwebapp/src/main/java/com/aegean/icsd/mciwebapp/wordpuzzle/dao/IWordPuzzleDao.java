@@ -6,5 +6,5 @@ public interface IWordPuzzleDao {
 
   boolean solveGame(String id, String player, String word) throws MciException;
 
-  String getWordById(String id) throws MciException;
+  String getAssociatedWordNodeById(String id) throws MciException;
 }
