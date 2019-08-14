@@ -46,7 +46,7 @@ public class TestIntegration {
   public void testObsIns() throws MciException {
     String playerName = "TestUser";
 
-    ObservationResponse obs = observationImpl.createObservation(playerName, Difficulty.HARD);
+    ObservationResponse obs = observationImpl.createGame(playerName, Difficulty.HARD);
 
     Assertions.assertNotNull(obs);
     Assertions.assertEquals(playerName, obs.getGame().getPlayerName());

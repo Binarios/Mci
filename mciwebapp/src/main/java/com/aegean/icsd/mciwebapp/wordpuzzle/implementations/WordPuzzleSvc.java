@@ -47,7 +47,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
   private IWordPuzzleDao dao;
 
   @Override
-  public List<WordPuzzleResponse> getWordPuzzles(String playerName) throws MciException {
+  public List<WordPuzzleResponse> getGames(String playerName) throws MciException {
     if (StringUtils.isEmpty(playerName)) {
       throw GameExceptions.InvalidRequest(gameName);
     }
@@ -65,7 +65,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
   }
 
   @Override
-  public WordPuzzleResponse createWordPuzzle(String playerName, Difficulty difficulty) throws MciException {
+  public WordPuzzleResponse createGame(String playerName, Difficulty difficulty) throws MciException {
     LOGGER.info(String.format("Creating Word Puzzle game for player %s with difficulty %s",
       playerName, difficulty.name()));
 
@@ -129,7 +129,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
   }
 
   @Override
-  public WordPuzzleResponse getWordPuzzle(String id, String player) throws MciException {
+  public WordPuzzleResponse getGame(String id, String player) throws MciException {
     if (StringUtils.isEmpty(id)
       || StringUtils.isEmpty(player)) {
       throw GameExceptions.InvalidRequest(gameName);

@@ -20,6 +20,7 @@ import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.common.interfaces.IGameService;
 import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
@@ -51,7 +52,7 @@ public class ObservationImpl implements IObservationSvc {
   private IAnnotationReader ano;
 
   @Override
-  public List<ObservationResponse> getObservations(String playerName) throws MciException {
+  public List<ObservationResponse> getGames(String playerName) throws MciException {
     if (StringUtils.isEmpty(playerName)) {
       throw GameExceptions.InvalidRequest(gameName);
     }
@@ -71,7 +72,7 @@ public class ObservationImpl implements IObservationSvc {
   }
 
   @Override
-  public ObservationResponse getObservation(String id, String player) throws MciException {
+  public ObservationResponse getGame(String id, String player) throws MciException {
     if (StringUtils.isEmpty(id)
       || StringUtils.isEmpty(player)) {
       throw GameExceptions.InvalidRequest(gameName);
@@ -134,7 +135,7 @@ public class ObservationImpl implements IObservationSvc {
   }
 
   @Override
-  public ObservationResponse createObservation(String playerName, Difficulty difficulty) throws MciException {
+  public ObservationResponse createGame(String playerName, Difficulty difficulty) throws MciException {
     LOGGER.info(String.format("Creating Observation game for player %s at the difficulty %s",
       playerName, difficulty.name()));
 
