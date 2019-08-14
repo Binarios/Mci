@@ -178,7 +178,13 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     }
 
     boolean solved = dao.solveGame(puzzle.getId(), player, solution);
-    String correctWord = dao.getAssociatedWordNodeById(puzzle.getId());
+    String wordNode = dao.getAssociatedWordNodeById(puzzle.getId());
+    Word word;
+    try{
+      word = wordProvider.getWordFromNode(wordNode);
+    } catch (ProviderException e) {
+      throw GameExceptions.FailedToRetrieveWord(gameName, puzzle.getId());
+    }
     if (solved) {
       puzzle.setCompletionTime(completionTime);
       puzzle.setCompletedDate(String.valueOf(System.currentTimeMillis()));
@@ -188,7 +194,8 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
         throw  GameExceptions.GenerationError(gameName, e);
       }
     }
-    WordPuzzleResponse resp = toResponse(puzzle, correctWord);
+
+    WordPuzzleResponse resp = toResponse(puzzle, word.getValue());
     resp.setSolved(solved);
     return resp;
   }
@@ -197,8 +204,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     String[] letters = word.split("");
     List<String> shuffled = Arrays.asList(letters);
     Collections.shuffle(shuffled, new Random(System.currentTimeMillis()));
-    WordPuzzleResponse res = new WordPuzzleResponse();
-    res.setPuzzle(puzzle);
+    WordPuzzleResponse res = new WordPuzzleResponse(puzzle);
     res.setLetters(shuffled);
     return res;
   }

@@ -3,14 +3,18 @@ package com.aegean.icsd.mciwebapp.observations.beans;
 import java.util.List;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 
 import openllet.core.utils.Bool;
 
-public class ObservationResponse {
-  private Observation observation;
+public class ObservationResponse extends ServiceResponse<Observation> {
   private Boolean solved;
   private List<ObservationItem> items;
   private List<String> words;
+
+  public ObservationResponse(Observation observation) {
+    super(observation);
+  }
 
   public List<ObservationItem> getItems() {
     return items;
@@ -26,14 +30,6 @@ public class ObservationResponse {
 
   public void setWords(List<String> words) {
     this.words = words;
-  }
-
-  public Observation getObservation() {
-    return observation;
-  }
-
-  public void setObservation(Observation observation) {
-    this.observation = observation;
   }
 
   public Boolean getSolved() {

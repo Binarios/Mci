@@ -2,18 +2,16 @@ package com.aegean.icsd.mciwebapp.wordpuzzle.beans;
 
 import java.util.List;
 
-public class WordPuzzleResponse {
-  private WordPuzzle puzzle;
+import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
+
+public class WordPuzzleResponse extends ServiceResponse<WordPuzzle> {
   private Boolean solved;
   private List<String> letters;
 
-  public WordPuzzle getPuzzle() {
-    return puzzle;
+  public WordPuzzleResponse(WordPuzzle game) {
+    super(game);
   }
 
-  public void setPuzzle(WordPuzzle puzzle) {
-    this.puzzle = puzzle;
-  }
 
   public Boolean getSolved() {
     return solved;
