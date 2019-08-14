@@ -49,9 +49,9 @@ public class TestIntegration {
     ObservationResponse obs = observationImpl.createObservation(playerName, Difficulty.HARD);
 
     Assertions.assertNotNull(obs);
-    Assertions.assertEquals(playerName, obs.getObservation().getPlayerName());
-    Assertions.assertEquals(Difficulty.HARD, obs.getObservation().getDifficulty());
-    Assertions.assertEquals(180000, obs.getObservation().getMaxCompletionTime());
+    Assertions.assertEquals(playerName, obs.getGame().getPlayerName());
+    Assertions.assertEquals(Difficulty.HARD, obs.getGame().getDifficulty());
+    Assertions.assertEquals(180000, obs.getGame().getMaxCompletionTime());
     Assertions.assertEquals(4, obs.getWords().size());
     Assertions.assertEquals(4, obs.getItems().size());
   }

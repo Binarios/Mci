@@ -1,11 +1,7 @@
 package com.aegean.icsd.mciwebapp.observations.controllers;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +19,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
-import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationRequest;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
@@ -49,24 +45,7 @@ public class ObservationsController {
                                                             @RequestParam(name = "completed", required = false) Boolean completed,
                                                             @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     List<ObservationResponse> responses = observationImpl.getObservations(player);
-    List<ObservationResponse> filtered = responses.stream().filter(x -> {
-      boolean choose = true;
-      if (!StringUtils.isEmpty(difficulty)) {
-        Difficulty diff = Difficulty.valueOf(difficulty.toUpperCase());
-        choose = x.getObservation().getDifficulty().equals(diff);
-      }
-
-      if (completed != null) {
-        if (completed) {
-          choose &= x.getObservation().getCompletedDate() != null;
-        } else {
-          choose &= x.getObservation().getCompletedDate() == null;
-        }
-      }
-      return choose;
-    }).collect(Collectors.toList());
-
-
+    List<ObservationResponse> filtered = FilterResponse.by(responses, difficulty, completed);
     return new Response<>(filtered);
   }
 

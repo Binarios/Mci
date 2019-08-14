@@ -2,20 +2,11 @@ package com.aegean.icsd.mciwebapp.observations.beans;
 
 import java.util.Map;
 
-public class ObservationRequest {
-  private String difficulty;
+import com.aegean.icsd.mciwebapp.common.beans.Request;
+
+public class ObservationRequest extends Request {
 
   private Map<String, Integer> solution;
-
-  private Long completionTime;
-
-  public String getDifficulty() {
-    return difficulty;
-  }
-
-  public void setDifficulty(String difficulty) {
-    this.difficulty = difficulty;
-  }
 
   public Map<String, Integer> getSolution() {
     return solution;
@@ -25,11 +16,4 @@ public class ObservationRequest {
     this.solution = solution;
   }
 
-  public Long getCompletionTime() {
-    return completionTime;
-  }
-
-  public void setCompletionTime(Long completionTime) {
-    this.completionTime = completionTime;
-  }
 }

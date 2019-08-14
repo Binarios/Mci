@@ -1,9 +1,7 @@
 package com.aegean.icsd.mciwebapp.wordpuzzle.controllres;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +19,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationRequest;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
-import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzleResponse;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WorldPuzzleRequest;
 import com.aegean.icsd.mciwebapp.wordpuzzle.interfaces.IWordPuzzleSvc;
@@ -46,26 +42,11 @@ public class WordPuzzlesController {
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
   public Response<List<WordPuzzleResponse>> getWordPuzzles(@RequestParam(name = "difficulty", required = false) String difficulty,
-                                                            @RequestParam(name = "completed", required = false) Boolean completed,
-                                                            @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+                                                           @RequestParam(name = "completed", required = false) Boolean completed,
+                                                           @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+
     List<WordPuzzleResponse> responses = wordPuzzleSvc.getWordPuzzles(player);
-    List<WordPuzzleResponse> filtered = responses.stream().filter(x -> {
-      boolean choose = true;
-      if (!StringUtils.isEmpty(difficulty)) {
-        Difficulty diff = Difficulty.valueOf(difficulty.toUpperCase());
-        choose = x.getPuzzle().getDifficulty().equals(diff);
-      }
-
-      if (completed != null) {
-        if (completed) {
-          choose &= x.getPuzzle().getCompletedDate() != null;
-        } else {
-          choose &= x.getPuzzle().getCompletedDate() == null;
-        }
-      }
-      return choose;
-    }).collect(Collectors.toList());
-
+    List<WordPuzzleResponse> filtered = FilterResponse.by(responses, difficulty, completed);
 
     return new Response<>(filtered);
   }
@@ -74,7 +55,7 @@ public class WordPuzzlesController {
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
   public Response<WordPuzzleResponse> createWordPuzzle(@RequestBody WorldPuzzleRequest req,
-                                                         @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+                                                       @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createWordPuzzle request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
     WordPuzzleResponse resp = wordPuzzleSvc.createWordPuzzle(player, dif);
@@ -85,7 +66,7 @@ public class WordPuzzlesController {
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
   public Response<WordPuzzleResponse> getWordPuzzle(@PathVariable("id") String id,
-                                                      @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+                                                    @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     WordPuzzleResponse obs = wordPuzzleSvc.getWordPuzzle(id, player);
     return new Response<>(obs);
   }
@@ -95,8 +76,8 @@ public class WordPuzzlesController {
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
   public Response<WordPuzzleResponse> updateWordPuzzle(@PathVariable("id") String id,
-                                                         @RequestBody WorldPuzzleRequest req,
-                                                         @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+                                                       @RequestBody WorldPuzzleRequest req,
+                                                       @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     WordPuzzleResponse response = wordPuzzleSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution());
     return new Response<>(response);
   }

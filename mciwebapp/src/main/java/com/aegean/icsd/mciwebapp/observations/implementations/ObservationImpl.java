@@ -226,9 +226,8 @@ public class ObservationImpl implements IObservationSvc {
   }
 
   ObservationResponse toResponse(Observation obs, List<ObservationItem> images, List<String> words) {
-    ObservationResponse resp = new ObservationResponse();
+    ObservationResponse resp = new ObservationResponse(obs);
     resp.setSolved(!StringUtils.isEmpty(obs.getCompletedDate()));
-    resp.setObservation(obs);
     if (images != null) {
       resp.setItems(images);
     }
