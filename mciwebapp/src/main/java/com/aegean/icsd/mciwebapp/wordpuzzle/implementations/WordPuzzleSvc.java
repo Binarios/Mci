@@ -22,7 +22,6 @@ import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
-import com.aegean.icsd.mciwebapp.object.beans.WordCriteria;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzle;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzleResponse;
@@ -50,13 +49,13 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
   @Override
   public List<WordPuzzleResponse> getWordPuzzles(String playerName) throws MciException {
     if (StringUtils.isEmpty(playerName)) {
-      throw Exceptions.InvalidRequest();
+      throw GameExceptions.InvalidRequest(gameName);
     }
-    List<WordPuzzle> puzzles = null;
+    List<WordPuzzle> puzzles;
     try {
       puzzles = generator.getGamesForPlayer(gameName, playerName, WordPuzzle.class);
     } catch (EngineException e) {
-      throw Exceptions.FailedToRetrieveGames(playerName, e);
+      throw GameExceptions.FailedToRetrieveGames(gameName, playerName, e);
     }
     List<WordPuzzleResponse> res = new ArrayList<>();
     for (WordPuzzle puzzle : puzzles) {
@@ -112,27 +111,21 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     puzzle.setMaxCompletionTime(Long.parseLong("" + generator.generateIntDataValue(maxCompleteTimeRes.getDataRange())));
     puzzle.setWordLength(generator.generateIntDataValue(wordLengthRes.getDataRange()));
 
-    WordCriteria criteria = new WordCriteria();
-    criteria.setLength(puzzle.getWordLength());
-    criteria.setForEntity(fullName);
-
-    String wordId;
-    String word;
+    Word word;
     try {
-      wordId = wordProvider.getWordWithCriteria(criteria);
-      word = wordProvider.getWordValue(wordId);
+      word = wordProvider.getNewWordFor(fullName, puzzle.getWordLength());
     } catch (ProviderException e) {
       throw GameExceptions.GenerationError(gameName, e);
     }
 
     try {
       generator.upsertObj(puzzle);
-      generator.createObjRelation(puzzle.getId(), hasWordRes.getOnProperty(), wordId);
+      generator.createObjRelation(puzzle.getId(), hasWordRes.getOnProperty(), word.getId());
     } catch (EngineException e) {
       throw GameExceptions.GenerationError(gameName, e);
     }
 
-    return toResponse(puzzle, word);
+    return toResponse(puzzle, word.getValue());
   }
 
   @Override
@@ -149,15 +142,15 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
       throw GameExceptions.UnableToRetrieveGame(gameName, id, player);
     }
 
-    if (puzzle == null) {
-      throw GameExceptions.UnableToRetrieveGame(gameName, id, player);
+    String wordNode = dao.getAssociatedWordNodeById(puzzle.getId());
+    Word word;
+    try{
+      word = wordProvider.getWordFromNode(wordNode);
+    } catch (ProviderException e) {
+      throw GameExceptions.FailedToRetrieveWord(gameName, puzzle.getId());
     }
 
-    String word = dao.getWordById(puzzle.getId());
-    if(StringUtils.isEmpty(word)) {
-      throw Exceptions.FailedToRetrieveWord(puzzle.getId());
-    }
-    return toResponse(puzzle, word);
+    return toResponse(puzzle, word.getValue());
   }
 
   @Override
@@ -185,7 +178,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     }
 
     boolean solved = dao.solveGame(puzzle.getId(), player, solution);
-    String correctWord = dao.getWordById(puzzle.getId());
+    String correctWord = dao.getAssociatedWordNodeById(puzzle.getId());
     if (solved) {
       puzzle.setCompletionTime(completionTime);
       puzzle.setCompletedDate(String.valueOf(System.currentTimeMillis()));

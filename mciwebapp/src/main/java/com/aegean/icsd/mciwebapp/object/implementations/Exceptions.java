@@ -5,8 +5,8 @@ import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 class Exceptions {
   private final static String CODE_NAME = "OP";
 
-  static ProviderException UnableToReadFile(String path, Throwable t) {
-    return new ProviderException(CODE_NAME + "." + 1, String.format("Unable to locate the requested filePath: %s", path), t);
+  static ProviderException UnableToGetWord(String criteria, Throwable t) {
+    return new ProviderException(CODE_NAME + "." + 1, String.format("Unable to get the word with the associated criteria: %s", criteria), t);
   }
 
   static ProviderException UnableToReadFile(String path) {

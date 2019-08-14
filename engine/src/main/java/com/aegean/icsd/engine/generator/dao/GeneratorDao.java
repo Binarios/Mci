@@ -34,6 +34,48 @@ public class GeneratorDao implements IGeneratorDao {
   private IAnnotationReader ano;
 
   @Override
+  public Map<String, Object> selectObject(Map<String, Object> relations) throws EngineException {
+    SelectQuery.Builder qBuilder = new SelectQuery.Builder()
+      .select("p", "o");
+
+    for (Map.Entry<String, Object> entry : relations.entrySet()) {
+      String dataProperty = entry.getKey();
+      Object value = entry.getValue();
+      if (value == null) {
+        continue;
+      }
+
+      qBuilder.where("s", dataProperty, "value")
+        .addIriParam(dataProperty, ontology.getPrefixedEntity(dataProperty));
+      if (Integer.class.isAssignableFrom(value.getClass())) {
+        qBuilder.addLiteralParam("value", Integer.parseInt(value.toString()));
+      } else if (Long.class.isAssignableFrom(value.getClass())) {
+        qBuilder.addLiteralParam("value", Long.parseLong(value.toString()));
+      } else {
+        qBuilder.addLiteralParam("value", value.toString());
+      }
+    }
+    qBuilder.where("s", "p", "o");
+
+    try {
+      JsonArray result = ontology.select(qBuilder.build());
+      Map<String, Object> existingRelations = null;
+      if (result.size() != 0) {
+        existingRelations = new HashMap<>();
+        for (JsonElement element : result) {
+          JsonObject obj = element.getAsJsonObject();
+          String dataProperty = ontology.removePrefix(obj.get("p").getAsString());
+          String value = ontology.removePrefix(obj.get("o").getAsString());
+          existingRelations.put(dataProperty, value);
+        }
+      }
+      return existingRelations;
+    } catch (OntologyException e) {
+      throw DaoExceptions.SelectObjectQuery("No extra msg", e);
+    }
+  }
+
+  @Override
   public boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)
     throws EngineException {
     return createRelation(id, name, rangeValue, false, valueClass);
@@ -54,51 +96,6 @@ public class GeneratorDao implements IGeneratorDao {
       return ontology.insert(ins);
     } catch (OntologyException e) {
       throw DaoExceptions.InsertQuery("Object: " + id, e);
-    }
-  }
-
-  @Override
-  public String selectObjectId(Map<String, Object> propValues) throws EngineException {
-    SelectQuery.Builder builder = new SelectQuery.Builder().select("id");
-
-    for (Map.Entry<String, Object> propValue : propValues.entrySet()) {
-      String property = propValue.getKey();
-      Object value = propValue.getValue();
-      if (value == null) {
-        continue;
-      }
-
-      if (List.class.isAssignableFrom(value.getClass())) {
-        List valueList = (List) value;
-        for (Object val : valueList) {
-          String propVar = UUID.randomUUID().toString().replace("-", "");
-          String valueVar = UUID.randomUUID().toString().replace("-", "");
-          builder.where("sub", propVar, valueVar);
-          builder.addIriParam(propVar, ontology.getPrefixedEntity(property));
-          builder.addLiteralParam(valueVar, val.toString());
-        }
-      } else {
-        String propVar = UUID.randomUUID().toString().replace("-", "");
-        String valueVar = UUID.randomUUID().toString().replace("-", "");
-        builder.where("sub", propVar, valueVar);
-        builder.addIriParam(propVar, ontology.getPrefixedEntity(property));
-        builder.addLiteralParam(valueVar, value.toString());
-      }
-      builder.where("sub", "hasId", "id");
-      builder.addIriParam("hasId", ontology.getPrefixedEntity("hasId"));
-    }
-
-    SelectQuery q = builder.build();
-
-    try {
-      String id = null;
-      JsonArray result = ontology.select(q);
-      if (result.size() != 0) {
-        id = result.get(0).getAsJsonObject().get("id").getAsString();
-      }
-      return id;
-    } catch (OntologyException e) {
-      throw DaoExceptions.InsertQuery("No extra msg", e);
     }
   }
 

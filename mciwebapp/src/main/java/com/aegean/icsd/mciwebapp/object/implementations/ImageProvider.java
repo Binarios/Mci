@@ -1,8 +1,5 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +11,7 @@ import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.object.beans.Image;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.mciwebapp.object.configurations.ImageConfiguration;
 import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObjectFileProvider;
@@ -40,7 +38,7 @@ public class ImageProvider implements IImageProvider {
   private IObjectFileProvider fileProvider;
 
   @Override
-  public String getImageId() throws ProviderException {
+  public Image getImage() throws ProviderException {
     LOGGER.info("Retrieving an Image");
     Image img = new Image();
 
@@ -63,33 +61,20 @@ public class ImageProvider implements IImageProvider {
     String subject = fragments[config.getSubjectIndex()];
 
     try {
-      String id = generator.selectObjectId(img);
-      if (id == null) {
+      generator.selectObj(img);
+      if (img.getId() == null) {
         generator.upsertObj(img);
-      } else {
-        img.setId(id);
       }
-      String titleId = wordProvider.getWordFromValue(title);
-      String subjectId = wordProvider.getWordFromValue(subject);
-      generator.createObjRelation(img.getId(), imageTitleRes.getOnProperty(), titleId);
-      generator.createObjRelation(img.getId(), imageSubjRes.getOnProperty(), subjectId);
+
+      Word titleWord = wordProvider.getWordWithValue(title);
+      Word subjectWord = wordProvider.getWordWithValue(subject);
+      generator.createObjRelation(img.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
+      generator.createObjRelation(img.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
 
       LOGGER.info(String.format("Retrieving an Image with id %s", img.getId()));
-      return img.getId();
+      return img;
     } catch (EngineException e) {
       throw Exceptions.GenerationError(e);
     }
-  }
-
-  private String extractNameFromUrl(String url) {
-    String unixFormat = url.replace("\\", "/");
-    String[] fragments = unixFormat.split("/");
-    String name = fragments[fragments.length - 1];
-    if (name.contains(".")) {
-      String[] nameTypeFragments = name.split("\\.");
-      List<String> nameFragments = Arrays.asList(nameTypeFragments).subList(0, nameTypeFragments.length - 1);
-      name = String.join(".", nameFragments);
-    }
-    return name;
   }
 }

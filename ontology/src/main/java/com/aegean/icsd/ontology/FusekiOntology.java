@@ -2,15 +2,12 @@ package com.aegean.icsd.ontology;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.Authenticator;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,16 +22,8 @@ import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryException;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ReadWrite;
-import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -43,11 +32,6 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.tdb2.TDB2Factory;
-import org.apache.jena.update.UpdateExecutionFactory;
-import org.apache.jena.update.UpdateFactory;
-import org.apache.jena.update.UpdateProcessor;
-import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -146,7 +130,7 @@ public class FusekiOntology implements IOntology {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
 
-    for(Map.Entry<String, Integer> entry : selectQuery.getIntLiteralParams().entrySet()) {
+    for(Map.Entry<String, Long> entry : selectQuery.getLongLiteralParams().entrySet()) {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
 
@@ -177,10 +161,15 @@ public class FusekiOntology implements IOntology {
      for (JsonElement elem : res.getResults().getBindings()) {
        JsonObject resultObj = new JsonObject();
        for (String varName : varNames) {
-         String value = elem.getAsJsonObject().get(varName).getAsJsonObject().get("value").getAsString();
-         resultObj.addProperty(varName, value);
+         JsonObject currentResult = elem.getAsJsonObject();
+         if (currentResult.has(varName)) {
+           String value = currentResult.get(varName).getAsJsonObject().get("value").getAsString();
+           resultObj.addProperty(varName, value);
+         }
        }
-       array.add(resultObj);
+       if (resultObj.entrySet().size() > 0) {
+         array.add(resultObj);
+       }
      }
     } catch (IOException | InterruptedException e) {
       throw new OntologyException("SEL.1", "Error when executing the query", e);

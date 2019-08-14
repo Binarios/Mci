@@ -45,4 +45,8 @@ public class GameExceptions {
       " the game \"%s\" with difficulty \"%s\" and player \"%s\"", game, difficulty.name(), playerName)
       , t);
   }
+
+  public static MciException FailedToRetrieveWord(String game, String id) {
+    return new MciException(game + "." + 9, String.format("Could not retrieve the word associated with the id %s ", id));
+  }
 }

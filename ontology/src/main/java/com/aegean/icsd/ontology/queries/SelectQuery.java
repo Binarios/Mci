@@ -18,7 +18,7 @@ public class SelectQuery {
   private Map<String, List<Triplet>> conditions = new LinkedHashMap<>();
   private Map<String, String> iriParams = new LinkedHashMap<>();
   private Map<String, String> literalParams = new LinkedHashMap<>();
-  private Map<String, Integer> intLiteralParams = new LinkedHashMap<>();
+  private Map<String, Long> longLiteralParams = new LinkedHashMap<>();
   private List<String> selectParams = new LinkedList<>();
 
   private SelectQuery() { }
@@ -47,8 +47,8 @@ public class SelectQuery {
     return selectParams;
   }
 
-  public Map<String, Integer> getIntLiteralParams() {
-    return intLiteralParams;
+  public Map<String, Long> getLongLiteralParams() {
+    return longLiteralParams;
   }
 
 
@@ -60,7 +60,7 @@ public class SelectQuery {
     private List<String> filters = new LinkedList<>();
     private Map<String, String> iriParams = new LinkedHashMap<>();
     private Map<String, String> literalParams = new LinkedHashMap<>();
-    private Map<String, Integer> intLiteralParams = new LinkedHashMap<>();
+    private Map<String, Long> longLiteralParams = new LinkedHashMap<>();
     private List<SelectQuery> subQueries = new LinkedList<>();
     private boolean isAscOrdered = false;
     private String orderFiled = null;
@@ -87,7 +87,12 @@ public class SelectQuery {
     }
 
     public Builder addLiteralParam(String param, Integer value) {
-      intLiteralParams.put(param, value);
+      longLiteralParams.put(param, Long.parseLong(value.toString()));
+      return this;
+    }
+
+    public Builder addLiteralParam(String param, Long value) {
+      longLiteralParams.put(param, value);
       return this;
     }
 
@@ -238,7 +243,7 @@ public class SelectQuery {
       query.conditions = conditions;
       query.iriParams = iriParams;
       query.literalParams = literalParams;
-      query.intLiteralParams = intLiteralParams;
+      query.longLiteralParams = longLiteralParams;
       query.selectParams = params;
 
       return query;

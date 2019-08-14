@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
-import com.aegean.icsd.mciwebapp.object.beans.WordCriteria;
 import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.mciwebapp.object.dao.IObjectsDao;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObjectFileProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
+import com.aegean.icsd.ontology.IOntology;
 
 @Service
 public class WordProvider implements IWordProvider {
@@ -34,63 +34,76 @@ public class WordProvider implements IWordProvider {
   @Autowired
   private IObjectFileProvider fileProvider;
 
+  @Autowired
+  private IOntology ont;
+
   @Override
-  public String getWordFromValue(String value) throws ProviderException {
+  public Word getWordWithValue(String value) throws ProviderException {
     LOGGER.info(String.format("Requested word with value %s", value));
     Word word = toWord(value);
     try {
-      String id = generator.selectObjectId(word);
-      if (id == null) {
+      generator.selectObj(word);
+      if (word.getId() == null) {
         generator.upsertObj(word);
-      } else {
-        word.setId(id);
       }
-      return word.getId();
+      return word;
     } catch (EngineException e) {
       throw Exceptions.GenerationError(e);
     }
   }
 
   @Override
-  public String getWordWithCriteria(WordCriteria criteria) throws ProviderException {
-    String id;
-    if (!StringUtils.isEmpty(criteria.getValue())) {
-      id = getWordFromValue(criteria.getValue());
+  public Word getNewWordFor(String entityName, int length) throws ProviderException {
+    String id = dao.getNewWordIdFor(entityName);
+    Word word;
+    if (StringUtils.isEmpty(id)) {
+      word = readWord(length);
     } else {
-      id = dao.getNonAssociatedWordIdsWithLength(criteria.getForEntity(), criteria.getLength());
-      if (id == null) {
-        id = readWord(criteria);
+      word = new Word();
+      word.setId(id);
+      try {
+        generator.selectObj(word);
+      } catch (EngineException e) {
+        throw Exceptions.GenerationError(e);
       }
     }
-    return id;
+    return word;
   }
 
   @Override
-  public String getWordValue(String wordId) throws ProviderException {
-    return dao.getWordValue(wordId);
+  public Word getWordFromNode(String wordNode) throws ProviderException {
+    String id = ont.removePrefix(wordNode);
+    Word word = new Word();
+    word.setId(id);
+
+    try {
+      generator.selectObj(word);
+    } catch (EngineException e) {
+      throw Exceptions.GenerationError(e);
+    }
+
+    return word;
   }
 
-  String readWord(WordCriteria criteria) throws ProviderException {
-    String wordId = null;
+  Word readWord(int length) throws ProviderException {
+    Word word = null;
     List<String> lines = fileProvider.getLines(config.getLocation() + "/" + config.getFilename());
     for (String line : lines) {
       String[] fragments = line.split(config.getDelimiter());
-      for (String word : fragments) {
-        if (word.length() == criteria.getLength()) {
-          wordId = getWordFromValue(word);
+      for (String value : fragments) {
+        if (value.length() == length) {
+          word = getWordWithValue(value);
           break;
         }
-        if (wordId != null) {
+        if (word != null) {
           break;
         }
       }
     }
-
-    if (wordId == null) {
+    if (word == null) {
       throw Exceptions.UnableToGenerateObject(Word.NAME);
     }
-
-    return wordId;
+    return word;
   }
 
   Word toWord(String value) {

@@ -12,6 +12,14 @@ class DaoExceptions {
     return new EngineException(CODE_NAME + "." + 2, String.format("There was a problem when inserting an entry. More details: %s", extraMsg), t);
   }
 
+  static EngineException SelectObjectQuery(String extraMsg) {
+    return new EngineException(CODE_NAME + "." + 3, String.format("There was a problem when selecting the relations of a Game Object. More details: %s", extraMsg));
+  }
+
+  static EngineException SelectObjectQuery(String extraMsg, Throwable t) {
+    return new EngineException(CODE_NAME + "." + 3, String.format("There was a problem when selecting the relations of a Game Object. More details: %s", extraMsg), t);
+  }
+
 
   static EngineException FailedToRetrieveLastLevel(String gameName, Difficulty difficulty,
       String playerName, Throwable t) {

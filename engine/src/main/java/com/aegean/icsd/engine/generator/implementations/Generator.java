@@ -42,6 +42,16 @@ public class Generator implements IGenerator {
   @Autowired
   private IOntology ont;
 
+  @Override
+  public void selectObj(Object object) throws EngineException {
+    Map<String, Object> relations = ano.getDataProperties(object);
+    Map<String, Object> existingRelations = dao.selectObject(relations);
+    if (existingRelations != null) {
+      for (Map.Entry<String, Object> entry : existingRelations.entrySet()) {
+        ano.setDataPropertyValue(object, entry.getKey(), entry.getValue());
+      }
+    }
+  }
 
   @Override
   public String upsertObj(Object object) throws EngineException {
@@ -77,18 +87,6 @@ public class Generator implements IGenerator {
       }
     }
 
-    return id;
-  }
-
-  @Override
-  public String selectObjectId(Object object) throws EngineException {
-    Map<String, Object> propValues;
-    try {
-      propValues = ano.getDataProperties(object);
-    } catch (EngineException e) {
-      throw  Exceptions.UnableToRetrieveDataProperties(e);
-    }
-    String id = dao.selectObjectId(propValues);
     return id;
   }
 
