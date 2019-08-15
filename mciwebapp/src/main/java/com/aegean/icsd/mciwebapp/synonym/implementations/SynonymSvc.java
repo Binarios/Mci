@@ -126,7 +126,7 @@ public class SynonymSvc implements ISynonymsSvc {
       throw GameExceptions.GenerationError(Synonym.NAME, e);
     }
 
-    if (words.size() == 0) {
+    if (words.isEmpty()) {
       throw GameExceptions.GenerationError(Synonym.NAME, "No words are available for this level");
     }
 
@@ -198,14 +198,14 @@ public class SynonymSvc implements ISynonymsSvc {
     try {
       synonym = generator.getGameWithId(id, player, Synonym.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(Synonym.NAME, id, player);
+      throw GameExceptions.UnableToRetrieveGame(Synonym.NAME, id, player, e);
     }
 
     List<Word> words;
     try{
       words = wordProvider.selectWordsByEntityId(synonym.getId());
     } catch (ProviderException e) {
-      throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, synonym.getId());
+      throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, synonym.getId(), e);
     }
 
     Word mainWord;
@@ -213,7 +213,7 @@ public class SynonymSvc implements ISynonymsSvc {
       String wordNode = dao.getMainWord(synonym.getId());
       mainWord = wordProvider.selectWordByNode(wordNode);
     } catch (ProviderException e) {
-      throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, synonym.getId());
+      throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, synonym.getId(), e);
     }
     removeWordFromList(mainWord, words);
     return toResponse(synonym, mainWord, words);
@@ -232,7 +232,7 @@ public class SynonymSvc implements ISynonymsSvc {
     try {
       synonym = generator.getGameWithId(id, player, Synonym.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(Synonym.NAME, id, player);
+      throw GameExceptions.UnableToRetrieveGame(Synonym.NAME, id, player, e);
     }
 
     if (completionTime > synonym.getMaxCompletionTime()) {

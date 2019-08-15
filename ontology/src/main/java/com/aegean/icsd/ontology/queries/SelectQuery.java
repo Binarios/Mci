@@ -192,6 +192,7 @@ public class SelectQuery {
           break;
         case IS_LITERAL:
           filter = "FILTER (isLiteral(" + escapedVar +"))";
+          break;
         default:
           break;
       }
@@ -309,7 +310,7 @@ public class SelectQuery {
         builder.append("\t}\n");
       }
 
-      if (filters.size() > 0) {
+      if (!filters.isEmpty()) {
         for (String filter : filters) {
           if (!StringUtils.isEmpty(filter)) {
             builder.append("\t").append(filter).append("\n");
@@ -355,13 +356,14 @@ public class SelectQuery {
     }
 
     String removeParamChars(String entry) {
-      if(entry.indexOf("?") == 0) {
-        entry = entry.substring(1);
+      String sanitized = StringUtils.trim(entry);
+      if(sanitized.indexOf("?") == 0) {
+        sanitized = sanitized.substring(1);
       }
-      if(entry.indexOf("$") == 0) {
-        entry = entry.substring(1);
+      if(sanitized.indexOf("$") == 0) {
+        sanitized = sanitized.substring(1);
       }
-      return "?" + entry;
+      return "?" + sanitized;
     }
 
     Builder orderBy(String field, boolean ascended) {

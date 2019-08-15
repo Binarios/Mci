@@ -22,7 +22,7 @@ import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.mciwebapp.object.dao.IObjectsDao;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObjectFileProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
-import com.aegean.icsd.ontology.IOntology;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 
 @Service
 public class WordProvider implements IWordProvider {
@@ -42,7 +42,7 @@ public class WordProvider implements IWordProvider {
   private IRules rules;
 
   @Autowired
-  private IOntology ont;
+  private IMciModelReader model;
 
   @Autowired
   private IObjectFileProvider fileProvider;
@@ -58,7 +58,7 @@ public class WordProvider implements IWordProvider {
   @Override
   public List<Word> getNewWordsFor(String entityName, int count, Word criteria) throws ProviderException {
     List<String> availableIds = dao.getNewWordIdsFor(entityName);
-    if (availableIds.size() == 0) {
+    if (availableIds.isEmpty()) {
       throw Exceptions.UnableToGenerateObject(Word.NAME);
     }
     List<Word> availableWords = new ArrayList<>();
@@ -92,7 +92,7 @@ public class WordProvider implements IWordProvider {
 
   @Override
   public Word selectWordByNode(String nodeName) throws ProviderException {
-    String id = ont.removePrefix(nodeName);
+    String id = model.removePrefix(nodeName);
     Word word = new Word();
     word.setId(id);
     try {
@@ -145,18 +145,6 @@ public class WordProvider implements IWordProvider {
   @PostConstruct
   void readWords() throws ProviderException {
     List<String> lines = fileProvider.getLines(config.getLocation() + "/" + config.getFilename());
-    EntityRestriction antonymRes;
-    try {
-      antonymRes = rules.getEntityRestriction("AntonymWord", "hasAntonym");
-    } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveRules("AntonymWord", e);
-    }
-    EntityRestriction synonymRes;
-    try {
-      synonymRes = rules.getEntityRestriction("SynonymWord", "hasSynonym");
-    } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveRules("SynonymWord", e);
-    }
 
     for (String line : lines) {
       String[] fragments = line.split(config.getDelimiter());
@@ -173,41 +161,63 @@ public class WordProvider implements IWordProvider {
 
       if (!StringUtils.isEmpty(antonymRaw)) {
         String[] antonymsRaw = antonymRaw.split(config.getAntonymDelimiter());
-        for (String antonymValue : antonymsRaw) {
-          Word antonymWord = toWord(antonymValue);
-          antonymWord.setAntonym(true);
-          getOrUpsertWord(antonymWord);
-          if (antonymWord.getId() != null) {
-            try {
-              generator.createObjRelation(value.getId(), antonymRes.getOnProperty(), antonymWord.getId());
-              if (!value.isAntonym()) {
-                value.setAntonym(true);
-                generator.upsertGameObject(value);
-              }
-            } catch (EngineException e) {
-              throw Exceptions.GenerationError(Word.NAME, e);
-            }
-          }
-        }
+        handleAntonyms(value, antonymsRaw);
       }
 
       if (!StringUtils.isEmpty(synonymRaw)) {
         String[] synonymsRaw = synonymRaw.split(config.getSynonymDelimiter());
-        for (String synonymValue : synonymsRaw) {
-          Word synonymWord = toWord(synonymValue);
-          synonymWord.setSynonym(true);
-          getOrUpsertWord(synonymWord);
-          if (synonymWord.getId() != null) {
-            try {
-              generator.createObjRelation(value.getId(), synonymRes.getOnProperty(), synonymWord.getId());
-              if (!value.isSynonym()) {
-                value.setSynonym(true);
-                generator.upsertGameObject(value);
-              }
-            } catch (EngineException e) {
-              throw Exceptions.GenerationError(Word.NAME, e);
-            }
+        handleSynonyms(value, synonymsRaw);
+      }
+    }
+  }
+
+  void handleAntonyms(Word value, String[] antonyms) throws ProviderException {
+    EntityRestriction antonymRes;
+    try {
+      antonymRes = rules.getEntityRestriction("AntonymWord", "hasAntonym");
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveRules("AntonymWord", e);
+    }
+
+    for (String antonym : antonyms) {
+      Word antonymWord = toWord(antonym);
+      antonymWord.setAntonym(true);
+      getOrUpsertWord(antonymWord);
+      if (antonymWord.getId() != null) {
+        try {
+          generator.createObjRelation(value.getId(), antonymRes.getOnProperty(), antonymWord.getId());
+          if (!value.isAntonym()) {
+            value.setAntonym(true);
+            generator.upsertGameObject(value);
           }
+        } catch (EngineException e) {
+          throw Exceptions.GenerationError(Word.NAME, e);
+        }
+      }
+    }
+  }
+
+  void handleSynonyms(Word value, String[] synonyms) throws ProviderException {
+    EntityRestriction synonymRes;
+    try {
+      synonymRes = rules.getEntityRestriction("SynonymWord", "hasSynonym");
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveRules("SynonymWord", e);
+    }
+
+    for (String synonym : synonyms) {
+      Word synonymWord = toWord(synonym);
+      synonymWord.setAntonym(true);
+      getOrUpsertWord(synonymWord);
+      if (synonymWord.getId() != null) {
+        try {
+          generator.createObjRelation(value.getId(), synonymRes.getOnProperty(), synonymWord.getId());
+          if (!value.isSynonym()) {
+            value.setSynonym(true);
+            generator.upsertGameObject(value);
+          }
+        } catch (EngineException e) {
+          throw Exceptions.GenerationError(Word.NAME, e);
         }
       }
     }

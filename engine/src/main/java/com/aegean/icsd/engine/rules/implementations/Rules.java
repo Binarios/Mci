@@ -2,10 +2,8 @@ package com.aegean.icsd.engine.rules.implementations;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,19 +19,19 @@ import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
-import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 
 @Service
 public class Rules implements IRules {
   private static Logger LOGGER = Logger.getLogger(Rules.class);
 
   @Autowired
-  private IOntology ontology;
+  private IMciModelReader model;
 
   @Override
   public EntityRules getGameRules(String gameName, Difficulty difficulty) throws RulesException {
@@ -59,7 +57,7 @@ public class Rules implements IRules {
 
     ClassSchema entitySchema;
     try {
-      entitySchema = ontology.getClassSchema(entityName);
+      entitySchema = model.getClassSchema(entityName);
     } catch (OntologyException e) {
       throw Exceptions.CannotRetrieveClassSchema(entityName, e);
     }

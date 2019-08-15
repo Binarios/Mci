@@ -80,7 +80,7 @@ public class ObservationSvc implements IObservationSvc {
     try {
       obs = generator.getGameWithId(id, player, Observation.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(Observation.NAME, id, player);
+      throw GameExceptions.UnableToRetrieveGame(Observation.NAME, id, player, e);
     }
 
     List<String> chosenWords = dao.getAssociatedSubjects(obs.getId());
@@ -103,7 +103,7 @@ public class ObservationSvc implements IObservationSvc {
     try {
       obs = generator.getGameWithId(id, player, Observation.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(Observation.NAME, id, player);
+      throw GameExceptions.UnableToRetrieveGame(Observation.NAME, id, player, e);
     }
 
     if (completionTime > obs.getMaxCompletionTime()) {
@@ -220,8 +220,7 @@ public class ObservationSvc implements IObservationSvc {
     }
 
     List<String> chosenWords = dao.getAssociatedSubjects(toCreate.getId());
-    ObservationResponse response = toResponse(toCreate, images, chosenWords);
-    return response;
+    return toResponse(toCreate, images, chosenWords);
   }
 
   ObservationResponse toResponse(Observation obs, List<ObservationItem> images, List<String> words) {

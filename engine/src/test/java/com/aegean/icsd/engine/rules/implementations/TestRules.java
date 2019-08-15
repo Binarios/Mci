@@ -22,16 +22,15 @@ import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
-import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.CardinalitySchema;
 import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -46,7 +45,7 @@ public class TestRules {
   private Rules rules = new Rules();
 
   @Mock
-  private IOntology ontology;
+  private IMciModelReader model;
 
   @Mock
   private ClassSchema classSchema;
@@ -72,7 +71,7 @@ public class TestRules {
 
     ClassSchema mockInd = mock(ClassSchema.class);
     List<PropertySchema> props = new ArrayList<>();
-    given(ontology.getClassSchema(any())).willReturn(mockInd);
+    given(model.getClassSchema(any())).willReturn(mockInd);
     given(mockInd.getProperties()).willReturn(props);
     Mockito.doReturn(new ArrayList<>()).when(rules).getEntityRestrictions(mockInd);
     Mockito.doReturn(new ArrayList<>()).when(rules).getEntityProperties(props);

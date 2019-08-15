@@ -9,8 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
-import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
@@ -21,17 +22,20 @@ import com.google.gson.JsonElement;
 public class ObjectsDao implements IObjectsDao {
 
   @Autowired
-  private IOntology ont;
+  private IOntologyConnector ont;
 
-   @Override
+  @Autowired
+  private IMciModelReader model;
+
+  @Override
   public List<String> getNewWordIdsFor(String forEntity) throws ProviderException {
     SelectQuery q = new SelectQuery.Builder()
       .select("wordId")
-      .whereHasType("s", ont.getPrefixedEntity(forEntity))
-      .whereHasType("word", ont.getPrefixedEntity(Word.NAME))
+      .whereHasType("s", model.getPrefixedEntity(forEntity))
+      .whereHasType("word", model.getPrefixedEntity(Word.NAME))
       .where("word", "hasId", "wordId")
       .minus("s", "p", "word")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
       .build();
 
     try {
@@ -52,9 +56,9 @@ public class ObjectsDao implements IObjectsDao {
       .select("associatedId")
       .where("s", "p", "id")
       .where("s", "pAll", "w")
-      .whereHasType("w",  ont.getPrefixedEntity(Word.NAME))
+      .whereHasType("w",  model.getPrefixedEntity(Word.NAME))
       .where("w", "hasId", "associatedId")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
       .addLiteralParam("id", id)
       .build();
 
@@ -76,15 +80,14 @@ public class ObjectsDao implements IObjectsDao {
       .is("this", "hasId", "thisId")
       .is("this", "hasSynonym", "other")
       .is("other", "hasId", "otherId")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasSynonym", ont.getPrefixedEntity("hasSynonym"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasSynonym", model.getPrefixedEntity("hasSynonym"))
       .addLiteralParam("thisId", thisWord.getId())
       .addLiteralParam("otherId", otherWord.getId())
       .build();
 
     try {
-      boolean result = ont.ask(ask);
-      return result;
+      return ont.ask(ask);
     } catch (OntologyException e) {
       throw Exceptions.FailedToAsk(String.format("%s is not synonym with %s", thisWord.getValue(), otherWord.getValue() ), e);
     }
@@ -96,15 +99,14 @@ public class ObjectsDao implements IObjectsDao {
       .is("this", "hasId", "thisId")
       .is("this", "hasAntonym", "other")
       .is("other", "hasId", "otherId")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasAntonym", ont.getPrefixedEntity("hasAntonym"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasAntonym", model.getPrefixedEntity("hasAntonym"))
       .addLiteralParam("thisId", thisWord.getId())
       .addLiteralParam("otherId", otherWord.getId())
       .build();
 
     try {
-      boolean result = ont.ask(ask);
-      return result;
+      return ont.ask(ask);
     } catch (OntologyException e) {
       throw Exceptions.FailedToAsk(String.format("%s is not antonym with %s", thisWord.getValue(), otherWord.getValue() ), e);
     }

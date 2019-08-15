@@ -1,6 +1,5 @@
 package com.aegean.icsd.engine.generator.implementations;
 
-import javax.naming.Name;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -28,7 +27,8 @@ import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
-import com.aegean.icsd.ontology.IOntology;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 
 @Service
 public class Generator implements IGenerator {
@@ -44,18 +44,21 @@ public class Generator implements IGenerator {
   private IAnnotationReader ano;
 
   @Autowired
-  private IOntology ont;
+  private IOntologyConnector ont;
+
+  @Autowired
+  private IMciModelReader model;
 
   @Override
   public void selectObj(Object object) throws EngineException {
     Map<String, Object> relations = ano.getDataProperties(object);
     Map<String, Object> existingRelations = dao.selectObject(relations);
-    if (existingRelations != null) {
+    if (existingRelations == null) {
+      ano.setDataPropertyValue(object, "hasId", null);
+    } else {
       for (Map.Entry<String, Object> entry : existingRelations.entrySet()) {
         ano.setDataPropertyValue(object, entry.getKey(), entry.getValue());
       }
-    } else {
-      ano.setDataPropertyValue(object, "hasId", null);
     }
   }
 
@@ -181,7 +184,7 @@ public class Generator implements IGenerator {
       }
 
       if (rangeValue != null) {
-        Class<?> rangeClass = ont.getJavaClassFromOwlType(property.getRange());
+        Class<?> rangeClass = model.getJavaClassFromOwlType(property.getRange());
         dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
       }
     }

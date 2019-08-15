@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -14,8 +13,9 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
-import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 import com.aegean.icsd.ontology.queries.InsertQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 import com.aegean.icsd.ontology.queries.beans.InsertParam;
@@ -28,7 +28,10 @@ import com.google.gson.JsonObject;
 public class GeneratorDao implements IGeneratorDao {
 
   @Autowired
-  private IOntology ontology;
+  private IOntologyConnector ontology;
+
+  @Autowired
+  private IMciModelReader model;
 
   @Autowired
   private IAnnotationReader ano;
@@ -47,7 +50,7 @@ public class GeneratorDao implements IGeneratorDao {
       }
       String param = "value" + i;
       qBuilder.where("s", dataProperty, param)
-        .addIriParam(dataProperty, ontology.getPrefixedEntity(dataProperty));
+        .addIriParam(dataProperty, model.getPrefixedEntity(dataProperty));
       if (Integer.class.isAssignableFrom(value.getClass())) {
         qBuilder.addLiteralParam(param, Integer.parseInt(value.toString()));
       } else if (Long.class.isAssignableFrom(value.getClass())) {
@@ -68,8 +71,8 @@ public class GeneratorDao implements IGeneratorDao {
         existingRelations = new HashMap<>();
         for (JsonElement element : result) {
           JsonObject obj = element.getAsJsonObject();
-          String dataProperty = ontology.removePrefix(obj.get("p").getAsString());
-          String value = ontology.removePrefix(obj.get("o").getAsString());
+          String dataProperty = model.removePrefix(obj.get("p").getAsString());
+          String value = model.removePrefix(obj.get("o").getAsString());
           existingRelations.put(dataProperty, value);
         }
       }
@@ -96,7 +99,7 @@ public class GeneratorDao implements IGeneratorDao {
   @Override
   public boolean instantiateObject(String id, String type) throws EngineException {
     InsertQuery ins = new InsertQuery.Builder()
-      .insertEntry(ontology.getPrefixedEntity(id), ontology.getPrefixedEntity(type))
+      .insertEntry(model.getPrefixedEntity(id), model.getPrefixedEntity(type))
       .build();
 
     try {
@@ -110,15 +113,15 @@ public class GeneratorDao implements IGeneratorDao {
   public int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException {
     SelectQuery query = new SelectQuery.Builder()
       .select("level")
-      .whereHasType("obs", ontology.getPrefixedEntity(gameName))
+      .whereHasType("obs", model.getPrefixedEntity(gameName))
       .where("obs", "hasDifficulty", "difficulty")
       .where("obs", "hasPlayer", "playerName")
       .where("obs", "hasLevel", "level")
       .orderByDesc("level")
       .limit(1)
-      .addIriParam("hasDifficulty", ontology.getPrefixedEntity("hasDifficulty"))
-      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
-      .addIriParam("hasLevel", ontology.getPrefixedEntity("hasLevel"))
+      .addIriParam("hasDifficulty", model.getPrefixedEntity("hasDifficulty"))
+      .addIriParam("hasPlayer", model.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasLevel", model.getPrefixedEntity("hasLevel"))
       .addLiteralParam("difficulty", difficulty.name())
       .addLiteralParam("playerName", playerName)
       .build();
@@ -145,7 +148,7 @@ public class GeneratorDao implements IGeneratorDao {
       .where("s", "p", "o")
       .regexFilter("type", "gameName")
       .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
-      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasPlayer", model.getPrefixedEntity("hasPlayer"))
       .addIriParam("rdfType", "rdf:type")
       .addLiteralParam("player", playerName)
       .addLiteralParam("gameName", gameName)
@@ -177,8 +180,8 @@ public class GeneratorDao implements IGeneratorDao {
       .where("s", "hasPlayer", "player")
       .where("s", "hasId", "id")
       .where("s", "p", "o")
-      .addIriParam("hasId", ontology.getPrefixedEntity("hasId"))
-      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasPlayer", model.getPrefixedEntity("hasPlayer"))
       .addLiteralParam("player", playerName)
       .addLiteralParam("id", id)
       .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
@@ -206,23 +209,18 @@ public class GeneratorDao implements IGeneratorDao {
     }
   }
 
-  @Override
-  public Class<?> getJavaClass(String range) {
-    return ontology.getJavaClassFromOwlType(range);
-  }
-
   <T> boolean createRelation(String id, String name, Object rangeValue, boolean isObject, Class<T> rangeClass)
     throws EngineException {
     InsertParam rangeParam;
     if (isObject) {
-      rangeParam = InsertParam.createObj(ontology.getPrefixedEntity(rangeValue.toString()));
+      rangeParam = InsertParam.createObj(model.getPrefixedEntity(rangeValue.toString()));
     } else {
       rangeParam = InsertParam.createValue(rangeValue, rangeClass);
     }
 
     InsertQuery ins = new InsertQuery.Builder()
-      .forSubject(InsertParam.createObj(ontology.getPrefixedEntity(id)))
-      .addRelation(InsertParam.createObj(ontology.getPrefixedEntity(name)), rangeParam)
+      .forSubject(InsertParam.createObj(model.getPrefixedEntity(id)))
+      .addRelation(InsertParam.createObj(model.getPrefixedEntity(name)), rangeParam)
       .build();
     try {
       return ontology.insert(ins);
@@ -237,7 +235,7 @@ public class GeneratorDao implements IGeneratorDao {
     for (JsonElement element : dataProperties) {
       JsonObject obj = element.getAsJsonObject();
       String prefixedDataProperty = obj.get("p").getAsString();
-      String dataProperty = ontology.removePrefix(prefixedDataProperty);
+      String dataProperty = model.removePrefix(prefixedDataProperty);
       String value = obj.get("o").getAsString();
       ano.setDataPropertyValue(object, dataProperty, value);
     }

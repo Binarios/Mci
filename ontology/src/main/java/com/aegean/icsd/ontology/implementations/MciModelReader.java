@@ -1,4 +1,4 @@
-package com.aegean.icsd.ontology;
+package com.aegean.icsd.ontology.implementations;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -15,16 +14,7 @@ import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
-import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryException;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ReadWrite;
-import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -33,11 +23,6 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.tdb2.TDB2Factory;
-import org.apache.jena.update.UpdateExecutionFactory;
-import org.apache.jena.update.UpdateFactory;
-import org.apache.jena.update.UpdateProcessor;
-import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -49,123 +34,24 @@ import com.aegean.icsd.ontology.beans.CardinalitySchema;
 import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
-import com.aegean.icsd.ontology.beans.RestrictionSchema;
-import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.ontology.queries.AskQuery;
-import com.aegean.icsd.ontology.queries.beans.InsertParam;
-import com.aegean.icsd.ontology.queries.InsertQuery;
-import com.aegean.icsd.ontology.queries.SelectQuery;
+import com.aegean.icsd.ontology.beans.PropertySchema;
+import com.aegean.icsd.ontology.beans.RestrictionSchema;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import openllet.jena.PelletReasonerFactory;
 
-//@Service
-@Deprecated(since = "Use FusekiOntology", forRemoval = true)
-public class Ontology {
-
-  private static Logger LOGGER = Logger.getLogger(Ontology.class);
+@Service
+public class MciModelReader implements IMciModelReader {
+  private static Logger LOGGER = Logger.getLogger(MciModelReader.class);
 
   @Autowired
   private DatasetProperties ontologyProps;
 
   private OntModel model;
-  private Dataset ds;
 
-//  @Override
-  public JsonArray select(SelectQuery selectQuery) throws OntologyException {
-    JsonArray array = new JsonArray();
 
-    ParameterizedSparqlString sparql = getPrefixedSparql(selectQuery.getPrefixes());
-    sparql.setCommandText(selectQuery.getCommand());
-
-    for(Map.Entry<String, String> entry : selectQuery.getIriParams().entrySet()) {
-      sparql.setIri(entry.getKey(), entry.getValue());
-    }
-
-    for(Map.Entry<String, String> entry : selectQuery.getLiteralParams().entrySet()) {
-      sparql.setLiteral(entry.getKey(), entry.getValue());
-    }
-
-    Query selectRequest;
-    try {
-      selectRequest = QueryFactory.create(sparql.asQuery().toString());
-    } catch (QueryException ex ) {
-      throw new OntologyException("SEL.1", "Error when constructing the query", ex);
-    }
-
-    try {
-      ds.begin(ReadWrite.READ);
-      QueryExecution queryProcessor = QueryExecutionFactory.create(selectRequest, ds);
-      ResultSet resultSet = queryProcessor.execSelect();
-      List<String> varNames = resultSet.getResultVars();
-      while (resultSet.hasNext()) {
-        QuerySolution solution = resultSet.next();
-        JsonObject obj = new JsonObject();
-        for (String varName : varNames) {
-          String var = "?" + varName;
-          RDFNode node = solution.get(var);
-          if (node != null && node.isResource()) {
-            obj.addProperty(varName, node.asResource().getLocalName());
-          }
-          if (node != null && node.isLiteral()) {
-            obj.addProperty(varName, node.asLiteral().getString());
-          }
-        }
-        if (obj.entrySet().size() > 0) {
-          array.add(obj);
-        }
-      }
-    } catch (Exception ex) {
-      throw new OntologyException("SEL.1", "Error when reading from TDB2", ex);
-    } finally {
-      ds.end();
-    }
-    return array;
-  }
-
-//  @Override
-  public boolean insert(InsertQuery insertQuery) throws OntologyException {
-    ParameterizedSparqlString sparql = getPrefixedSparql(insertQuery.getPrefixes());
-    sparql.setCommandText(insertQuery.getCommand());
-
-    for (InsertParam param : insertQuery.getParams()) {
-      if (param.isIriParam()) {
-        sparql.setIri(param.getName(), param.getValue().toString());
-      } else {
-        if (String.class.equals(param.getValueClass())) {
-          sparql.setLiteral(param.getName(), param.getValue().toString());
-        } else if (Long.class.equals(param.getValueClass())) {
-          sparql.setLiteral(param.getName(), Long.parseLong(param.getValue().toString()));
-        } else if (Boolean.class.equals(param.getValueClass())) {
-          sparql.setLiteral(param.getName(), (Boolean) param.getValue());
-        }
-      }
-    }
-
-    UpdateRequest updateRequest;
-    try {
-      updateRequest = UpdateFactory.create(sparql.asUpdate().toString());
-    } catch (QueryException ex ) {
-      throw new OntologyException("INS.1", "Error when constructing the query", ex);
-    }
-    try {
-      ds.begin(ReadWrite.WRITE);
-      UpdateProcessor updateProcessor = UpdateExecutionFactory.create(updateRequest, ds);
-      updateProcessor.execute();
-      ds.commit();
-    } catch (Exception ex) {
-      ds.abort();
-      throw new OntologyException("INS.2", "Error when inserting the triple", ex);
-    }  finally {
-      ds.end();
-    }
-
-    return true;
-  }
-
-//  @Override
+  @Override
   public ClassSchema getClassSchema(String className) throws OntologyException {
     LOGGER.info(String.format("Reading ontology schema for class %s", className));
     ClassSchema result = new ClassSchema();
@@ -182,12 +68,7 @@ public class Ontology {
     return result;
   }
 
-//  @Override
-  public String getPrefixedEntity(String entityName) {
-    return ontologyProps.getPrefix() + ":" + entityName;
-  }
-
-//  @Override
+  @Override
   public Class<?> getJavaClassFromOwlType(String owlType) {
     Class<?> rangeClass = null;
     switch (owlType) {
@@ -209,6 +90,24 @@ public class Ontology {
     }
     return rangeClass;
   }
+
+  @Override
+  public String getPrefixedEntity(String entityName) {
+    return ontologyProps.getPrefix() + ":" + entityName;
+  }
+
+  @Override
+  public String removePrefix(String prefixedEntity) {
+    String[] chunks = prefixedEntity.split(":");
+    String entity = "";
+    if (chunks.length == 1) {
+      entity = prefixedEntity;
+    } else {
+      entity = chunks[1].replace(">", "");
+    }
+    return entity;
+  }
+
 
 
   List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {
@@ -233,6 +132,8 @@ public class Ontology {
         Restriction resClass = superClass.asRestriction();
         RestrictionSchema restriction = getRestrictionSchema(resClass);
         restrictions.add(restriction);
+      } else if (superClass.isClass()) {
+        restrictions.addAll(getRestrictionSchemas(superClass));
       }
     }
     return restrictions;
@@ -254,20 +155,18 @@ public class Ontology {
   }
 
   void getEqualityRestrictionSchema(Resource intersectionOf, List<RestrictionSchema> equalityRestrictions)
-          throws OntologyException {
+    throws OntologyException {
     Resource first = intersectionOf.getPropertyResourceValue(RDF.first);
-    if (first != null ) {
-      if (first.canAs(OntClass.class)) {
-        OntClass firstAsClass = first.as(OntClass.class);
-        if (firstAsClass.isRestriction()) {
-          Restriction restriction = firstAsClass.asRestriction();
-          RestrictionSchema eqRestriction = getRestrictionSchema(restriction);
-          equalityRestrictions.add(eqRestriction);
-        }
-        Resource rest = intersectionOf.getPropertyResourceValue(RDF.rest);
-        if (rest != null) {
-          getEqualityRestrictionSchema(rest, equalityRestrictions);
-        }
+    if (first != null && first.canAs(OntClass.class)) {
+      OntClass firstAsClass = first.as(OntClass.class);
+      if (firstAsClass.isRestriction()) {
+        Restriction restriction = firstAsClass.asRestriction();
+        RestrictionSchema eqRestriction = getRestrictionSchema(restriction);
+        equalityRestrictions.add(eqRestriction);
+      }
+      Resource rest = intersectionOf.getPropertyResourceValue(RDF.rest);
+      if (rest != null) {
+        getEqualityRestrictionSchema(rest, equalityRestrictions);
       }
     }
   }
@@ -410,8 +309,7 @@ public class Ontology {
   }
 
   OntClass getOntClass(String className) {
-    OntClass result = this.model.getOntClass(ontologyProps.getNamespace() + className);
-    return result;
+    return this.model.getOntClass(ontologyProps.getNamespace() + className);
   }
 
   ParameterizedSparqlString getPrefixedSparql(Map<String, String> prefixes) {
@@ -432,32 +330,16 @@ public class Ontology {
   @PostConstruct
   void setupModel () {
     LOGGER.info("START: Setting up the model");
-    String ontologyName = this.ontologyProps.getOntologyName();
+    String ontologyName = ontologyProps.getOntologyName();
 
     ModelMaker maker= ModelFactory.createMemModelMaker();
     OntModelSpec spec = new OntModelSpec(PelletReasonerFactory.THE_SPEC);
     spec.setBaseModelMaker(maker);
     spec.setImportModelMaker(maker);
     Model base = maker.createModel( ontologyName );
-    this.model = ModelFactory.createOntologyModel(spec, base);
-    LOGGER.info("START: Reading the model from :" + this.ontologyProps.getOntologyLocation());
-    this.model.read(this.ontologyProps.getOntologyLocation(), this.ontologyProps.getOntologyType());
-    LOGGER.info("END: Reading the model from :" + this.ontologyProps.getOntologyLocation());
-    LOGGER.info("START: Reading TDB2 from :" + this.ontologyProps.getDatasetLocation());
-    ds = TDB2Factory.connectDataset(this.ontologyProps.getDatasetLocation());
-    ds.begin(ReadWrite.READ);
-    boolean found = ds.containsNamedModel(ontologyProps.getOntologyName());
-    ds.end();
-    LOGGER.info("END: Reading TDB2 from :" + this.ontologyProps.getDatasetLocation());
-
-    if (!found) {
-      LOGGER.info("START: Init TDB2 in :" + this.ontologyProps.getDatasetLocation());
-      ds.begin(ReadWrite.WRITE);
-      ds.addNamedModel(ontologyProps.getOntologyName(), ModelFactory.createOntologyModel());
-      ds.commit();
-      ds.end();
-      LOGGER.info("END: Init TDB2 in :" + this.ontologyProps.getDatasetLocation());
-    }
+    model = ModelFactory.createOntologyModel(spec, base);
+    LOGGER.info("START: Reading the model from :" + ontologyProps.getOntologyLocation());
+    model.read(ontologyProps.getOntologyLocation(), ontologyProps.getOntologyType());
+    LOGGER.info("END: Reading the model from :" + ontologyProps.getOntologyLocation());
   }
-
 }

@@ -32,11 +32,12 @@ public class ObservationProvider implements IObservationProvider {
   @Override
   public ObservationObj getObservation(int totalImageNumber) throws ProviderException {
     LOGGER.info("Creating Observation Object");
-    if (totalImageNumber < 0) {
-      totalImageNumber = 0;
+    int imageTotalNb = totalImageNumber;
+    if (imageTotalNb < 0) {
+      imageTotalNb = 0;
     }
     ObservationObj obs = new ObservationObj();
-    obs.setNbOfImages(totalImageNumber);
+    obs.setNbOfImages(imageTotalNb);
 
     EntityRestriction imageRes;
     try {

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -128,7 +129,7 @@ public class AnnotationReader implements IAnnotationReader {
           }
         }
         if(Enum.class.isAssignableFrom(fieldClass)) {
-          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase()));
+          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase(Locale.ENGLISH)));
         }
         if(Boolean.class.isAssignableFrom(fieldClass)) {
           if (value == null) {

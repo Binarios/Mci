@@ -1,4 +1,4 @@
-package com.aegean.icsd.ontology;
+package com.aegean.icsd.ontology.implementations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +33,12 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.aegean.icsd.ontology.beans.CardinalitySchema;
+import com.aegean.icsd.ontology.beans.ClassSchema;
 import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.DatasetProperties;
-import com.aegean.icsd.ontology.beans.ClassSchema;
+import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
-import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -47,11 +47,11 @@ import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 @Execution(ExecutionMode.CONCURRENT)
-public class TestOntology {
+public class TestMciModelReader {
 
   @InjectMocks
   @Spy
-  private Ontology ont = new Ontology();
+  private MciModelReader model = new MciModelReader();
 
   @Mock(lenient = true)
   private DatasetProperties ds;
@@ -102,7 +102,7 @@ public class TestOntology {
     given(ontClassMock.isEnumeratedClass()).willReturn(false);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
 
-    PropertySchema prop = ont.getPropertySchema(ontPropertyMock);
+    PropertySchema prop = model.getPropertySchema(ontPropertyMock);
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(objectPropertyMockName, prop.getName());
@@ -122,7 +122,7 @@ public class TestOntology {
     given(ontClassMock.isEnumeratedClass()).willReturn(false);
     given(ontClassMock.getLocalName()).willReturn(rangeMockName);
 
-    PropertySchema prop = ont.getPropertySchema(ontPropertyMock);
+    PropertySchema prop = model.getPropertySchema(ontPropertyMock);
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(propertyMockName, prop.getName());
@@ -152,7 +152,7 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(rangeMockName);
 
-    PropertySchema prop = ont.getPropertySchema(ontPropertyMock);
+    PropertySchema prop = model.getPropertySchema(ontPropertyMock);
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(propertyMockName, prop.getName());
@@ -182,7 +182,7 @@ public class TestOntology {
     given(literalMock.getString()).willReturn(value);
     given(literalMock.getDatatypeURI()).willReturn(type);
 
-    List<DataRangeRestrinctionSchema> res = ont.generateDataRangeRestrictions(ontClassMock);
+    List<DataRangeRestrinctionSchema> res = model.generateDataRangeRestrictions(ontClassMock);
 
     Assertions.assertNotNull(res);
     Assertions.assertEquals(1,res.size() );
@@ -196,9 +196,9 @@ public class TestOntology {
     given(resMock.getOnProperty()).willReturn(ontPropertyMock);
     given(resMock.isAllValuesFromRestriction()).willReturn(true);
 
-    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
+    Mockito.doReturn(new PropertySchema()).when(model).getPropertySchema(ontPropertyMock);
 
-    RestrictionSchema res = ont.getRestrictionSchema(resMock);
+    RestrictionSchema res = model.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals("only", res.getType());
   }
@@ -216,9 +216,9 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
+    Mockito.doReturn(new PropertySchema()).when(model).getPropertySchema(ontPropertyMock);
 
-    RestrictionSchema res = ont.getRestrictionSchema(resMock);
+    RestrictionSchema res = model.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals("value", res.getType());
     Assertions.assertEquals(value, res.getExactValue());
@@ -229,9 +229,9 @@ public class TestOntology {
     given(resMock.getOnProperty()).willReturn(ontPropertyMock);
     given(resMock.isSomeValuesFromRestriction()).willReturn(true);
 
-    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
+    Mockito.doReturn(new PropertySchema()).when(model).getPropertySchema(ontPropertyMock);
 
-    RestrictionSchema res = ont.getRestrictionSchema(resMock);
+    RestrictionSchema res = model.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals("some", res.getType());
   }
@@ -243,11 +243,11 @@ public class TestOntology {
     given(resMock.isSomeValuesFromRestriction()).willReturn(false);
     given(resMock.isAllValuesFromRestriction()).willReturn(false);
 
-    Mockito.doReturn(new PropertySchema()).when(ont).getPropertySchema(ontPropertyMock);
-    Mockito.doReturn(new CardinalitySchema()).when(ont).getOwl2CardinalitySchema(resMock);
-    Mockito.doReturn(RestrictionSchema.EXACTLY_TYPE).when(ont).getOwl2RestrictionType(resMock);
+    Mockito.doReturn(new PropertySchema()).when(model).getPropertySchema(ontPropertyMock);
+    Mockito.doReturn(new CardinalitySchema()).when(model).getOwl2CardinalitySchema(resMock);
+    Mockito.doReturn(RestrictionSchema.EXACTLY_TYPE).when(model).getOwl2RestrictionType(resMock);
 
-    RestrictionSchema res = ont.getRestrictionSchema(resMock);
+    RestrictionSchema res = model.getRestrictionSchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(RestrictionSchema.EXACTLY_TYPE, res.getType());
   }
@@ -262,9 +262,9 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
+    Mockito.doReturn(new ArrayList<>()).when(model).generateDataRangeRestrictions(resMock);
 
-    CardinalitySchema res = ont.getOwl2CardinalitySchema(resMock);
+    CardinalitySchema res = model.getOwl2CardinalitySchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(value, res.getOccurrence());
   }
@@ -279,9 +279,9 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
+    Mockito.doReturn(new ArrayList<>()).when(model).generateDataRangeRestrictions(resMock);
 
-    CardinalitySchema res = ont.getOwl2CardinalitySchema(resMock);
+    CardinalitySchema res = model.getOwl2CardinalitySchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(value, res.getOccurrence());
   }
@@ -295,9 +295,9 @@ public class TestOntology {
     given(nodeMock.asLiteral()).willReturn(literalMock);
     given(literalMock.getString()).willReturn(value);
 
-    Mockito.doReturn(new ArrayList<>()).when(ont).generateDataRangeRestrictions(resMock);
+    Mockito.doReturn(new ArrayList<>()).when(model).generateDataRangeRestrictions(resMock);
 
-    CardinalitySchema res = ont.getOwl2CardinalitySchema(resMock);
+    CardinalitySchema res = model.getOwl2CardinalitySchema(resMock);
     Assertions.assertNotNull(res);
     Assertions.assertEquals(value, res.getOccurrence());
   }
@@ -311,12 +311,12 @@ public class TestOntology {
     PropertySchema prop = generateDataProperty(propertyMockName, "asdf");
     props.add(prop);
 
-    Mockito.doReturn(ontClassMock).when(ont).getOntClass(ontClassMockName);
-    Mockito.doReturn(props).when(ont).getDeclaredPropertiesSchemas(ontClassMock);
-    Mockito.doReturn(new ArrayList<>()).when(ont).getRestrictionSchemas(ontClassMock);
-    Mockito.doReturn(new ArrayList<>()).when(ont).getEqualityRestrictionSchemas(ontClassMock);
+    Mockito.doReturn(ontClassMock).when(model).getOntClass(ontClassMockName);
+    Mockito.doReturn(props).when(model).getDeclaredPropertiesSchemas(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(model).getRestrictionSchemas(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(model).getEqualityRestrictionSchemas(ontClassMock);
 
-    ClassSchema result = ont.getClassSchema(ontClassMockName);
+    ClassSchema result = model.getClassSchema(ontClassMockName);
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(ontClassMockName, result.getClassName());
@@ -341,12 +341,12 @@ public class TestOntology {
     List<RestrictionSchema> restrictions = new ArrayList<>();
     restrictions.add(res);
 
-    Mockito.doReturn(ontClassMock).when(ont).getOntClass(ontClassMockName);
-    Mockito.doReturn(props).when(ont).getDeclaredPropertiesSchemas(ontClassMock);
-    Mockito.doReturn(restrictions).when(ont).getRestrictionSchemas(ontClassMock);
-    Mockito.doReturn(new ArrayList<>()).when(ont).getEqualityRestrictionSchemas(ontClassMock);
+    Mockito.doReturn(ontClassMock).when(model).getOntClass(ontClassMockName);
+    Mockito.doReturn(props).when(model).getDeclaredPropertiesSchemas(ontClassMock);
+    Mockito.doReturn(restrictions).when(model).getRestrictionSchemas(ontClassMock);
+    Mockito.doReturn(new ArrayList<>()).when(model).getEqualityRestrictionSchemas(ontClassMock);
 
-    ClassSchema result = ont.getClassSchema(ontClassMockName);
+    ClassSchema result = model.getClassSchema(ontClassMockName);
     Assertions.assertNotNull(result);
     Assertions.assertEquals(ontClassMockName, result.getClassName());
     List<PropertySchema> propsRes = result.getProperties();
@@ -371,9 +371,9 @@ public class TestOntology {
     given(ontClassMock.asRestriction()).willReturn(resMock);
     given(intersectionOf.getPropertyResourceValue(eq(RDF.rest))).willReturn(null);
 
-    Mockito.doReturn(test).when(ont).getRestrictionSchema(resMock);
+    Mockito.doReturn(test).when(model).getRestrictionSchema(resMock);
 
-    ont.getEqualityRestrictionSchema(intersectionOf, result);
+    model.getEqualityRestrictionSchema(intersectionOf, result);
 
     Assertions.assertEquals(1, result.size());
     Assertions.assertEquals(test.getType(), result.get(0).getType());
@@ -405,9 +405,9 @@ public class TestOntology {
     given(secondClass.isRestriction()).willReturn(true);
     given(secondClass.asRestriction()).willReturn(res);
 
-    Mockito.doReturn(test).when(ont).getRestrictionSchema(res);
+    Mockito.doReturn(test).when(model).getRestrictionSchema(res);
 
-    ont.getEqualityRestrictionSchema(intersectionOf, result);
+    model.getEqualityRestrictionSchema(intersectionOf, result);
 
     Assertions.assertEquals(2, result.size());
     Assertions.assertEquals(test.getType(), result.get(0).getType());
@@ -416,9 +416,9 @@ public class TestOntology {
   @Test
   @Disabled("Exploring the Jena API")
   public void test() throws OntologyException {
-    ont.setupModel();
+    model.setupModel();
     String className = "Number";
-    ont.getClassSchema(className);
+    model.getClassSchema(className);
   }
 
   private PropertySchema generateDataProperty (String name, String className) {

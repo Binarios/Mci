@@ -4,9 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
-import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
-import com.aegean.icsd.ontology.queries.AskQuery;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
@@ -15,7 +15,10 @@ import com.google.gson.JsonArray;
 public class SynonymDao implements ISynonymDao {
 
   @Autowired
-  private IOntology ont;
+  private IOntologyConnector ont;
+
+  @Autowired
+  private IMciModelReader model;
 
   @Override
   public String getMainWord(String id) throws MciException {
@@ -23,8 +26,8 @@ public class SynonymDao implements ISynonymDao {
       .select("word")
       .where("s", "hasId", "id")
       .where("s", "hasMainWord","word")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasMainWord", ont.getPrefixedEntity("hasMainWord"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasMainWord", model.getPrefixedEntity("hasMainWord"))
       .addLiteralParam("id", id)
       .build();
 

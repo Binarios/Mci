@@ -5,18 +5,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
-import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 import com.aegean.icsd.ontology.queries.AskQuery;
-import com.aegean.icsd.ontology.queries.SelectQuery;
-
-import com.google.gson.JsonArray;
 
 @Repository
 public class WordPuzzleDao implements IWordPuzzleDao {
 
   @Autowired
-  private IOntology ont;
+  private IOntologyConnector ont;
+
+  @Autowired
+  private IMciModelReader model;
 
   @Override
   public
@@ -26,10 +27,10 @@ public class WordPuzzleDao implements IWordPuzzleDao {
       .is("wp", "hasPlayer", "player")
       .is("wp", "hasWord","wordId")
       .is("wordId", "hasStringValue", "word")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
-      .addIriParam("hasWord", ont.getPrefixedEntity("hasWord"))
-      .addIriParam("hasStringValue", ont.getPrefixedEntity("hasStringValue"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasPlayer", model.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasWord", model.getPrefixedEntity("hasWord"))
+      .addIriParam("hasStringValue", model.getPrefixedEntity("hasStringValue"))
       .addLiteralParam("id", id)
       .addLiteralParam("player", player)
       .addLiteralParam("word", word)

@@ -5,6 +5,7 @@ import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
 public class GameExceptions {
+  private GameExceptions () { }
 
   public static MciException InvalidRequest(String game) {
     return new MciException(game + "." + 1, String.format("The request is invalid (%s). " +
@@ -21,9 +22,9 @@ public class GameExceptions {
       "There was a problem retrieving the game rules", t);
   }
 
-  public static MciException UnableToRetrieveGame(String game, String id, String player) {
+  public static MciException UnableToRetrieveGame(String game, String id, String player, Throwable e) {
     return new MciException(game + "." + 4,
-      String.format("Game with id %s and player %s doesn't exist", id, player));
+      String.format("Game with id %s and player %s doesn't exist", id, player), e);
   }
 
   public static MciException GameIsAlreadySolvedAt(String game, String id, String date) {
@@ -51,14 +52,18 @@ public class GameExceptions {
     return new MciException(game + "." + 9, String.format("Could not retrieve the word associated with the id %s ", id));
   }
 
+
+  public static MciException FailedToRetrieveWord(String game, String id, Throwable t) {
+    return new MciException(game + "." + 10, String.format("Could not retrieve the word associated with the id %s ", id), t);
+  }
+
   public static MciException UnableToSolve(String game, Throwable t) {
-    return new MciException(game + "." + 10, String.format("Unable to solve game %s", game), t);
+    return new MciException(game + "." + 11, String.format("Unable to solve game %s", game), t);
   }
 
   public static MciException UnableToSolve(String game, String info) {
-    return new MciException(game + "." + 11, String.format("Unable to solve game %s, %s", game, info));
+    return new MciException(game + "." + 12, String.format("Unable to solve game %s, %s", game, info));
   }
-
 
   public static MciException GenerationError(String game, String msg) {
     return new MciException(game + "." + 99, String.format("There was a problem during the " +

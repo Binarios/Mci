@@ -1,28 +1,23 @@
 package com.aegean.icsd.mciwebapp.observations.dao;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
-import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
-import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 @Repository
 public class ObservationDao implements IObservationDao {
@@ -30,7 +25,10 @@ public class ObservationDao implements IObservationDao {
   private final static String gameName = "Observation";
 
   @Autowired
-  private IOntology ont;
+  private IOntologyConnector ont;
+
+  @Autowired
+  private IMciModelReader model;
 
   @Autowired
   private IGenerator generator;
@@ -49,10 +47,10 @@ public class ObservationDao implements IObservationDao {
       .where("obsObj", "hasImage", "image")
       .where("image", "hasImageSubject", "subject")
       .where("subject", "hasStringValue", "word")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasObservation", ont.getPrefixedEntity("hasObservation"))
-      .addIriParam("hasImageSubject", ont.getPrefixedEntity("hasImageSubject"))
-      .addIriParam("hasStringValue", ont.getPrefixedEntity("hasStringValue"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasObservation", model.getPrefixedEntity("hasObservation"))
+      .addIriParam("hasImageSubject", model.getPrefixedEntity("hasImageSubject"))
+      .addIriParam("hasStringValue", model.getPrefixedEntity("hasStringValue"))
       .addLiteralParam("id", id)
       .build();
 
@@ -77,9 +75,9 @@ public class ObservationDao implements IObservationDao {
       .where("obsObj", "hasId", "id")
       .where("obsObj", "hasImage", "image")
       .where("image", "hasAssetPath", "path")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
-      .addIriParam("hasAssetPath", ont.getPrefixedEntity("hasAssetPath"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasImage", model.getPrefixedEntity("hasImage"))
+      .addIriParam("hasAssetPath", model.getPrefixedEntity("hasAssetPath"))
       .addLiteralParam("id", id)
       .build();
 
@@ -100,11 +98,11 @@ public class ObservationDao implements IObservationDao {
       .where("obs", "hasImage", "img")
       .where("obs", "hasTotalImages", "nb")
       .where("img", "hasAssetPath", "path")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasObservation", ont.getPrefixedEntity("hasObservation"))
-      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
-      .addIriParam("hasTotalImages", ont.getPrefixedEntity("hasTotalImages"))
-      .addIriParam("hasAssetPath", ont.getPrefixedEntity("hasAssetPath"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasObservation", model.getPrefixedEntity("hasObservation"))
+      .addIriParam("hasImage", model.getPrefixedEntity("hasImage"))
+      .addIriParam("hasTotalImages", model.getPrefixedEntity("hasTotalImages"))
+      .addIriParam("hasAssetPath", model.getPrefixedEntity("hasAssetPath"))
       .addLiteralParam("id", id)
       .build();
 
@@ -134,13 +132,13 @@ public class ObservationDao implements IObservationDao {
       .is("obs", "hasTotalImages", "occurrences")
       .is("img", "hasImageSubject", "sub")
       .is("sub", "hasStringValue", "word")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasObservation", ont.getPrefixedEntity("hasObservation"))
-      .addIriParam("hasPlayer", ont.getPrefixedEntity("hasPlayer"))
-      .addIriParam("hasImage", ont.getPrefixedEntity("hasImage"))
-      .addIriParam("hasImageSubject", ont.getPrefixedEntity("hasImageSubject"))
-      .addIriParam("hasTotalImages", ont.getPrefixedEntity("hasTotalImages"))
-      .addIriParam("hasStringValue", ont.getPrefixedEntity("hasStringValue"))
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam("hasObservation", model.getPrefixedEntity("hasObservation"))
+      .addIriParam("hasPlayer", model.getPrefixedEntity("hasPlayer"))
+      .addIriParam("hasImage", model.getPrefixedEntity("hasImage"))
+      .addIriParam("hasImageSubject", model.getPrefixedEntity("hasImageSubject"))
+      .addIriParam("hasTotalImages", model.getPrefixedEntity("hasTotalImages"))
+      .addIriParam("hasStringValue", model.getPrefixedEntity("hasStringValue"))
       .addLiteralParam("occurrences", occurrences)
       .addLiteralParam("word", word)
       .addLiteralParam("id", id)

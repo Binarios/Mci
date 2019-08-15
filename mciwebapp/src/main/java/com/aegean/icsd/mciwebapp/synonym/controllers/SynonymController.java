@@ -1,6 +1,7 @@
 package com.aegean.icsd.mciwebapp.synonym.controllers;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -57,7 +58,7 @@ public class SynonymController {
   public Response<SynonymResponse> createGame(@RequestBody SynonymRequest req,
                                               @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createWordPuzzle request received");
-    Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
+    Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase(Locale.ENGLISH));
     SynonymResponse resp = synonymsSvc.createGame(player, dif);
     return new Response<>(resp);
   }

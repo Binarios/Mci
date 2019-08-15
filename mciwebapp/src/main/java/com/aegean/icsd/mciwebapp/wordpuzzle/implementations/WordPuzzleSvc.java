@@ -133,14 +133,14 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     try {
       puzzle = generator.getGameWithId(id, player, WordPuzzle.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(WordPuzzle.NAME, id, player);
+      throw GameExceptions.UnableToRetrieveGame(WordPuzzle.NAME, id, player, e);
     }
 
     Word word;
     try{
       word = wordProvider.selectWordsByEntityId(puzzle.getId()).get(0);
     } catch (ProviderException e) {
-      throw GameExceptions.FailedToRetrieveWord(WordPuzzle.NAME, puzzle.getId());
+      throw GameExceptions.FailedToRetrieveWord(WordPuzzle.NAME, puzzle.getId(), e);
     }
 
     return toResponse(puzzle, word.getValue());
@@ -160,7 +160,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     try {
       puzzle = generator.getGameWithId(id, player, WordPuzzle.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(WordPuzzle.NAME, id, player);
+      throw GameExceptions.UnableToRetrieveGame(WordPuzzle.NAME, id, player, e);
     }
 
     if (completionTime > puzzle.getMaxCompletionTime()) {
@@ -175,7 +175,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
     try{
       word = wordProvider.selectWordsByEntityId(puzzle.getId()).get(0);
     } catch (ProviderException e) {
-      throw GameExceptions.FailedToRetrieveWord(WordPuzzle.NAME, puzzle.getId());
+      throw GameExceptions.FailedToRetrieveWord(WordPuzzle.NAME, puzzle.getId(), e);
     }
     if (solved) {
       puzzle.setCompletionTime(completionTime);

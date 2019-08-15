@@ -5,6 +5,8 @@ import com.aegean.icsd.engine.common.beans.EngineException;
 class Exceptions {
   private static final String CODE_NAME = "GG";
 
+  private Exceptions () { }
+
   static EngineException CannotRetrieveRules(String entity, Throwable t) {
     return new EngineException(CODE_NAME + "." + 2, String.format("Unable to retrieve rules for entity: %s", entity), t);
   }
