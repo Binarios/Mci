@@ -2,10 +2,7 @@ package com.aegean.icsd.mciwebapp.observations.beans;
 
 import java.util.List;
 
-import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
-
-import openllet.core.utils.Bool;
 
 public class ObservationResponse extends ServiceResponse<Observation> {
   private List<ObservationItem> items;

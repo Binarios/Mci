@@ -2,7 +2,7 @@ package com.aegean.icsd.engine.generator.implementations;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 
-class Exceptions {
+final class Exceptions {
   private static final String CODE_NAME = "GG";
 
   private Exceptions () { }

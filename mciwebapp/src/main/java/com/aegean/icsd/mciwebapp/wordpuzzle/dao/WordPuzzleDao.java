@@ -37,8 +37,7 @@ public class WordPuzzleDao implements IWordPuzzleDao {
       .build();
 
     try {
-      boolean result = ont.ask(q);
-      return result;
+      return ont.ask(q);
     } catch (OntologyException e) {
       throw Exceptions.FailedToAskTheSolution(id, player, word, e);
     }

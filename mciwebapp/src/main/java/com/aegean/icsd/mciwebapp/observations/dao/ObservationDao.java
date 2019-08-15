@@ -146,8 +146,7 @@ public class ObservationDao implements IObservationDao {
       .build();
 
     try {
-      boolean result = ont.ask(ask);
-      return result;
+      return ont.ask(ask);
     } catch (OntologyException e) {
       throw Exceptions.FailedToAskTheSolution(id, player, word, occurrences, e);
     }

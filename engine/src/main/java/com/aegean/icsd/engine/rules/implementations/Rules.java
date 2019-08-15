@@ -10,20 +10,20 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
 import com.aegean.icsd.engine.rules.beans.RestrictionType;
-import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
-import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
 import com.aegean.icsd.ontology.beans.ClassSchema;
+import com.aegean.icsd.ontology.beans.DataRangeRestrinctionSchema;
+import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
-import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 
 @Service

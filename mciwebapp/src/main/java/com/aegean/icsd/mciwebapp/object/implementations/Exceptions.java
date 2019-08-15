@@ -2,7 +2,7 @@ package com.aegean.icsd.mciwebapp.object.implementations;
 
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
-class Exceptions {
+final class Exceptions {
   private final static String CODE_NAME = "OP";
 
   static ProviderException UnableToGetWord(String criteria, Throwable t) {

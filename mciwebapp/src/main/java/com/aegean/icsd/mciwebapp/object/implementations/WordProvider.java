@@ -17,8 +17,8 @@ import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
-import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
+import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.dao.IObjectsDao;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObjectFileProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
@@ -171,7 +171,7 @@ public class WordProvider implements IWordProvider {
     }
   }
 
-  void handleAntonyms(Word value, String[] antonyms) throws ProviderException {
+  void handleAntonyms(Word value, String... antonyms) throws ProviderException {
     EntityRestriction antonymRes;
     try {
       antonymRes = rules.getEntityRestriction("AntonymWord", "hasAntonym");
@@ -197,7 +197,7 @@ public class WordProvider implements IWordProvider {
     }
   }
 
-  void handleSynonyms(Word value, String[] synonyms) throws ProviderException {
+  void handleSynonyms(Word value, String... synonyms) throws ProviderException {
     EntityRestriction synonymRes;
     try {
       synonymRes = rules.getEntityRestriction("SynonymWord", "hasSynonym");

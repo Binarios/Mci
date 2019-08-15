@@ -21,12 +21,12 @@ import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
+import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.observations.dao.IObservationDao;
-import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 
 @Service

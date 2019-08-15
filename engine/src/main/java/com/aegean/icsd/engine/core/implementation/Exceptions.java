@@ -2,7 +2,7 @@ package com.aegean.icsd.engine.core.implementation;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 
-class Exceptions {
+final class Exceptions {
   private static final String CODE_NAME = "ARD";
 
   static EngineException UnableToReadAnnotation(String annotation) {

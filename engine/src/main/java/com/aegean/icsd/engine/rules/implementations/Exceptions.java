@@ -2,7 +2,7 @@ package com.aegean.icsd.engine.rules.implementations;
 
 import com.aegean.icsd.engine.rules.beans.RulesException;
 
-class Exceptions {
+final class Exceptions {
   private static final String CODE_NAME = "GR";
 
   static RulesException InvalidParameters() {

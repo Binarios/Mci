@@ -1,7 +1,5 @@
 package com.aegean.icsd.engine.rules.beans;
 
-import java.util.List;
-
 public class EntityRestriction {
   /**
    * The name of the property the restriction is on

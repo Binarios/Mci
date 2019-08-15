@@ -2,7 +2,7 @@ package com.aegean.icsd.mciwebapp.object.dao;
 
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
-class Exceptions {
+final class Exceptions {
   private static final String CODE_NAME = "OBJECTS.DAO";
 
   private Exceptions () { }
