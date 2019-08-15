@@ -41,10 +41,10 @@ public class ObservationsController {
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<ObservationResponse>> getObservation(@RequestParam(name = "difficulty", required = false) String difficulty,
-                                                            @RequestParam(name = "completed", required = false) Boolean completed,
-                                                            @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    List<ObservationResponse> responses = observationImpl.getObservations(player);
+  public Response<List<ObservationResponse>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
+                                                      @RequestParam(name = "completed", required = false) Boolean completed,
+                                                      @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+    List<ObservationResponse> responses = observationImpl.getGames(player);
     List<ObservationResponse> filtered = FilterResponse.by(responses, difficulty, completed);
     return new Response<>(filtered);
   }
@@ -52,20 +52,20 @@ public class ObservationsController {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public Response<ObservationResponse> createObservation(@RequestBody ObservationRequest req,
-                                                         @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+  public Response<ObservationResponse> createGame(@RequestBody ObservationRequest req,
+                                                  @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createObservation request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
-    ObservationResponse resp = observationImpl.createObservation(player, dif);
+    ObservationResponse resp = observationImpl.createGame(player, dif);
     return new Response<>(resp);
   }
 
   @GetMapping(value = "/{id}",
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<ObservationResponse> getObservation(@PathVariable("id") String id,
-                                                      @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    ObservationResponse obs = observationImpl.getObservation(id, player);
+  public Response<ObservationResponse> getGame(@PathVariable("id") String id,
+                                               @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+    ObservationResponse obs = observationImpl.getGame(id, player);
     return new Response<>(obs);
   }
 
@@ -73,9 +73,9 @@ public class ObservationsController {
           consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<ObservationResponse> updateObservation(@PathVariable("id") String id,
-                                                         @RequestBody ObservationRequest req,
-                                                         @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+  public Response<ObservationResponse> solveGame(@PathVariable("id") String id,
+                                                 @RequestBody ObservationRequest req,
+                                                 @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     ObservationResponse response = observationImpl.solveGame(id, player, req.getCompletionTime(), req.getSolution());
     return new Response<>(response);
   }

@@ -11,12 +11,12 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import com.aegean.icsd.mciwebapp.common.beans.MciException;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
-import com.aegean.icsd.ontology.IOntology;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(SpringExtension.class)
@@ -32,7 +32,7 @@ public class TestIntegration {
   IRules r;
 
   @Autowired
-  IOntology o;
+  IOntologyConnector o;
 
   @Test
   public void testSpring() {
@@ -46,7 +46,7 @@ public class TestIntegration {
   public void testObsIns() throws MciException {
     String playerName = "TestUser";
 
-    ObservationResponse obs = observationImpl.createObservation(playerName, Difficulty.HARD);
+    ObservationResponse obs = observationImpl.createGame(playerName, Difficulty.HARD);
 
     Assertions.assertNotNull(obs);
     Assertions.assertEquals(playerName, obs.getGame().getPlayerName());

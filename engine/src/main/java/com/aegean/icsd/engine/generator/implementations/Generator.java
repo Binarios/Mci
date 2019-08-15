@@ -5,14 +5,17 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
@@ -24,7 +27,8 @@ import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 import com.aegean.icsd.engine.rules.beans.ValueRangeType;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
-import com.aegean.icsd.ontology.IOntology;
+import com.aegean.icsd.ontology.interfaces.IMciModelReader;
+import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
 
 @Service
 public class Generator implements IGenerator {
@@ -40,13 +44,18 @@ public class Generator implements IGenerator {
   private IAnnotationReader ano;
 
   @Autowired
-  private IOntology ont;
+  private IOntologyConnector ont;
+
+  @Autowired
+  private IMciModelReader model;
 
   @Override
   public void selectObj(Object object) throws EngineException {
     Map<String, Object> relations = ano.getDataProperties(object);
     Map<String, Object> existingRelations = dao.selectObject(relations);
-    if (existingRelations != null) {
+    if (existingRelations == null) {
+      ano.setDataPropertyValue(object, "hasId", null);
+    } else {
       for (Map.Entry<String, Object> entry : existingRelations.entrySet()) {
         ano.setDataPropertyValue(object, entry.getKey(), entry.getValue());
       }
@@ -54,47 +63,40 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public String upsertObj(Object object) throws EngineException {
+  public <T extends BaseGame> String upsertGame(T game) throws EngineException {
+    LOGGER.debug("Upserting new Game");
+    String id = ano.setEntityId(game);
+    String gameName = ano.getEntityValue(game);
+    String fullName = Utils.getFullGameName(gameName, game.getDifficulty());
+    return upsertObject(fullName, game);
+  }
+
+  @Override
+  public <T extends BaseGameObject> String upsertGameObject(T object) throws EngineException {
     LOGGER.debug("Upserting new Object");
-    String id = ano.setEntityId(object);
     String name = ano.getEntityValue(object);
-    LOGGER.info(String.format("Upserting new %s with id %s", name, id));
-    Map<String, Object> relations = ano.getDataProperties(object);
-    EntityRules er;
-    try {
-      er = rules.getEntityRules(name);
-    } catch (RulesException e) {
-      throw  Exceptions.CannotRetrieveRules(name, e);
-    }
-    List<EntityProperty> dataProperties = er.getProperties().stream()
-      .filter(x -> !x.isObjectProperty())
-      .collect(Collectors.toList());
-
-    boolean success = dao.instantiateObject(id, name);
-    if (!success) {
-      throw Exceptions.CannotCreateObject(name);
-    }
-
-    for (EntityProperty property : dataProperties) {
-      Object rangeValue = relations.get(property.getName());
-      if (property.isMandatory() && rangeValue == null) {
-        throw Exceptions.MissingMandatoryRelation(name, property.getName());
-      }
-
-      if (rangeValue != null) {
-        Class<?> rangeClass = dao.getJavaClass(property.getRange());
-        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
-      }
-    }
-
-    return id;
+    return upsertObject(name, object);
   }
 
   @Override
   public boolean createObjRelation(String id, EntityProperty onProperty, String objId) throws EngineException {
-    LOGGER.info(String.format("Associating %s with %s throught the relation %s ", id, objId, onProperty.getName()));
+    LOGGER.info(String.format("Associating %s with %s through the relation %s ", id, objId, onProperty.getName()));
     try {
+      if (onProperty.isMandatory() && StringUtils.isEmpty(objId)) {
+        throw Exceptions.CannotCreateObjectRelation(onProperty.getName(), id, objId,
+          "Property is marked as mandatory. Relation is missing");
+      }
+
+      if (onProperty.isIrreflexive() && id.equals(objId)) {
+        throw Exceptions.CannotCreateObjectRelation(onProperty.getName(), id, objId,
+          "Property is marked as irreflexive");
+      }
+
       boolean success = dao.createObjRelation(id, onProperty.getName(), objId);
+      if (onProperty.isSymmetric()) {
+        LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getName()));
+        success &= dao.createObjRelation(objId, onProperty.getName(), id);
+      }
       return success;
     } catch (EngineException e) {
       throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);
@@ -154,6 +156,39 @@ public class Generator implements IGenerator {
     }
 
     return rangeValue;
+  }
+
+  String upsertObject (String name, Object object) throws EngineException {
+    String id = ano.setEntityId(object);
+    LOGGER.info(String.format("Upserting new %s with id %s", name, id));
+    Map<String, Object> relations = ano.getDataProperties(object);
+    EntityRules er;
+    try {
+      er = rules.getEntityRules(name);
+    } catch (RulesException e) {
+      throw  Exceptions.CannotRetrieveRules(name, e);
+    }
+    List<EntityProperty> dataProperties = er.getProperties().stream()
+      .filter(x -> !x.isObjectProperty())
+      .collect(Collectors.toList());
+
+    boolean success = dao.instantiateObject(id, er.getName());
+    if (!success) {
+      throw Exceptions.CannotCreateObject(name);
+    }
+
+    for (EntityProperty property : dataProperties) {
+      Object rangeValue = relations.get(property.getName());
+      if (property.isMandatory() && rangeValue == null) {
+        throw Exceptions.MissingMandatoryRelation(name, property.getName());
+      }
+
+      if (rangeValue != null) {
+        Class<?> rangeClass = model.getJavaClassFromOwlType(property.getRange());
+        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
+      }
+    }
+    return id;
   }
 
   int calculateCardinality(List<EntityRestriction> restrictions) {

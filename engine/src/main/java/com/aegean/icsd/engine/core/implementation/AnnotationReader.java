@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -121,12 +122,22 @@ public class AnnotationReader implements IAnnotationReader {
           invokeFieldSetter(field, object, Long.parseLong(value.toString()));
         }
         if(String.class.isAssignableFrom(fieldClass)) {
-          invokeFieldSetter(field, object, value.toString());
+          if (value == null) {
+            invokeFieldSetter(field, object, (Object) null);
+          } else {
+            invokeFieldSetter(field, object, value.toString());
+          }
         }
         if(Enum.class.isAssignableFrom(fieldClass)) {
-          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase()));
+          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase(Locale.ENGLISH)));
         }
-
+        if(Boolean.class.isAssignableFrom(fieldClass)) {
+          if (value == null) {
+            invokeFieldSetter(field, object, (Object)null);
+          } else {
+            invokeFieldSetter(field, object, Boolean.valueOf(value.toString()));
+          }
+        }
         break;
       }
     }

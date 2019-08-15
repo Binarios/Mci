@@ -25,7 +25,4 @@ public interface IGeneratorDao {
 
   <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass)
     throws EngineException;
-
-  Class<?> getJavaClass(String range);
-
 }

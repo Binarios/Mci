@@ -3,7 +3,7 @@ package com.aegean.icsd.engine.generator.dao;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 
-class DaoExceptions {
+final class DaoExceptions {
 
   private static final String CODE_NAME = "GG.DAO";
 

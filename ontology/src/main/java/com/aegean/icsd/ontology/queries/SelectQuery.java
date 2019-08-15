@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,6 +20,7 @@ public class SelectQuery {
   private Map<String, String> iriParams = new LinkedHashMap<>();
   private Map<String, String> literalParams = new LinkedHashMap<>();
   private Map<String, Long> longLiteralParams = new LinkedHashMap<>();
+  private Map<String, Boolean> boolLiteralParams = new LinkedHashMap<>();
   private List<String> selectParams = new LinkedList<>();
 
   private SelectQuery() { }
@@ -51,6 +53,10 @@ public class SelectQuery {
     return longLiteralParams;
   }
 
+  public Map<String, Boolean> getBoolLiteralParams() {
+    return boolLiteralParams;
+  }
+
 
   public static class Builder {
     private List<String> params = new LinkedList<>();
@@ -61,6 +67,7 @@ public class SelectQuery {
     private Map<String, String> iriParams = new LinkedHashMap<>();
     private Map<String, String> literalParams = new LinkedHashMap<>();
     private Map<String, Long> longLiteralParams = new LinkedHashMap<>();
+    private Map<String, Boolean> boolLiteralParams = new LinkedHashMap<>();
     private List<SelectQuery> subQueries = new LinkedList<>();
     private boolean isAscOrdered = false;
     private String orderFiled = null;
@@ -96,6 +103,11 @@ public class SelectQuery {
       return this;
     }
 
+    public Builder addLiteralParam(String param, Boolean value) {
+      boolLiteralParams.put(param, value);
+      return this;
+    }
+
     public Builder select(String... paramNames) {
       params.addAll(Arrays.asList(paramNames));
       return this;
@@ -124,7 +136,8 @@ public class SelectQuery {
     }
 
     public Builder whereHasType(String subject, String type) {
-      Triplet t = new Triplet(subject, "rdfType", "class");
+      String ph = UUID.randomUUID().toString().replace("-", "");
+      Triplet t = new Triplet(subject, "rdfType", ph);
       if (conditions.containsKey(subject)) {
         conditions.get(subject).add(t);
       } else {
@@ -133,17 +146,22 @@ public class SelectQuery {
         conditions.put(subject, entries);
       }
       addIriParam("rdfType", "rdf:type");
-      addIriParam("class", type);
+      addIriParam(ph, type);
       return this;
     }
 
     public Builder regexFilter(String value, String pattern) {
-      this.regexFilter(value, pattern, null);
+      this.regexFilter(value, pattern, true, null);
       return this;
     }
 
-    public Builder regexFilter(String value, String pattern, String flags) {
-      String filter = "FILTER regex(" + value + ", " + pattern ;
+    public Builder regexFilter(String value, String pattern, boolean valueToStr, String flags) {
+      String sanitizedValue = removeParamChars(value);
+      String sanitizedPattern = removeParamChars(pattern);
+      if (valueToStr) {
+        sanitizedValue = "str(" + sanitizedValue + ")";
+      }
+      String filter = "FILTER regex(" + sanitizedValue + ", " + sanitizedPattern ;
       if (!StringUtils.isEmpty(flags)) {
         filter += ", " + flags;
       }
@@ -174,6 +192,7 @@ public class SelectQuery {
           break;
         case IS_LITERAL:
           filter = "FILTER (isLiteral(" + escapedVar +"))";
+          break;
         default:
           break;
       }
@@ -244,6 +263,7 @@ public class SelectQuery {
       query.iriParams = iriParams;
       query.literalParams = literalParams;
       query.longLiteralParams = longLiteralParams;
+      query.boolLiteralParams = boolLiteralParams;
       query.selectParams = params;
 
       return query;
@@ -290,7 +310,7 @@ public class SelectQuery {
         builder.append("\t}\n");
       }
 
-      if (filters.size() > 0) {
+      if (!filters.isEmpty()) {
         for (String filter : filters) {
           if (!StringUtils.isEmpty(filter)) {
             builder.append("\t").append(filter).append("\n");
@@ -336,7 +356,14 @@ public class SelectQuery {
     }
 
     String removeParamChars(String entry) {
-      return "?" + entry.replace("?", "").replace("$", "");
+      String sanitized = StringUtils.trim(entry);
+      if(sanitized.indexOf("?") == 0) {
+        sanitized = sanitized.substring(1);
+      }
+      if(sanitized.indexOf("$") == 0) {
+        sanitized = sanitized.substring(1);
+      }
+      return "?" + sanitized;
     }
 
     Builder orderBy(String field, boolean ascended) {

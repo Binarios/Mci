@@ -41,11 +41,11 @@ public class WordPuzzlesController {
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<WordPuzzleResponse>> getWordPuzzles(@RequestParam(name = "difficulty", required = false) String difficulty,
-                                                           @RequestParam(name = "completed", required = false) Boolean completed,
-                                                           @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+  public Response<List<WordPuzzleResponse>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
+                                                     @RequestParam(name = "completed", required = false) Boolean completed,
+                                                     @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
 
-    List<WordPuzzleResponse> responses = wordPuzzleSvc.getWordPuzzles(player);
+    List<WordPuzzleResponse> responses = wordPuzzleSvc.getGames(player);
     List<WordPuzzleResponse> filtered = FilterResponse.by(responses, difficulty, completed);
 
     return new Response<>(filtered);
@@ -54,20 +54,20 @@ public class WordPuzzlesController {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public Response<WordPuzzleResponse> createWordPuzzle(@RequestBody WorldPuzzleRequest req,
-                                                       @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+  public Response<WordPuzzleResponse> createGame(@RequestBody WorldPuzzleRequest req,
+                                                 @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createWordPuzzle request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
-    WordPuzzleResponse resp = wordPuzzleSvc.createWordPuzzle(player, dif);
+    WordPuzzleResponse resp = wordPuzzleSvc.createGame(player, dif);
     return new Response<>(resp);
   }
 
   @GetMapping(value = "/{id}",
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<WordPuzzleResponse> getWordPuzzle(@PathVariable("id") String id,
-                                                    @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    WordPuzzleResponse obs = wordPuzzleSvc.getWordPuzzle(id, player);
+  public Response<WordPuzzleResponse> getGame(@PathVariable("id") String id,
+                                              @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+    WordPuzzleResponse obs = wordPuzzleSvc.getGame(id, player);
     return new Response<>(obs);
   }
 
@@ -75,9 +75,9 @@ public class WordPuzzlesController {
           consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<WordPuzzleResponse> updateWordPuzzle(@PathVariable("id") String id,
-                                                       @RequestBody WorldPuzzleRequest req,
-                                                       @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+  public Response<WordPuzzleResponse> solveGame(@PathVariable("id") String id,
+                                                @RequestBody WorldPuzzleRequest req,
+                                                @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     WordPuzzleResponse response = wordPuzzleSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution());
     return new Response<>(response);
   }

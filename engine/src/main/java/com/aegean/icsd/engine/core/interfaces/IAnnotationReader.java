@@ -4,8 +4,6 @@ import java.util.Map;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 
-import com.google.gson.JsonObject;
-
 public interface IAnnotationReader {
 
   String setEntityId(Object object) throws EngineException;
