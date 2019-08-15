@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
-import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
@@ -105,6 +104,18 @@ public class WordProvider implements IWordProvider {
   }
 
   @Override
+  public Word selectWordByWordId(String wordId) throws ProviderException {
+    Word word = new Word();
+    word.setId(wordId);
+    try {
+      generator.selectObj(word);
+    } catch (EngineException e) {
+      throw Exceptions.UnableToGetWord("word id  = " + wordId, e);
+    }
+    return word;
+  }
+
+  @Override
   public List<Word> selectWordsByEntityId(String entityId) throws ProviderException {
     List<String> ids = dao.getAssociatedWordOfId(entityId);
     List<Word> words = new ArrayList<>();
@@ -119,6 +130,16 @@ public class WordProvider implements IWordProvider {
       }
     }
     return words;
+  }
+
+  @Override
+  public boolean areSynonyms(Word thisWord, Word otherWord) throws ProviderException {
+    return dao.areSynonyms(thisWord, otherWord);
+  }
+
+  @Override
+  public boolean areAntonyms(Word thisWord, Word otherWord) throws ProviderException {
+    return dao.areAntonyms(thisWord, otherWord);
   }
 
   @PostConstruct
@@ -159,8 +180,10 @@ public class WordProvider implements IWordProvider {
           if (antonymWord.getId() != null) {
             try {
               generator.createObjRelation(value.getId(), antonymRes.getOnProperty(), antonymWord.getId());
-              value.setAntonym(true);
-              generator.upsertObj(value);
+              if (!value.isAntonym()) {
+                value.setAntonym(true);
+                generator.upsertGameObject(value);
+              }
             } catch (EngineException e) {
               throw Exceptions.GenerationError(Word.NAME, e);
             }
@@ -177,8 +200,10 @@ public class WordProvider implements IWordProvider {
           if (synonymWord.getId() != null) {
             try {
               generator.createObjRelation(value.getId(), synonymRes.getOnProperty(), synonymWord.getId());
-              value.setSynonym(true);
-              generator.upsertObj(value);
+              if (!value.isSynonym()) {
+                value.setSynonym(true);
+                generator.upsertGameObject(value);
+              }
             } catch (EngineException e) {
               throw Exceptions.GenerationError(Word.NAME, e);
             }
@@ -192,7 +217,7 @@ public class WordProvider implements IWordProvider {
     try {
       generator.selectObj(word);
       if (word.getId() == null) {
-        generator.upsertObj(word);
+        generator.upsertGameObject(word);
       }
       return word;
     } catch (EngineException e) {

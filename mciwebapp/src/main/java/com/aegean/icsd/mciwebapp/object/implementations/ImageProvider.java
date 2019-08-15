@@ -63,7 +63,7 @@ public class ImageProvider implements IImageProvider {
     try {
       generator.selectObj(img);
       if (img.getId() == null) {
-        generator.upsertObj(img);
+        generator.upsertGameObject(img);
       }
 
       Word titleWord = wordProvider.getWordWithValue(title);

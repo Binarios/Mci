@@ -4,7 +4,7 @@ import com.aegean.icsd.engine.generator.beans.BaseGame;
 
 public class ServiceResponse<T extends BaseGame> {
   private T game;
-
+  private Boolean solved;
 
   protected ServiceResponse(T game) {
     this.game = game;
@@ -12,5 +12,13 @@ public class ServiceResponse<T extends BaseGame> {
 
   public T getGame() {
     return game;
+  }
+
+  public boolean isSolved() {
+    return solved;
+  }
+
+  public void setSolved(boolean solved) {
+    this.solved = solved;
   }
 }

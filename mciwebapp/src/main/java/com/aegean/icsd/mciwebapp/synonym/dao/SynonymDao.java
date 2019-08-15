@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;

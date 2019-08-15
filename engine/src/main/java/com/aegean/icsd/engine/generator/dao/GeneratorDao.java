@@ -140,12 +140,15 @@ public class GeneratorDao implements IGeneratorDao {
     throws EngineException {
     SelectQuery query = new SelectQuery.Builder()
       .select("s", "p", "o")
-      .whereHasType("s", ontology.getPrefixedEntity(gameName))
+      .where("s", "rdfType", "type")
       .where("s", "hasPlayer", "player")
       .where("s", "p", "o")
-      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
-      .addLiteralParam("player", playerName)
+      .regexFilter("type", "gameName")
       .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
+      .addIriParam("hasPlayer", ontology.getPrefixedEntity("hasPlayer"))
+      .addIriParam("rdfType", "rdf:type")
+      .addLiteralParam("player", playerName)
+      .addLiteralParam("gameName", gameName)
       .build();
 
     try {

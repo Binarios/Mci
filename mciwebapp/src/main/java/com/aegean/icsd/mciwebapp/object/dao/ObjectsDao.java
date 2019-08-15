@@ -11,6 +11,7 @@ import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.ontology.IOntology;
 import com.aegean.icsd.ontology.beans.OntologyException;
+import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
@@ -66,6 +67,46 @@ public class ObjectsDao implements IObjectsDao {
       return ids;
     } catch (OntologyException e) {
       throw Exceptions.FailedToRetrieveWords(id, e);
+    }
+  }
+
+  @Override
+  public boolean areSynonyms(Word thisWord, Word otherWord) throws ProviderException {
+    AskQuery ask = new AskQuery.Builder()
+      .is("this", "hasId", "thisId")
+      .is("this", "hasSynonym", "other")
+      .is("other", "hasId", "otherId")
+      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasSynonym", ont.getPrefixedEntity("hasSynonym"))
+      .addLiteralParam("thisId", thisWord.getId())
+      .addLiteralParam("otherId", otherWord.getId())
+      .build();
+
+    try {
+      boolean result = ont.ask(ask);
+      return result;
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToAsk(String.format("%s is not synonym with %s", thisWord.getValue(), otherWord.getValue() ), e);
+    }
+  }
+
+  @Override
+  public boolean areAntonyms(Word thisWord, Word otherWord) throws ProviderException {
+    AskQuery ask = new AskQuery.Builder()
+      .is("this", "hasId", "thisId")
+      .is("this", "hasAntonym", "other")
+      .is("other", "hasId", "otherId")
+      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
+      .addIriParam("hasAntonym", ont.getPrefixedEntity("hasAntonym"))
+      .addLiteralParam("thisId", thisWord.getId())
+      .addLiteralParam("otherId", otherWord.getId())
+      .build();
+
+    try {
+      boolean result = ont.ask(ask);
+      return result;
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToAsk(String.format("%s is not antonym with %s", thisWord.getValue(), otherWord.getValue() ), e);
     }
   }
 }

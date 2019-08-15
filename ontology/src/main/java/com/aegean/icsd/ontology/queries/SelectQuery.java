@@ -151,12 +151,17 @@ public class SelectQuery {
     }
 
     public Builder regexFilter(String value, String pattern) {
-      this.regexFilter(value, pattern, null);
+      this.regexFilter(value, pattern, true, null);
       return this;
     }
 
-    public Builder regexFilter(String value, String pattern, String flags) {
-      String filter = "FILTER regex(" + value + ", " + pattern ;
+    public Builder regexFilter(String value, String pattern, boolean valueToStr, String flags) {
+      String sanitizedValue = removeParamChars(value);
+      String sanitizedPattern = removeParamChars(pattern);
+      if (valueToStr) {
+        sanitizedValue = "str(" + sanitizedValue + ")";
+      }
+      String filter = "FILTER regex(" + sanitizedValue + ", " + sanitizedPattern ;
       if (!StringUtils.isEmpty(flags)) {
         filter += ", " + flags;
       }
@@ -350,7 +355,13 @@ public class SelectQuery {
     }
 
     String removeParamChars(String entry) {
-      return "?" + entry.replace("?", "").replace("$", "");
+      if(entry.indexOf("?") == 0) {
+        entry = entry.substring(1);
+      }
+      if(entry.indexOf("$") == 0) {
+        entry = entry.substring(1);
+      }
+      return "?" + entry;
     }
 
     Builder orderBy(String field, boolean ascended) {

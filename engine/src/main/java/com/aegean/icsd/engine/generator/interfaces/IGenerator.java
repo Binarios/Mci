@@ -13,7 +13,9 @@ public interface IGenerator {
 
   void selectObj(Object object) throws EngineException;
 
-  String upsertObj(Object object) throws EngineException;
+  <T extends BaseGame> String upsertGame(T game) throws EngineException;
+
+  <T extends BaseGameObject> String upsertGameObject(T gameObject) throws EngineException;
 
   boolean createObjRelation(String id, EntityProperty onProperty, String rangeId) throws EngineException;
 

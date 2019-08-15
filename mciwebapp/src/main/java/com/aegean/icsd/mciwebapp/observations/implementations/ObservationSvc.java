@@ -123,7 +123,7 @@ public class ObservationSvc implements IObservationSvc {
       obs.setCompletedDate(String.valueOf(System.currentTimeMillis()));
       obs.setCompletionTime(completionTime);
       try {
-        generator.upsertObj(obs);
+        generator.upsertGame(obs);
       } catch (EngineException e) {
         throw GameExceptions.GenerationError(Observation.NAME, e);
       }
@@ -211,7 +211,7 @@ public class ObservationSvc implements IObservationSvc {
     }
 
     try {
-      generator.upsertObj(toCreate);
+      generator.upsertGame(toCreate);
       for (String obsId : obsIds) {
         generator.createObjRelation(toCreate.getId(), hasObservationRes.getOnProperty(), obsId);
       }

@@ -75,15 +75,15 @@ public class SynonymSvc implements ISynonymsSvc {
       throw GameExceptions.InvalidRequest(Synonym.NAME);
     }
 
+    String fullName = Utils.getFullGameName(Synonym.NAME, difficulty);
     int lastCompletedLevel;
     try {
-      lastCompletedLevel = generator.getLastCompletedLevel(Synonym.NAME, difficulty, playerName);
+      lastCompletedLevel = generator.getLastCompletedLevel(fullName, difficulty, playerName);
     } catch (EngineException e) {
       throw GameExceptions.FailedToRetrieveLastLevel(Synonym.NAME, difficulty, playerName, e);
     }
     int newLevel = lastCompletedLevel + 1;
 
-    String fullName = Utils.getFullGameName(Synonym.NAME, difficulty);
     EntityRestriction maxCompleteTimeRes;
     try {
       maxCompleteTimeRes = rules.getEntityRestriction(fullName, "maxCompletionTime");
@@ -111,7 +111,7 @@ public class SynonymSvc implements ISynonymsSvc {
     toCreate.setLevel(newLevel);
     toCreate.setDifficulty(difficulty);
     try {
-      generator.upsertObj(toCreate);
+      generator.upsertGame(toCreate);
     } catch (EngineException e) {
       throw GameExceptions.GenerationError(Synonym.NAME, e);
     }
@@ -121,9 +121,13 @@ public class SynonymSvc implements ISynonymsSvc {
 
     List<Word> words;
     try {
-      words = wordProvider.getNewWordsFor(Synonym.NAME, hasWordRes.getCardinality(), criteria);
+      words = wordProvider.getNewWordsFor(fullName, hasWordRes.getCardinality(), criteria);
     } catch (ProviderException e) {
       throw GameExceptions.GenerationError(Synonym.NAME, e);
+    }
+
+    if (words.size() == 0) {
+      throw GameExceptions.GenerationError(Synonym.NAME, "No words are available for this level");
     }
 
     Collections.shuffle(words, new Random(System.currentTimeMillis()));
@@ -149,7 +153,24 @@ public class SynonymSvc implements ISynonymsSvc {
       .orElse(null);
 
     if (synonym == null) {
-      throw GameExceptions.GenerationError(Synonym.NAME);
+      //means already exists in the word list. In that case we just get a new word.
+      try {
+        List<Word> existing = words.stream()
+          .filter(x->{
+            Word found = relatedWords.stream()
+              .filter(y -> y.getId().equals(x.getId()))
+              .findFirst()
+              .orElse(null);
+            return found != null;
+          })
+          .collect(Collectors.toList());
+        words.removeAll(existing);
+        int nb = hasWordRes.getCardinality() - words.size();
+        List<Word> newWords = wordProvider.getNewWordsFor(fullName, nb, criteria);
+        words.addAll(newWords);
+      } catch (ProviderException e) {
+        throw GameExceptions.GenerationError(Synonym.NAME, e);
+      }
     }
 
     words.add(synonym);
@@ -194,18 +215,85 @@ public class SynonymSvc implements ISynonymsSvc {
     } catch (ProviderException e) {
       throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, synonym.getId());
     }
-
+    removeWordFromList(mainWord, words);
     return toResponse(synonym, mainWord, words);
   }
 
   @Override
   public SynonymResponse solveGame(String id, String player, Long completionTime, String solution) throws MciException {
-    return null;
+    if (StringUtils.isEmpty(id)
+      || StringUtils.isEmpty(player)
+      || completionTime == null
+      || solution.isEmpty()) {
+      throw GameExceptions.InvalidRequest(Synonym.NAME);
+    }
+
+    Synonym synonym;
+    try {
+      synonym = generator.getGameWithId(id, player, Synonym.class);
+    } catch (EngineException e) {
+      throw GameExceptions.UnableToRetrieveGame(Synonym.NAME, id, player);
+    }
+
+    if (completionTime > synonym.getMaxCompletionTime()) {
+      throw GameExceptions.SurpassedMaxCompletionTime(Synonym.NAME, id, synonym.getMaxCompletionTime());
+    }
+    if (!StringUtils.isEmpty(synonym.getCompletedDate())) {
+      throw GameExceptions.GameIsAlreadySolvedAt(Synonym.NAME, id, synonym.getCompletedDate());
+    }
+
+    boolean areSynonyms;
+    Word mainWord;
+    List<Word> words;
+    try {
+      Word solutionWord = wordProvider.getWordWithValue(solution);
+      words = wordProvider.selectWordsByEntityId(synonym.getId());
+      Word found = words.stream()
+        .filter(x -> x.getId().equals(solutionWord.getId()))
+        .findFirst()
+        .orElse(null);
+      if (found == null) {
+        throw GameExceptions.UnableToSolve(Synonym.NAME, "Provided word is not associated with this game");
+      }
+
+      String mainWordId = dao.getMainWord(synonym.getId());
+      mainWord = wordProvider.selectWordByNode(mainWordId);
+      if (mainWord.getId() == null) {
+        throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, mainWordId);
+      }
+
+      areSynonyms = wordProvider.areSynonyms(mainWord, solutionWord);
+
+    } catch (ProviderException e) {
+      throw GameExceptions.UnableToSolve(Synonym.NAME, e);
+    }
+
+    if (areSynonyms) {
+      synonym.setCompletionTime(completionTime);
+      synonym.setCompletedDate(String.valueOf(System.currentTimeMillis()));
+      try {
+        generator.upsertGame(synonym);
+      } catch (EngineException e) {
+        throw  GameExceptions.GenerationError(Synonym.NAME, e);
+      }
+    }
+
+    removeWordFromList(mainWord, words);
+    return toResponse(synonym, mainWord, words);
   }
 
+  void removeWordFromList(Word toRemove, List<Word> words) {
+    Word main = words.stream()
+      .filter(x -> x.getId().equals(toRemove.getId()))
+      .findFirst()
+      .get();
+
+    words.remove(main);
+  }
 
   SynonymResponse toResponse(Synonym synonym, @Nullable Word mainWord, @Nullable List<Word> words) {
     SynonymResponse response = new SynonymResponse(synonym);
+    response.setSolved(synonym.getCompletedDate() != null);
     if (mainWord != null) {
       response.setWord(mainWord.getValue());
     }

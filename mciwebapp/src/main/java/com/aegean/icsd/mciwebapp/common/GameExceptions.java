@@ -2,6 +2,7 @@ package com.aegean.icsd.mciwebapp.common;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
 public class GameExceptions {
 
@@ -50,8 +51,17 @@ public class GameExceptions {
     return new MciException(game + "." + 9, String.format("Could not retrieve the word associated with the id %s ", id));
   }
 
-  public static MciException GenerationError(String game) {
+  public static MciException UnableToSolve(String game, Throwable t) {
+    return new MciException(game + "." + 10, String.format("Unable to solve game %s", game), t);
+  }
+
+  public static MciException UnableToSolve(String game, String info) {
+    return new MciException(game + "." + 11, String.format("Unable to solve game %s, %s", game, info));
+  }
+
+
+  public static MciException GenerationError(String game, String msg) {
     return new MciException(game + "." + 99, String.format("There was a problem during the " +
-      "generation of the game %s, please retry", game));
+      "generation of the game %s. %s", game, msg));
   }
 }

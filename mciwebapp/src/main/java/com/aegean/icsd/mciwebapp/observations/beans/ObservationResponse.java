@@ -8,7 +8,6 @@ import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 import openllet.core.utils.Bool;
 
 public class ObservationResponse extends ServiceResponse<Observation> {
-  private Boolean solved;
   private List<ObservationItem> items;
   private List<String> words;
 
@@ -32,11 +31,4 @@ public class ObservationResponse extends ServiceResponse<Observation> {
     this.words = words;
   }
 
-  public Boolean getSolved() {
-    return solved;
-  }
-
-  public void setSolved(Boolean solved) {
-    this.solved = solved;
-  }
 }

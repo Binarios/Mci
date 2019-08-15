@@ -14,7 +14,6 @@ import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
-import com.aegean.icsd.ontology.queries.SelectQuery;
 
 @Service
 public class ObservationProvider implements IObservationProvider {
@@ -47,7 +46,7 @@ public class ObservationProvider implements IObservationProvider {
     }
     Image image = imageProvider.getImage();
     try {
-      generator.upsertObj(obs);
+      generator.upsertGameObject(obs);
       generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), image.getId());
     } catch (EngineException e) {
       throw Exceptions.GenerationError(ObservationObj.NAME, e);

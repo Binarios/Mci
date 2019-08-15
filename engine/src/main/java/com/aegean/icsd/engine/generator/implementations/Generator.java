@@ -1,5 +1,6 @@
 package com.aegean.icsd.engine.generator.implementations;
 
+import javax.naming.Name;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -10,10 +11,12 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
@@ -57,40 +60,19 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public String upsertObj(Object object) throws EngineException {
+  public <T extends BaseGame> String upsertGame(T game) throws EngineException {
+    LOGGER.debug("Upserting new Game");
+    String id = ano.setEntityId(game);
+    String gameName = ano.getEntityValue(game);
+    String fullName = Utils.getFullGameName(gameName, game.getDifficulty());
+    return upsertObject(fullName, game);
+  }
+
+  @Override
+  public <T extends BaseGameObject> String upsertGameObject(T object) throws EngineException {
     LOGGER.debug("Upserting new Object");
-    String id = ano.setEntityId(object);
     String name = ano.getEntityValue(object);
-    LOGGER.info(String.format("Upserting new %s with id %s", name, id));
-    Map<String, Object> relations = ano.getDataProperties(object);
-    EntityRules er;
-    try {
-      er = rules.getEntityRules(name);
-    } catch (RulesException e) {
-      throw  Exceptions.CannotRetrieveRules(name, e);
-    }
-    List<EntityProperty> dataProperties = er.getProperties().stream()
-      .filter(x -> !x.isObjectProperty())
-      .collect(Collectors.toList());
-
-    boolean success = dao.instantiateObject(id, er.getName());
-    if (!success) {
-      throw Exceptions.CannotCreateObject(name);
-    }
-
-    for (EntityProperty property : dataProperties) {
-      Object rangeValue = relations.get(property.getName());
-      if (property.isMandatory() && rangeValue == null) {
-        throw Exceptions.MissingMandatoryRelation(name, property.getName());
-      }
-
-      if (rangeValue != null) {
-        Class<?> rangeClass = ont.getJavaClassFromOwlType(property.getRange());
-        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
-      }
-    }
-
-    return id;
+    return upsertObject(name, object);
   }
 
   @Override
@@ -171,6 +153,39 @@ public class Generator implements IGenerator {
     }
 
     return rangeValue;
+  }
+
+  String upsertObject (String name, Object object) throws EngineException {
+    String id = ano.setEntityId(object);
+    LOGGER.info(String.format("Upserting new %s with id %s", name, id));
+    Map<String, Object> relations = ano.getDataProperties(object);
+    EntityRules er;
+    try {
+      er = rules.getEntityRules(name);
+    } catch (RulesException e) {
+      throw  Exceptions.CannotRetrieveRules(name, e);
+    }
+    List<EntityProperty> dataProperties = er.getProperties().stream()
+      .filter(x -> !x.isObjectProperty())
+      .collect(Collectors.toList());
+
+    boolean success = dao.instantiateObject(id, er.getName());
+    if (!success) {
+      throw Exceptions.CannotCreateObject(name);
+    }
+
+    for (EntityProperty property : dataProperties) {
+      Object rangeValue = relations.get(property.getName());
+      if (property.isMandatory() && rangeValue == null) {
+        throw Exceptions.MissingMandatoryRelation(name, property.getName());
+      }
+
+      if (rangeValue != null) {
+        Class<?> rangeClass = ont.getJavaClassFromOwlType(property.getRange());
+        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
+      }
+    }
+    return id;
   }
 
   int calculateCardinality(List<EntityRestriction> restrictions) {

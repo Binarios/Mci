@@ -112,15 +112,10 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
 
     Word word;
     try {
+      generator.upsertGame(puzzle);
       word = wordProvider.getNewWordFor(fullName, puzzle.getWordLength());
-    } catch (ProviderException e) {
-      throw GameExceptions.GenerationError(WordPuzzle.NAME, e);
-    }
-
-    try {
-      generator.upsertObj(puzzle);
       generator.createObjRelation(puzzle.getId(), hasWordRes.getOnProperty(), word.getId());
-    } catch (EngineException e) {
+    } catch (EngineException | ProviderException e) {
       throw GameExceptions.GenerationError(WordPuzzle.NAME, e);
     }
 
@@ -186,7 +181,7 @@ public class WordPuzzleSvc implements IWordPuzzleSvc {
       puzzle.setCompletionTime(completionTime);
       puzzle.setCompletedDate(String.valueOf(System.currentTimeMillis()));
       try {
-        generator.upsertObj(puzzle);
+        generator.upsertGame(puzzle);
       } catch (EngineException e) {
         throw  GameExceptions.GenerationError(WordPuzzle.NAME, e);
       }

@@ -15,4 +15,9 @@ class Exceptions {
     return new MciException(CODE_NAME + "." + 2,
       String.format("Unable to retrieve the main word for game with id %s ", id), e);
   }
+
+  public static MciException UnableToFindWord(String id, String wordId, Throwable e) {
+    return new MciException(CODE_NAME + "." + 3,
+      String.format("Unable to retrieve the word with id %s for game with id %s ", wordId, id), e);
+  }
 }
