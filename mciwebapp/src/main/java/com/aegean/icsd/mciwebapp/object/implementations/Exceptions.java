@@ -13,9 +13,9 @@ class Exceptions {
     return new ProviderException(CODE_NAME + "." + 2, String.format("Unable to locate the requested filePath: %s", path));
   }
 
-  static ProviderException GenerationError(Throwable t) {
-    return new ProviderException(CODE_NAME + "." + 3, "There was a problem during the " +
-      "generation of the word, please retry", t);
+  static ProviderException GenerationError(String entity, Throwable t) {
+    return new ProviderException(CODE_NAME + "." + 3, String.format("There was a problem during the " +
+      "generation of the %s, please retry", entity), t);
   }
 
   static ProviderException UnableToRetrieveRules(String entity, Throwable t) {

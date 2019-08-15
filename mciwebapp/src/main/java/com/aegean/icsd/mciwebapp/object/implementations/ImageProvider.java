@@ -54,7 +54,7 @@ public class ImageProvider implements IImageProvider {
       imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasImageSubject");
       imageTitleRes = rules.getEntityRestriction(Image.NAME, "hasImageTitle");
     } catch (RulesException e) {
-      throw Exceptions.GenerationError(e);
+      throw Exceptions.GenerationError(Image.NAME, e);
     }
 
     String title = fragments[config.getTitleIndex()];
@@ -74,7 +74,7 @@ public class ImageProvider implements IImageProvider {
       LOGGER.info(String.format("Retrieving an Image with id %s", img.getId()));
       return img;
     } catch (EngineException e) {
-      throw Exceptions.GenerationError(e);
+      throw Exceptions.GenerationError(Image.NAME, e);
     }
   }
 }

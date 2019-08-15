@@ -16,6 +16,12 @@ public class Word extends BaseGameObject {
   @DataProperty("hasWordLength")
   private Integer length;
 
+  @DataProperty("isSynonym")
+  private Boolean synonym;
+
+  @DataProperty("isAntonym")
+  private Boolean antonym;
+
   public String getValue() {
     return value;
   }
@@ -30,5 +36,21 @@ public class Word extends BaseGameObject {
 
   public void setLength(Integer length) {
     this.length = length;
+  }
+
+  public Boolean isAntonym() {
+    return antonym;
+  }
+
+  public void setAntonym(Boolean antonym) {
+    this.antonym = antonym;
+  }
+
+  public Boolean isSynonym() {
+    return synonym;
+  }
+
+  public void setSynonym(Boolean synonym) {
+    this.synonym = synonym;
   }
 }

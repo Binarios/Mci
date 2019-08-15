@@ -4,7 +4,11 @@ public class WordConfiguration {
   private String location;
   private String filename;
   private String delimiter;
+  private String antonymDelimiter;
+  private String synonymDelimiter;
   private int valueIndex;
+  private int synonymIndex;
+  private int antonymIndex;
 
 
   public String getLocation() {
@@ -37,5 +41,37 @@ public class WordConfiguration {
 
   public void setFilename(String filename) {
     this.filename = filename;
+  }
+
+  public int getSynonymIndex() {
+    return synonymIndex;
+  }
+
+  public void setSynonymIndex(int synonymIndex) {
+    this.synonymIndex = synonymIndex;
+  }
+
+  public int getAntonymIndex() {
+    return antonymIndex;
+  }
+
+  public void setAntonymIndex(int antonymIndex) {
+    this.antonymIndex = antonymIndex;
+  }
+
+  public String getAntonymDelimiter() {
+    return antonymDelimiter;
+  }
+
+  public void setAntonymDelimiter(String antonymDelimiter) {
+    this.antonymDelimiter = antonymDelimiter;
+  }
+
+  public String getSynonymDelimiter() {
+    return synonymDelimiter;
+  }
+
+  public void setSynonymDelimiter(String synonymDelimiter) {
+    this.synonymDelimiter = synonymDelimiter;
   }
 }

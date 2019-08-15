@@ -50,7 +50,7 @@ public class ObservationProvider implements IObservationProvider {
       generator.upsertObj(obs);
       generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), image.getId());
     } catch (EngineException e) {
-      throw Exceptions.GenerationError(e);
+      throw Exceptions.GenerationError(ObservationObj.NAME, e);
     }
 
     return obs;

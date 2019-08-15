@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.synonims.beans;
+package com.aegean.icsd.mciwebapp.synonym.beans;
 
 import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.generator.beans.BaseGame;

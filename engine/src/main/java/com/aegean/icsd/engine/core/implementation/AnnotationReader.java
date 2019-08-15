@@ -121,12 +121,22 @@ public class AnnotationReader implements IAnnotationReader {
           invokeFieldSetter(field, object, Long.parseLong(value.toString()));
         }
         if(String.class.isAssignableFrom(fieldClass)) {
-          invokeFieldSetter(field, object, value.toString());
+          if (value == null) {
+            invokeFieldSetter(field, object, (Object) null);
+          } else {
+            invokeFieldSetter(field, object, value.toString());
+          }
         }
         if(Enum.class.isAssignableFrom(fieldClass)) {
           invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase()));
         }
-
+        if(Boolean.class.isAssignableFrom(fieldClass)) {
+          if (value == null) {
+            invokeFieldSetter(field, object, (Object)null);
+          } else {
+            invokeFieldSetter(field, object, Boolean.valueOf(value.toString()));
+          }
+        }
         break;
       }
     }

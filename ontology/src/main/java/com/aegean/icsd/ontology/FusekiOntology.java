@@ -125,12 +125,13 @@ public class FusekiOntology implements IOntology {
     for(Map.Entry<String, String> entry : selectQuery.getIriParams().entrySet()) {
       sparql.setIri(entry.getKey(), entry.getValue());
     }
-
     for(Map.Entry<String, String> entry : selectQuery.getLiteralParams().entrySet()) {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
-
     for(Map.Entry<String, Long> entry : selectQuery.getLongLiteralParams().entrySet()) {
+      sparql.setLiteral(entry.getKey(), entry.getValue());
+    }
+    for(Map.Entry<String, Boolean> entry : selectQuery.getBoolLiteralParams().entrySet()) {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
 

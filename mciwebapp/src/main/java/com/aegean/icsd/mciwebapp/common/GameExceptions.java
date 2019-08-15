@@ -49,4 +49,9 @@ public class GameExceptions {
   public static MciException FailedToRetrieveWord(String game, String id) {
     return new MciException(game + "." + 9, String.format("Could not retrieve the word associated with the id %s ", id));
   }
+
+  public static MciException GenerationError(String game) {
+    return new MciException(game + "." + 99, String.format("There was a problem during the " +
+      "generation of the game %s, please retry", game));
+  }
 }

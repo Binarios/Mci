@@ -59,6 +59,10 @@ public class WebAppConfig implements WebMvcConfigurer {
     config.setFilename(getPropertyValue("word.filename"));
     config.setDelimiter(getPropertyValue("word.delimiter"));
     config.setValueIndex(Integer.parseInt(getPropertyValue("word.valueIndex")));
+    config.setSynonymIndex(Integer.parseInt(getPropertyValue("word.synonymIndex")));
+    config.setAntonymIndex(Integer.parseInt(getPropertyValue("word.antonymIndex")));
+    config.setSynonymDelimiter(getPropertyValue("word.synonym.delimiter"));
+    config.setAntonymDelimiter(getPropertyValue("word.antonym.delimiter"));
     return config;
   }
 

@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.synonims.controllers;
+package com.aegean.icsd.mciwebapp.synonym.controllers;
 
 import java.util.List;
 
@@ -22,9 +22,9 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
-import com.aegean.icsd.mciwebapp.synonims.beans.SynonymRequest;
-import com.aegean.icsd.mciwebapp.synonims.beans.SynonymResponse;
-import com.aegean.icsd.mciwebapp.synonims.interfaces.ISynonymsSvc;
+import com.aegean.icsd.mciwebapp.synonym.beans.SynonymRequest;
+import com.aegean.icsd.mciwebapp.synonym.beans.SynonymResponse;
+import com.aegean.icsd.mciwebapp.synonym.interfaces.ISynonymsSvc;
 
 /**
  * https://localhost:8443/mci/synonym

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,8 @@ public class Generator implements IGenerator {
       for (Map.Entry<String, Object> entry : existingRelations.entrySet()) {
         ano.setDataPropertyValue(object, entry.getKey(), entry.getValue());
       }
+    } else {
+      ano.setDataPropertyValue(object, "hasId", null);
     }
   }
 
@@ -70,7 +73,7 @@ public class Generator implements IGenerator {
       .filter(x -> !x.isObjectProperty())
       .collect(Collectors.toList());
 
-    boolean success = dao.instantiateObject(id, name);
+    boolean success = dao.instantiateObject(id, er.getName());
     if (!success) {
       throw Exceptions.CannotCreateObject(name);
     }
@@ -82,7 +85,7 @@ public class Generator implements IGenerator {
       }
 
       if (rangeValue != null) {
-        Class<?> rangeClass = dao.getJavaClass(property.getRange());
+        Class<?> rangeClass = ont.getJavaClassFromOwlType(property.getRange());
         dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
       }
     }
@@ -92,9 +95,23 @@ public class Generator implements IGenerator {
 
   @Override
   public boolean createObjRelation(String id, EntityProperty onProperty, String objId) throws EngineException {
-    LOGGER.info(String.format("Associating %s with %s throught the relation %s ", id, objId, onProperty.getName()));
+    LOGGER.info(String.format("Associating %s with %s through the relation %s ", id, objId, onProperty.getName()));
     try {
+      if (onProperty.isMandatory() && StringUtils.isEmpty(objId)) {
+        throw Exceptions.CannotCreateObjectRelation(onProperty.getName(), id, objId,
+          "Property is marked as mandatory. Relation is missing");
+      }
+
+      if (onProperty.isIrreflexive() && id.equals(objId)) {
+        throw Exceptions.CannotCreateObjectRelation(onProperty.getName(), id, objId,
+          "Property is marked as irreflexive");
+      }
+
       boolean success = dao.createObjRelation(id, onProperty.getName(), objId);
+      if (onProperty.isSymmetric()) {
+        LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getName()));
+        success &= dao.createObjRelation(objId, onProperty.getName(), id);
+      }
       return success;
     } catch (EngineException e) {
       throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);

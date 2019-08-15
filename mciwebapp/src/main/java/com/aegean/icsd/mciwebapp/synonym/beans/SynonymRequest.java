@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.synonims.beans;
+package com.aegean.icsd.mciwebapp.synonym.beans;
 
 import com.aegean.icsd.mciwebapp.common.beans.Request;
 

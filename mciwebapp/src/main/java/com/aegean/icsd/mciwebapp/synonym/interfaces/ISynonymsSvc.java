@@ -1,8 +1,8 @@
-package com.aegean.icsd.mciwebapp.synonims.interfaces;
+package com.aegean.icsd.mciwebapp.synonym.interfaces;
 
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.interfaces.IGameService;
-import com.aegean.icsd.mciwebapp.synonims.beans.SynonymResponse;
+import com.aegean.icsd.mciwebapp.synonym.beans.SynonymResponse;
 
 public interface ISynonymsSvc extends IGameService<SynonymResponse> {
 

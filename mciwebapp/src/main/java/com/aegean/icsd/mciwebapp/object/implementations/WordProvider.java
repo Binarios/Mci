@@ -1,6 +1,10 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -9,6 +13,10 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
+import com.aegean.icsd.engine.rules.beans.EntityRestriction;
+import com.aegean.icsd.engine.rules.beans.RulesException;
+import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
@@ -32,15 +40,155 @@ public class WordProvider implements IWordProvider {
   private IGenerator generator;
 
   @Autowired
-  private IObjectFileProvider fileProvider;
+  private IRules rules;
 
   @Autowired
   private IOntology ont;
+
+  @Autowired
+  private IObjectFileProvider fileProvider;
+
 
   @Override
   public Word getWordWithValue(String value) throws ProviderException {
     LOGGER.info(String.format("Requested word with value %s", value));
     Word word = toWord(value);
+    return getOrUpsertWord(word);
+  }
+
+  @Override
+  public List<Word> getNewWordsFor(String entityName, int count, Word criteria) throws ProviderException {
+    List<String> availableIds = dao.getNewWordIdsFor(entityName);
+    if (availableIds.size() == 0) {
+      throw Exceptions.UnableToGenerateObject(Word.NAME);
+    }
+    List<Word> availableWords = new ArrayList<>();
+    Collections.shuffle(availableIds, new Random(System.currentTimeMillis()));
+    for (String id : availableIds) {
+      Word cp = copy(criteria);
+      cp.setId(id);
+      try {
+        generator.selectObj(cp);
+      } catch (EngineException e) {
+        throw Exceptions.GenerationError(Word.NAME, e);
+      }
+      if (cp.getId() != null) {
+        availableWords.add(cp);
+      }
+
+      if(availableWords.size() == count) {
+        break;
+      }
+    }
+
+    return availableWords;
+  }
+
+  @Override
+  public Word getNewWordFor(String entityName, int length) throws ProviderException {
+    Word criteria = new Word();
+    criteria.setLength(length);
+    return getNewWordsFor(entityName, 1, criteria).get(0);
+  }
+
+  @Override
+  public Word selectWordByNode(String nodeName) throws ProviderException {
+    String id = ont.removePrefix(nodeName);
+    Word word = new Word();
+    word.setId(id);
+    try {
+      generator.selectObj(word);
+    } catch (EngineException e) {
+      throw Exceptions.UnableToGetWord("node name = " + nodeName, e);
+    }
+    return word;
+  }
+
+  @Override
+  public List<Word> selectWordsByEntityId(String entityId) throws ProviderException {
+    List<String> ids = dao.getAssociatedWordOfId(entityId);
+    List<Word> words = new ArrayList<>();
+    for (String id : ids) {
+      Word word = new Word();
+      word.setId(id);
+      try {
+        generator.selectObj(word);
+        words.add(word);
+      } catch (EngineException e) {
+        throw Exceptions.UnableToGetWord("entityId = " + entityId, e);
+      }
+    }
+    return words;
+  }
+
+  @PostConstruct
+  void readWords() throws ProviderException {
+    List<String> lines = fileProvider.getLines(config.getLocation() + "/" + config.getFilename());
+    EntityRestriction antonymRes;
+    try {
+      antonymRes = rules.getEntityRestriction("AntonymWord", "hasAntonym");
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveRules("AntonymWord", e);
+    }
+    EntityRestriction synonymRes;
+    try {
+      synonymRes = rules.getEntityRestriction("SynonymWord", "hasSynonym");
+    } catch (RulesException e) {
+      throw Exceptions.UnableToRetrieveRules("SynonymWord", e);
+    }
+
+    for (String line : lines) {
+      String[] fragments = line.split(config.getDelimiter());
+      String valueRaw = fragments[config.getValueIndex()];
+
+      if (fragments.length == 1) {
+        continue;
+      }
+
+      String antonymRaw = fragments[config.getAntonymIndex()];
+      String synonymRaw = fragments[config.getSynonymIndex()];
+
+      Word value = getWordWithValue(valueRaw);
+
+      if (!StringUtils.isEmpty(antonymRaw)) {
+        String[] antonymsRaw = antonymRaw.split(config.getAntonymDelimiter());
+        for (String antonymValue : antonymsRaw) {
+          Word antonymWord = toWord(antonymValue);
+          antonymWord.setAntonym(true);
+          getOrUpsertWord(antonymWord);
+          if (antonymWord.getId() != null) {
+            try {
+              generator.createObjRelation(value.getId(), antonymRes.getOnProperty(), antonymWord.getId());
+              value.setAntonym(true);
+              generator.upsertObj(value);
+            } catch (EngineException e) {
+              throw Exceptions.GenerationError(Word.NAME, e);
+            }
+          }
+        }
+      }
+
+      if (!StringUtils.isEmpty(synonymRaw)) {
+        String[] synonymsRaw = synonymRaw.split(config.getSynonymDelimiter());
+        for (String synonymValue : synonymsRaw) {
+          Word synonymWord = toWord(synonymValue);
+          synonymWord.setSynonym(true);
+          getOrUpsertWord(synonymWord);
+          if (synonymWord.getId() != null) {
+            try {
+              generator.createObjRelation(value.getId(), synonymRes.getOnProperty(), synonymWord.getId());
+              value.setSynonym(true);
+              generator.upsertObj(value);
+            } catch (EngineException e) {
+              throw Exceptions.GenerationError(Word.NAME, e);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Word getOrUpsertWord(Word word) throws ProviderException {
     try {
       generator.selectObj(word);
       if (word.getId() == null) {
@@ -48,62 +196,8 @@ public class WordProvider implements IWordProvider {
       }
       return word;
     } catch (EngineException e) {
-      throw Exceptions.GenerationError(e);
+      throw Exceptions.GenerationError(Word.NAME, e);
     }
-  }
-
-  @Override
-  public Word getNewWordFor(String entityName, int length) throws ProviderException {
-    String id = dao.getNewWordIdFor(entityName);
-    Word word;
-    if (StringUtils.isEmpty(id)) {
-      word = readWord(length);
-    } else {
-      word = new Word();
-      word.setId(id);
-      try {
-        generator.selectObj(word);
-      } catch (EngineException e) {
-        throw Exceptions.GenerationError(e);
-      }
-    }
-    return word;
-  }
-
-  @Override
-  public Word getWordFromNode(String wordNode) throws ProviderException {
-    String id = ont.removePrefix(wordNode);
-    Word word = new Word();
-    word.setId(id);
-
-    try {
-      generator.selectObj(word);
-    } catch (EngineException e) {
-      throw Exceptions.GenerationError(e);
-    }
-
-    return word;
-  }
-
-  Word readWord(int length) throws ProviderException {
-    Word word = null;
-    List<String> lines = fileProvider.getLines(config.getLocation() + "/" + config.getFilename());
-    for (String line : lines) {
-      String[] fragments = line.split(config.getDelimiter());
-      for (String value : fragments) {
-        if (value.length() == length) {
-          word = getWordWithValue(value);
-          break;
-        }
-        if (word != null) {
-          break;
-        }
-      }
-    }
-    if (word == null) {
-      throw Exceptions.UnableToGenerateObject(Word.NAME);
-    }
-    return word;
   }
 
   Word toWord(String value) {
@@ -111,5 +205,15 @@ public class WordProvider implements IWordProvider {
     word.setValue(value);
     word.setLength(value.length());
     return word;
+  }
+
+  Word copy(Word word) {
+    Word cp = new Word();
+    cp.setId(word.getId());
+    cp.setLength(word.getLength());
+    cp.setValue(word.getValue());
+    cp.setAntonym(word.isAntonym());
+    cp.setSynonym(word.isSynonym());
+    return cp;
   }
 }

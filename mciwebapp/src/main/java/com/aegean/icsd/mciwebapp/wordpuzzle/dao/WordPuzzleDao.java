@@ -43,27 +43,4 @@ public class WordPuzzleDao implements IWordPuzzleDao {
     }
 
   }
-
-  @Override
-  public String getAssociatedWordNodeById(String id) throws MciException {
-    SelectQuery q = new SelectQuery.Builder()
-      .select("wordNode")
-      .where("g", "hasId", "id")
-      .where("g", "hasWord", "wordNode")
-      .addIriParam("hasId", ont.getPrefixedEntity("hasId"))
-      .addIriParam("hasWord", ont.getPrefixedEntity("hasWord"))
-      .addLiteralParam("id", id)
-      .build();
-
-    try {
-      JsonArray result = ont.select(q);
-      String value = "";
-      if (result.size() > 0) {
-        value = result.get(0).getAsJsonObject().get("wordNode").getAsString();
-      }
-      return value;
-    } catch (OntologyException e) {
-      throw Exceptions.FailedToRetrieveWord(id,e);
-    }
-  }
 }

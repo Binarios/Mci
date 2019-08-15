@@ -38,22 +38,26 @@ public class GeneratorDao implements IGeneratorDao {
     SelectQuery.Builder qBuilder = new SelectQuery.Builder()
       .select("p", "o");
 
+    int i = 0;
     for (Map.Entry<String, Object> entry : relations.entrySet()) {
       String dataProperty = entry.getKey();
       Object value = entry.getValue();
       if (value == null) {
         continue;
       }
-
-      qBuilder.where("s", dataProperty, "value")
+      String param = "value" + i;
+      qBuilder.where("s", dataProperty, param)
         .addIriParam(dataProperty, ontology.getPrefixedEntity(dataProperty));
       if (Integer.class.isAssignableFrom(value.getClass())) {
-        qBuilder.addLiteralParam("value", Integer.parseInt(value.toString()));
+        qBuilder.addLiteralParam(param, Integer.parseInt(value.toString()));
       } else if (Long.class.isAssignableFrom(value.getClass())) {
-        qBuilder.addLiteralParam("value", Long.parseLong(value.toString()));
+        qBuilder.addLiteralParam(param, Long.parseLong(value.toString()));
+      } else if (Boolean.class.isAssignableFrom(value.getClass())) {
+        qBuilder.addLiteralParam(param, Boolean.parseBoolean(value.toString()));
       } else {
-        qBuilder.addLiteralParam("value", value.toString());
+        qBuilder.addLiteralParam(param, value.toString());
       }
+      i++;
     }
     qBuilder.where("s", "p", "o");
 
@@ -78,7 +82,10 @@ public class GeneratorDao implements IGeneratorDao {
   @Override
   public boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)
     throws EngineException {
-    return createRelation(id, name, rangeValue, false, valueClass);
+    if (rangeValue != null) {
+      return createRelation(id, name, rangeValue, false, valueClass);
+    }
+    return true;
   }
 
   @Override

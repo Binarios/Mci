@@ -17,7 +17,7 @@ public class TestObsSvc {
 
   @InjectMocks
   @Spy
-  private ObservationImpl svc = new ObservationImpl();
+  private ObservationSvc svc = new ObservationSvc();
 
   @Mock
   private IGenerator generator;
