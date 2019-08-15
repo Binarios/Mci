@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.synonym.implementations;
+package com.aegean.icsd.mciwebapp.antonyms.implementations;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,21 +18,25 @@ import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciwebapp.antonyms.beans.AntonymResponse;
+import com.aegean.icsd.mciwebapp.antonyms.beans.Antonyms;
+import com.aegean.icsd.mciwebapp.antonyms.dao.IAntonymsDao;
+import com.aegean.icsd.mciwebapp.antonyms.interfaces.IAntonymsSvc;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
-import com.aegean.icsd.mciwebapp.synonym.beans.Synonym;
-import com.aegean.icsd.mciwebapp.synonym.beans.SynonymResponse;
-import com.aegean.icsd.mciwebapp.synonym.dao.ISynonymDao;
-import com.aegean.icsd.mciwebapp.synonym.interfaces.ISynonymsSvc;
+import com.aegean.icsd.mciwebapp.synonyms.beans.SynonymResponse;
+import com.aegean.icsd.mciwebapp.synonyms.beans.Synonyms;
+import com.aegean.icsd.mciwebapp.synonyms.dao.ISynonymsDao;
+import com.aegean.icsd.mciwebapp.synonyms.interfaces.ISynonymsSvc;
 
 import com.sun.istack.Nullable;
 
 @Service
-public class SynonymSvc implements ISynonymsSvc {
-  private static Logger LOGGER = Logger.getLogger(SynonymSvc.class);
+public class AntonymsSvc implements IAntonymsSvc {
+  private static Logger LOGGER = Logger.getLogger(AntonymsSvc.class);
 
   @Autowired
   private IGenerator generator;
@@ -44,43 +48,43 @@ public class SynonymSvc implements ISynonymsSvc {
   private IWordProvider wordProvider;
 
   @Autowired
-  private ISynonymDao dao;
+  private IAntonymsDao dao;
 
   @Override
-  public List<SynonymResponse> getGames(String playerName) throws MciException {
+  public List<AntonymResponse> getGames(String playerName) throws MciException {
     if (StringUtils.isEmpty(playerName)) {
-      throw GameExceptions.InvalidRequest(Synonym.NAME);
+      throw GameExceptions.InvalidRequest(Antonyms.NAME);
     }
 
-    List<Synonym> synonyms;
+    List<Antonyms> antonyms;
     try {
-      synonyms = generator.getGamesForPlayer(Synonym.NAME, playerName, Synonym.class);
+      antonyms = generator.getGamesForPlayer(Antonyms.NAME, playerName, Antonyms.class);
     } catch (EngineException e) {
-      throw GameExceptions.FailedToRetrieveGames(Synonym.NAME, playerName, e);
+      throw GameExceptions.FailedToRetrieveGames(Antonyms.NAME, playerName, e);
     }
 
-    List<SynonymResponse> res = new ArrayList<>();
-    for (Synonym synonym : synonyms) {
-      res.add(toResponse(synonym, null, null));
+    List<AntonymResponse> res = new ArrayList<>();
+    for (Antonyms antonym : antonyms) {
+      res.add(toResponse(antonym, null, null));
     }
     return res;
   }
 
   @Override
-  public SynonymResponse createGame(String playerName, Difficulty difficulty) throws MciException {
+  public AntonymResponse createGame(String playerName, Difficulty difficulty) throws MciException {
     LOGGER.info(String.format("Creating Synonym game for player %s at the difficulty %s",
       playerName, difficulty.name()));
 
     if (StringUtils.isEmpty(playerName)) {
-      throw GameExceptions.InvalidRequest(Synonym.NAME);
+      throw GameExceptions.InvalidRequest(Antonyms.NAME);
     }
 
-    String fullName = Utils.getFullGameName(Synonym.NAME, difficulty);
+    String fullName = Utils.getFullGameName(Antonyms.NAME, difficulty);
     int lastCompletedLevel;
     try {
       lastCompletedLevel = generator.getLastCompletedLevel(fullName, difficulty, playerName);
     } catch (EngineException e) {
-      throw GameExceptions.FailedToRetrieveLastLevel(Synonym.NAME, difficulty, playerName, e);
+      throw GameExceptions.FailedToRetrieveLastLevel(Antonyms.NAME, difficulty, playerName, e);
     }
     int newLevel = lastCompletedLevel + 1;
 
@@ -88,24 +92,24 @@ public class SynonymSvc implements ISynonymsSvc {
     try {
       maxCompleteTimeRes = rules.getEntityRestriction(fullName, "maxCompletionTime");
     } catch (RulesException e) {
-      throw GameExceptions.UnableToRetrieveGameRules(Synonym.NAME, e);
+      throw GameExceptions.UnableToRetrieveGameRules(Antonyms.NAME, e);
     }
 
     EntityRestriction hasMainWordRes;
     try {
       hasMainWordRes = rules.getEntityRestriction(fullName, "hasMainWord");
     } catch (RulesException e) {
-      throw GameExceptions.UnableToRetrieveGameRules(Synonym.NAME, e);
+      throw GameExceptions.UnableToRetrieveGameRules(Antonyms.NAME, e);
     }
 
     EntityRestriction hasWordRes;
     try {
       hasWordRes = rules.getEntityRestriction(fullName, "hasWord");
     } catch (RulesException e) {
-      throw GameExceptions.UnableToRetrieveGameRules(Synonym.NAME, e);
+      throw GameExceptions.UnableToRetrieveGameRules(Antonyms.NAME, e);
     }
 
-    Synonym toCreate = new Synonym();
+    Antonyms toCreate = new Antonyms();
     toCreate.setMaxCompletionTime(Long.parseLong("" + generator.generateIntDataValue(maxCompleteTimeRes.getDataRange())));
     toCreate.setPlayerName(playerName);
     toCreate.setLevel(newLevel);
@@ -113,21 +117,21 @@ public class SynonymSvc implements ISynonymsSvc {
     try {
       generator.upsertGame(toCreate);
     } catch (EngineException e) {
-      throw GameExceptions.GenerationError(Synonym.NAME, e);
+      throw GameExceptions.GenerationError(Antonyms.NAME, e);
     }
 
     Word criteria = new Word();
-    criteria.setSynonym(true);
+    criteria.setAntonym(true);
 
     List<Word> words;
     try {
       words = wordProvider.getNewWordsFor(fullName, hasWordRes.getCardinality(), criteria);
     } catch (ProviderException e) {
-      throw GameExceptions.GenerationError(Synonym.NAME, e);
+      throw GameExceptions.GenerationError(Antonyms.NAME, e);
     }
 
     if (words.isEmpty()) {
-      throw GameExceptions.GenerationError(Synonym.NAME, "No words are available for this level");
+      throw GameExceptions.GenerationError(Antonyms.NAME, "No words are available for this level");
     }
 
     Collections.shuffle(words, new Random(System.currentTimeMillis()));
@@ -137,11 +141,11 @@ public class SynonymSvc implements ISynonymsSvc {
     try {
       relatedWords = wordProvider.selectWordsByEntityId(mainWord.getId());
     } catch (ProviderException e) {
-      throw GameExceptions.GenerationError(Synonym.NAME, e);
+      throw GameExceptions.GenerationError(Antonyms.NAME, e);
     }
 
-    Word synonym = relatedWords.stream()
-      .filter(x -> x.isSynonym() != null && x.isSynonym())
+    Word antonym = relatedWords.stream()
+      .filter(x -> x.isAntonym() != null && x.isAntonym())
       .filter(x -> {
         Word found = words.stream()
           .filter(y -> y.getId().equals(x.getId()))
@@ -152,7 +156,7 @@ public class SynonymSvc implements ISynonymsSvc {
       .findFirst()
       .orElse(null);
 
-    if (synonym == null) {
+    if (antonym == null) {
       //means already exists in the word list. In that case we just get a new word.
       try {
         List<Word> existing = words.stream()
@@ -169,11 +173,11 @@ public class SynonymSvc implements ISynonymsSvc {
         List<Word> newWords = wordProvider.getNewWordsFor(fullName, nb, criteria);
         words.addAll(newWords);
       } catch (ProviderException e) {
-        throw GameExceptions.GenerationError(Synonym.NAME, e);
+        throw GameExceptions.GenerationError(Antonyms.NAME, e);
       }
     }
 
-    words.add(synonym);
+    words.add(antonym);
     Collections.shuffle(words, new Random(System.currentTimeMillis()));
     try {
       generator.createObjRelation(toCreate.getId(), hasMainWordRes.getOnProperty(), mainWord.getId());
@@ -181,105 +185,105 @@ public class SynonymSvc implements ISynonymsSvc {
         generator.createObjRelation(toCreate.getId(), hasWordRes.getOnProperty(), word.getId());
       }
     } catch (EngineException e) {
-      throw GameExceptions.GenerationError(Synonym.NAME, e);
+      throw GameExceptions.GenerationError(Antonyms.NAME, e);
     }
 
     return toResponse(toCreate, mainWord, words);
   }
 
   @Override
-  public SynonymResponse getGame(String id, String player) throws MciException {
+  public AntonymResponse getGame(String id, String player) throws MciException {
     if (StringUtils.isEmpty(id)
       || StringUtils.isEmpty(player)) {
-      throw GameExceptions.InvalidRequest(Synonym.NAME);
+      throw GameExceptions.InvalidRequest(Antonyms.NAME);
     }
 
-    Synonym synonym;
+    Antonyms antonyms;
     try {
-      synonym = generator.getGameWithId(id, player, Synonym.class);
+      antonyms = generator.getGameWithId(id, player, Antonyms.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(Synonym.NAME, id, player, e);
+      throw GameExceptions.UnableToRetrieveGame(Antonyms.NAME, id, player, e);
     }
 
     List<Word> words;
     try{
-      words = wordProvider.selectWordsByEntityId(synonym.getId());
+      words = wordProvider.selectWordsByEntityId(antonyms.getId());
     } catch (ProviderException e) {
-      throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, synonym.getId(), e);
+      throw GameExceptions.FailedToRetrieveWord(Antonyms.NAME, antonyms.getId(), e);
     }
 
     Word mainWord;
     try {
-      String wordNode = dao.getMainWord(synonym.getId());
+      String wordNode = dao.getMainWord(antonyms.getId());
       mainWord = wordProvider.selectWordByNode(wordNode);
     } catch (ProviderException e) {
-      throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, synonym.getId(), e);
+      throw GameExceptions.FailedToRetrieveWord(Antonyms.NAME, antonyms.getId(), e);
     }
     removeWordFromList(mainWord, words);
-    return toResponse(synonym, mainWord, words);
+    return toResponse(antonyms, mainWord, words);
   }
 
   @Override
-  public SynonymResponse solveGame(String id, String player, Long completionTime, String solution) throws MciException {
+  public AntonymResponse solveGame(String id, String player, Long completionTime, String solution) throws MciException {
     if (StringUtils.isEmpty(id)
       || StringUtils.isEmpty(player)
       || completionTime == null
       || solution.isEmpty()) {
-      throw GameExceptions.InvalidRequest(Synonym.NAME);
+      throw GameExceptions.InvalidRequest(Antonyms.NAME);
     }
 
-    Synonym synonym;
+    Antonyms antonyms;
     try {
-      synonym = generator.getGameWithId(id, player, Synonym.class);
+      antonyms = generator.getGameWithId(id, player, Antonyms.class);
     } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(Synonym.NAME, id, player, e);
+      throw GameExceptions.UnableToRetrieveGame(Antonyms.NAME, id, player, e);
     }
 
-    if (completionTime > synonym.getMaxCompletionTime()) {
-      throw GameExceptions.SurpassedMaxCompletionTime(Synonym.NAME, id, synonym.getMaxCompletionTime());
+    if (completionTime > antonyms.getMaxCompletionTime()) {
+      throw GameExceptions.SurpassedMaxCompletionTime(Antonyms.NAME, id, antonyms.getMaxCompletionTime());
     }
-    if (!StringUtils.isEmpty(synonym.getCompletedDate())) {
-      throw GameExceptions.GameIsAlreadySolvedAt(Synonym.NAME, id, synonym.getCompletedDate());
+    if (!StringUtils.isEmpty(antonyms.getCompletedDate())) {
+      throw GameExceptions.GameIsAlreadySolvedAt(Antonyms.NAME, id, antonyms.getCompletedDate());
     }
 
-    boolean areSynonyms;
+    boolean areAntonyms;
     Word mainWord;
     List<Word> words;
     try {
       Word solutionWord = wordProvider.getWordWithValue(solution);
-      words = wordProvider.selectWordsByEntityId(synonym.getId());
+      words = wordProvider.selectWordsByEntityId(antonyms.getId());
       Word found = words.stream()
         .filter(x -> x.getId().equals(solutionWord.getId()))
         .findFirst()
         .orElse(null);
       if (found == null) {
-        throw GameExceptions.UnableToSolve(Synonym.NAME, "Provided word is not associated with this game");
+        throw GameExceptions.UnableToSolve(Antonyms.NAME, "Provided word is not associated with this game");
       }
 
-      String mainWordId = dao.getMainWord(synonym.getId());
+      String mainWordId = dao.getMainWord(antonyms.getId());
       mainWord = wordProvider.selectWordByNode(mainWordId);
       if (mainWord.getId() == null) {
-        throw GameExceptions.FailedToRetrieveWord(Synonym.NAME, mainWordId);
+        throw GameExceptions.FailedToRetrieveWord(Antonyms.NAME, mainWordId);
       }
 
-      areSynonyms = wordProvider.areSynonyms(mainWord, solutionWord);
+      areAntonyms = wordProvider.areAntonyms(mainWord, solutionWord);
 
     } catch (ProviderException e) {
-      throw GameExceptions.UnableToSolve(Synonym.NAME, e);
+      throw GameExceptions.UnableToSolve(Antonyms.NAME, e);
     }
 
-    if (areSynonyms) {
-      synonym.setCompletionTime(completionTime);
-      synonym.setCompletedDate(String.valueOf(System.currentTimeMillis()));
+    if (areAntonyms) {
+      antonyms.setCompletionTime(completionTime);
+      antonyms.setCompletedDate(String.valueOf(System.currentTimeMillis()));
       try {
-        generator.upsertGame(synonym);
+        generator.upsertGame(antonyms);
       } catch (EngineException e) {
-        throw  GameExceptions.GenerationError(Synonym.NAME, e);
+        throw  GameExceptions.GenerationError(Antonyms.NAME, e);
       }
     }
 
     removeWordFromList(mainWord, words);
-    return toResponse(synonym, mainWord, words);
+    return toResponse(antonyms, mainWord, words);
   }
 
   void removeWordFromList(Word toRemove, List<Word> words) {
@@ -291,9 +295,9 @@ public class SynonymSvc implements ISynonymsSvc {
     words.remove(main);
   }
 
-  SynonymResponse toResponse(Synonym synonym, @Nullable Word mainWord, @Nullable List<Word> words) {
-    SynonymResponse response = new SynonymResponse(synonym);
-    response.setSolved(synonym.getCompletedDate() != null);
+  AntonymResponse toResponse(Antonyms antonyms, @Nullable Word mainWord, @Nullable List<Word> words) {
+    AntonymResponse response = new AntonymResponse(antonyms);
+    response.setSolved(antonyms.getCompletedDate() != null);
     if (mainWord != null) {
       response.setWord(mainWord.getValue());
     }

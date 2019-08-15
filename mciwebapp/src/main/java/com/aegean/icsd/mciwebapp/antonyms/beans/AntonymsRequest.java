@@ -1,8 +1,8 @@
-package com.aegean.icsd.mciwebapp.synonym.beans;
+package com.aegean.icsd.mciwebapp.antonyms.beans;
 
 import com.aegean.icsd.mciwebapp.common.beans.Request;
 
-public class SynonymRequest extends Request {
+public class AntonymsRequest extends Request {
 
   private String solution;
 

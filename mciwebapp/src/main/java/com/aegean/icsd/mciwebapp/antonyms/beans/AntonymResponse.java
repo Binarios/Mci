@@ -1,15 +1,15 @@
-package com.aegean.icsd.mciwebapp.synonym.beans;
+package com.aegean.icsd.mciwebapp.antonyms.beans;
 
 import java.util.List;
 
 import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 
-public class SynonymResponse extends ServiceResponse<Synonym> {
+public class AntonymResponse extends ServiceResponse<Antonyms> {
 
   private String word;
   private List<String> choices;
 
-  public SynonymResponse(Synonym game) {
+  public AntonymResponse(Antonyms game) {
     super(game);
   }
 

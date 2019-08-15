@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.synonym.dao;
+package com.aegean.icsd.mciwebapp.synonyms.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -12,7 +12,7 @@ import com.aegean.icsd.ontology.queries.SelectQuery;
 import com.google.gson.JsonArray;
 
 @Repository
-public class SynonymDao implements ISynonymDao {
+public class SynonymsDao implements ISynonymsDao {
 
   @Autowired
   private IOntologyConnector ont;
