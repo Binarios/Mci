@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.synonym.controllers;
+package com.aegean.icsd.mciwebapp.antonyms.controllers;
 
 import java.util.List;
 import java.util.Locale;
@@ -20,34 +20,35 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.mciwebapp.antonyms.beans.AntonymResponse;
+import com.aegean.icsd.mciwebapp.antonyms.interfaces.IAntonymsSvc;
 import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
-import com.aegean.icsd.mciwebapp.synonym.beans.SynonymRequest;
-import com.aegean.icsd.mciwebapp.synonym.beans.SynonymResponse;
-import com.aegean.icsd.mciwebapp.synonym.interfaces.ISynonymsSvc;
+import com.aegean.icsd.mciwebapp.synonyms.beans.SynonymRequest;
+import com.aegean.icsd.mciwebapp.synonyms.beans.SynonymResponse;
 
 /**
- * https://localhost:8443/mci/synonym
+ * https://localhost:8443/mci/antonyms
  */
 @RestController
-@RequestMapping("synonym")
-public class SynonymController {
+@RequestMapping("antonyms")
+public class AntonymsController {
 
-  private static final Logger LOGGER = LogManager.getLogger(SynonymController.class);
+  private static final Logger LOGGER = LogManager.getLogger(AntonymsController.class);
 
   @Autowired
-  private ISynonymsSvc synonymsSvc;
+  private IAntonymsSvc antonymsSvc;
 
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<SynonymResponse>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
+  public Response<List<AntonymResponse>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
                                                   @RequestParam(name = "completed", required = false) Boolean completed,
                                                   @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
 
-    List<SynonymResponse> responses = synonymsSvc.getGames(player);
-    List<SynonymResponse> filtered = FilterResponse.by(responses, difficulty, completed);
+    List<AntonymResponse> responses = antonymsSvc.getGames(player);
+    List<AntonymResponse> filtered = FilterResponse.by(responses, difficulty, completed);
 
     return new Response<>(filtered);
   }
@@ -55,20 +56,20 @@ public class SynonymController {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public Response<SynonymResponse> createGame(@RequestBody SynonymRequest req,
+  public Response<AntonymResponse> createGame(@RequestBody SynonymRequest req,
                                               @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createWordPuzzle request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase(Locale.ENGLISH));
-    SynonymResponse resp = synonymsSvc.createGame(player, dif);
+    AntonymResponse resp = antonymsSvc.createGame(player, dif);
     return new Response<>(resp);
   }
 
   @GetMapping(value = "/{id}",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<SynonymResponse> getGame(@PathVariable("id") String id,
+  public Response<AntonymResponse> getGame(@PathVariable("id") String id,
                                            @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    SynonymResponse obs = synonymsSvc.getGame(id, player);
+    AntonymResponse obs = antonymsSvc.getGame(id, player);
     return new Response<>(obs);
   }
 
@@ -76,10 +77,10 @@ public class SynonymController {
     consumes = MediaType.APPLICATION_JSON_VALUE,
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<SynonymResponse> solveGame(@PathVariable("id") String id,
+  public Response<AntonymResponse> solveGame(@PathVariable("id") String id,
                                              @RequestBody SynonymRequest req,
                                              @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    SynonymResponse response = synonymsSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution());
+    AntonymResponse response = antonymsSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution());
     return new Response<>(response);
   }
 }

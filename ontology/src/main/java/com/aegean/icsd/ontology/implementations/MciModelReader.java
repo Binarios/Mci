@@ -2,10 +2,8 @@ package com.aegean.icsd.ontology.implementations;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
@@ -14,7 +12,6 @@ import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.ontology.OntResource;
 import org.apache.jena.ontology.Restriction;
-import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -310,21 +307,6 @@ public class MciModelReader implements IMciModelReader {
 
   OntClass getOntClass(String className) {
     return this.model.getOntClass(ontologyProps.getNamespace() + className);
-  }
-
-  ParameterizedSparqlString getPrefixedSparql(Map<String, String> prefixes) {
-    Map<String, String> defaultPrefixes = new HashMap<>();
-    defaultPrefixes.put(ontologyProps.getPrefix(), ontologyProps.getNamespace());
-    defaultPrefixes.put("owl", "http://www.w3.org/2002/07/owl#");
-    defaultPrefixes.put("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-    defaultPrefixes.put("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-    defaultPrefixes.put("xsd", "http://www.w3.org/2001/XMLSchema#");
-
-    defaultPrefixes.putAll(prefixes);
-
-    ParameterizedSparqlString sparql = new ParameterizedSparqlString();
-    sparql.setNsPrefixes(defaultPrefixes);
-    return sparql;
   }
 
   @PostConstruct
