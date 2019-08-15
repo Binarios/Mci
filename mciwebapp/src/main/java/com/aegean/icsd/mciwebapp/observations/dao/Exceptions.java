@@ -6,6 +6,8 @@ import com.aegean.icsd.ontology.beans.OntologyException;
 final class Exceptions {
   private static final String CODE_NAME = "OBS.DAO";
 
+  private Exceptions () { }
+
   static MciException FailedToRetrieveWords(String id, OntologyException e) {
     return new MciException(CODE_NAME + "." + 2, String.format("There was a problem when retrieving the words associated to the" +
       "id %s.",id), e);
