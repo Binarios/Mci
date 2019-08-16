@@ -1,5 +1,10 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +17,7 @@ import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.object.beans.Image;
 import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.dao.IObjectsDao;
 import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
 
@@ -28,6 +34,9 @@ public class ObservationProvider implements IObservationProvider {
 
   @Autowired
   private IRules rules;
+
+  @Autowired
+  private IObjectsDao dao;
 
   @Override
   public ObservationObj getObservation(int totalImageNumber) throws ProviderException {
@@ -54,5 +63,31 @@ public class ObservationProvider implements IObservationProvider {
     }
 
     return obs;
+  }
+
+  @Override
+  public ObservationObj getNewObservationFor(String entityName, ObservationObj criteria)
+      throws ProviderException {
+
+    List<String> availableIds = dao.getNewObservationIdsFor(entityName);
+    if (availableIds.isEmpty()) {
+      throw Exceptions.UnableToGenerateObject(ObservationObj.NAME);
+    }
+    ObservationObj availableObject = new ObservationObj();
+    Collections.shuffle(availableIds, new Random(System.currentTimeMillis()));
+    for (String id : availableIds) {
+      ObservationObj cp = copy(criteria);
+      cp.setId(id);
+      try {
+        generator.selectObj(cp);
+      } catch (EngineException e) {
+        throw Exceptions.GenerationError(ObservationObj.NAME, e);
+      }
+      if (cp.getId() != null) {
+        availableObjects.add(cp);
+      }
+    }
+
+    return availableObject;
   }
 }

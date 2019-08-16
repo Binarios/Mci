@@ -109,8 +109,9 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
+  public <T extends BaseGame> List<T> getGamesForPlayer(String playerName, Class<T> gameObjClass)
       throws EngineException {
+    String gameName = ano.getEntityValue(gameObjClass);
     return  dao.getGamesForPlayer(gameName, playerName, gameObjClass);
   }
 

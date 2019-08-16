@@ -21,7 +21,7 @@ public interface IGenerator {
 
   int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException;
 
-  <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
+  <T extends BaseGame> List<T> getGamesForPlayer(String playerName, Class<T> gameObjClass)
       throws EngineException;
 
   <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass)

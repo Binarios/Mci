@@ -1,6 +1,7 @@
 package com.aegean.icsd.mciwebapp.observations.implementations;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -14,15 +15,19 @@ import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.common.implementations.AbstractGameSvc;
 import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
+import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
@@ -30,7 +35,7 @@ import com.aegean.icsd.mciwebapp.observations.dao.IObservationDao;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 
 @Service
-public class ObservationSvc implements IObservationSvc {
+public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResponse> {
 
   private static Logger LOGGER = Logger.getLogger(ObservationSvc.class);
 
@@ -47,47 +52,10 @@ public class ObservationSvc implements IObservationSvc {
   private IObservationProvider observationProvider;
 
   @Autowired
-  private IAnnotationReader ano;
+  private IImageProvider imageProvider;
 
-  @Override
-  public List<ObservationResponse> getGames(String playerName) throws MciException {
-    if (StringUtils.isEmpty(playerName)) {
-      throw GameExceptions.InvalidRequest(Observation.NAME);
-    }
-
-    List<Observation> observations = null;
-    try {
-      observations = generator.getGamesForPlayer(Observation.NAME, playerName, Observation.class);
-    } catch (EngineException e) {
-      throw GameExceptions.FailedToRetrieveGames(Observation.NAME, playerName, e);
-    }
-
-    List<ObservationResponse> res = new ArrayList<>();
-    for (Observation observation : observations) {
-      res.add(toResponse(observation, null, null));
-    }
-    return res;
-  }
-
-  @Override
-  public ObservationResponse getGame(String id, String player) throws MciException {
-    if (StringUtils.isEmpty(id)
-      || StringUtils.isEmpty(player)) {
-      throw GameExceptions.InvalidRequest(Observation.NAME);
-    }
-
-    Observation obs;
-    try {
-      obs = generator.getGameWithId(id, player, Observation.class);
-    } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(Observation.NAME, id, player, e);
-    }
-
-    List<String> chosenWords = dao.getAssociatedSubjects(obs.getId());
-    List<ObservationItem> images = dao.getObservationItems(id);
-
-    return toResponse(obs, images, chosenWords);
-  }
+  @Autowired
+  private IWordProvider wordProvider;
 
   @Override
   public ObservationResponse solveGame(String id, String player, Long completionTime,
@@ -226,6 +194,78 @@ public class ObservationSvc implements IObservationSvc {
   ObservationResponse toResponse(Observation obs, List<ObservationItem> images, List<String> words) {
     ObservationResponse resp = new ObservationResponse(obs);
     resp.setSolved(!StringUtils.isEmpty(obs.getCompletedDate()));
+    if (images != null) {
+      resp.setItems(images);
+    }
+    if (words != null) {
+      resp.setWords(words);
+    }
+    return resp;
+  }
+
+  @Override protected boolean isValid(Object solution) {
+    return false;
+  }
+
+  @Override protected boolean checkSolution(Observation game, Object solution) {
+    return false;
+  }
+
+  @Override
+  protected Map<EntityRestriction, List<BaseGameObject>> getRestrictions(String fullName, Observation toCreate)
+      throws MciException {
+
+    Map<EntityRestriction, List<BaseGameObject>> restrictions = new HashMap<>();
+
+    EntityRestriction totalImages;
+    try {
+      totalImages = rules.getEntityRestriction(fullName, "hasTotalImages");
+    } catch (RulesException e) {
+      throw GameExceptions.UnableToRetrieveGameRules(Observation.NAME, e);
+    }
+
+    EntityRestriction hasObservationRes;
+    try {
+      hasObservationRes = rules.getEntityRestriction(fullName, "hasObservation");
+    } catch (RulesException e) {
+      throw GameExceptions.UnableToRetrieveGameRules(Observation.NAME, e);
+    }
+
+    toCreate.setTotalImages(generator.generateIntDataValue(totalImages.getDataRange()));
+
+    List<BaseGameObject> objects = new ArrayList<>();
+
+    int remaining = toCreate.getTotalImages();
+    for (int i = 0; i < hasObservationRes.getCardinality(); i++) {
+      int nbOfOccurrences;
+      if (remaining < 1) {
+        nbOfOccurrences = 0;
+      } else if (i + 1 >= hasObservationRes.getCardinality()) {
+        nbOfOccurrences = remaining;
+      } else {
+        nbOfOccurrences = ThreadLocalRandom.current().nextInt(0, remaining + 1);
+      }
+      try {
+        ObservationObj criteria = new ObservationObj();
+        criteria.setNbOfImages(nbOfOccurrences);
+        ObservationObj obs = observationProvider.getNewObservationFor(fullName, criteria);
+        objects.add(obs);
+        remaining -= nbOfOccurrences;
+      } catch (ProviderException e) {
+        throw  GameExceptions.GenerationError(Observation.NAME, e);
+      }
+    }
+    restrictions.put(hasObservationRes, objects);
+
+    return restrictions;
+  }
+
+  @Override
+  protected ObservationResponse toResponse(Observation toCreate) throws MciException {
+    ObservationResponse resp = new ObservationResponse(toCreate);
+    resp.setSolved(!StringUtils.isEmpty(toCreate.getCompletedDate()));
+    List<String> words = dao.getAssociatedSubjects(toCreate.getId());
+    List<ObservationItem> images = dao.getObservationItems(toCreate.getId());
     if (images != null) {
       resp.setItems(images);
     }
