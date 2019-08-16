@@ -41,7 +41,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
   private IRules rules;
 
   protected abstract boolean isValid(Object solution);
-  protected abstract boolean checkSolution(T game, Object solution);
+  protected abstract boolean checkSolution(T game, Object solution) throws MciException;
   protected abstract Map<EntityRestriction, List<BaseGameObject>> getRestrictions(String fullName, T toCreate)
       throws MciException;
   protected abstract R toResponse(T toCreate) throws MciException;
@@ -107,10 +107,11 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
     toCreate.setPlayerName(playerName);
     toCreate.setLevel(newLevel);
     toCreate.setDifficulty(difficulty);
+
     try {
       generator.upsertGame(toCreate);
     } catch (EngineException e) {
-      throw GameExceptions.GenerationError(gameName, e);
+      throw GameExceptions.GenerationError(fullName, e);
     }
 
     Map<EntityRestriction, List<BaseGameObject>> restrictions = getRestrictions(fullName, toCreate);

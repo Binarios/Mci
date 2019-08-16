@@ -1,10 +1,9 @@
 package com.aegean.icsd.mciwebapp.synonyms.interfaces;
 
-import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.interfaces.IGameService;
 import com.aegean.icsd.mciwebapp.synonyms.beans.SynonymResponse;
+import com.aegean.icsd.mciwebapp.synonyms.beans.Synonyms;
 
-public interface ISynonymsSvc extends IGameService<SynonymResponse> {
+public interface ISynonymsSvc extends IGameService<Synonyms, SynonymResponse> {
 
-  SynonymResponse solveGame(String id, String player, Long completionTime, String solution) throws MciException;
 }

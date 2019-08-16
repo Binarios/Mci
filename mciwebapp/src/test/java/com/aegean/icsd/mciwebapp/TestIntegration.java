@@ -14,6 +14,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
+import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
@@ -46,7 +47,7 @@ public class TestIntegration {
   public void testObsIns() throws MciException {
     String playerName = "TestUser";
 
-    ObservationResponse obs = observationImpl.createGame(playerName, Difficulty.HARD);
+    ObservationResponse obs = observationImpl.createGame(playerName, Difficulty.HARD, Observation.class);
 
     Assertions.assertNotNull(obs);
     Assertions.assertEquals(playerName, obs.getGame().getPlayerName());

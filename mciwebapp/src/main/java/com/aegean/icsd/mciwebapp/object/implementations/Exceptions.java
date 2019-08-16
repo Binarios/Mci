@@ -32,4 +32,13 @@ final class Exceptions {
     return new ProviderException(CODE_NAME + "." + 6,
       String.format("Unable to generate a new %s", name));
   }
+
+  static ProviderException UnableToGetObject(String message, Throwable t) {
+    return new ProviderException(CODE_NAME + "." + 7, String.format("Unable to get the word with the associated criteria: %s", message), t);
+  }
+
+  static ProviderException UnableToGetObject(String message) {
+    return new ProviderException(CODE_NAME + "." + 8, String.format("Unable to get the word with the associated criteria: %s", message));
+  }
+
 }

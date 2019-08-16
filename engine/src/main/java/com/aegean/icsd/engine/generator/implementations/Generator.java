@@ -50,16 +50,9 @@ public class Generator implements IGenerator {
   private IMciModelReader model;
 
   @Override
-  public void selectObj(Object object) throws EngineException {
-    Map<String, Object> relations = ano.getDataProperties(object);
-    Map<String, Object> existingRelations = dao.selectObject(relations);
-    if (existingRelations == null) {
-      ano.setDataPropertyValue(object, "hasId", null);
-    } else {
-      for (Map.Entry<String, Object> entry : existingRelations.entrySet()) {
-        ano.setDataPropertyValue(object, entry.getKey(), entry.getValue());
-      }
-    }
+  public <T extends BaseGameObject> List<T> selectGameObject(T criteria) throws EngineException {
+    Map<String, Object> relations = ano.getDataProperties(criteria);
+    return (List<T>) dao.selectGameObject(relations, criteria.getClass());
   }
 
   @Override

@@ -57,7 +57,7 @@ public class WordProvider implements IWordProvider {
 
   @Override
   public List<Word> getNewWordsFor(String entityName, int count, Word criteria) throws ProviderException {
-    List<String> availableIds = dao.getNewWordIdsFor(entityName);
+    List<String> availableIds = dao.getNewObjectIdsFor(entityName, Word.class);
     if (availableIds.isEmpty()) {
       throw Exceptions.UnableToGenerateObject(Word.NAME);
     }
@@ -67,18 +67,18 @@ public class WordProvider implements IWordProvider {
       Word cp = copy(criteria);
       cp.setId(id);
       try {
-        generator.selectObj(cp);
+        List<Word> results = generator.selectGameObject(cp);
+        if (!results.isEmpty()) {
+          availableWords.add(results.get(0));
+        }
       } catch (EngineException e) {
         throw Exceptions.GenerationError(Word.NAME, e);
       }
-      if (cp.getId() != null) {
-        availableWords.add(cp);
-      }
-
       if(availableWords.size() == count) {
         break;
       }
     }
+
 
     return availableWords;
   }
@@ -96,35 +96,23 @@ public class WordProvider implements IWordProvider {
     Word word = new Word();
     word.setId(id);
     try {
-      generator.selectObj(word);
+      List<Word> results = generator.selectGameObject(word);
+      return results.get(0);
     } catch (EngineException e) {
       throw Exceptions.UnableToGetWord("node name = " + nodeName, e);
     }
-    return word;
-  }
-
-  @Override
-  public Word selectWordByWordId(String wordId) throws ProviderException {
-    Word word = new Word();
-    word.setId(wordId);
-    try {
-      generator.selectObj(word);
-    } catch (EngineException e) {
-      throw Exceptions.UnableToGetWord("word id  = " + wordId, e);
-    }
-    return word;
   }
 
   @Override
   public List<Word> selectWordsByEntityId(String entityId) throws ProviderException {
-    List<String> ids = dao.getAssociatedWordOfId(entityId);
+    List<String> ids = dao.getAssociatedObjectOfId(entityId, Word.class);
     List<Word> words = new ArrayList<>();
     for (String id : ids) {
       Word word = new Word();
       word.setId(id);
       try {
-        generator.selectObj(word);
-        words.add(word);
+        List<Word> results = generator.selectGameObject(word);
+        words.add(results.get(0));
       } catch (EngineException e) {
         throw Exceptions.UnableToGetWord("entityId = " + entityId, e);
       }
@@ -225,8 +213,8 @@ public class WordProvider implements IWordProvider {
 
   Word getOrUpsertWord(Word word) throws ProviderException {
     try {
-      generator.selectObj(word);
-      if (word.getId() == null) {
+      List<Word> results = generator.selectGameObject(word);
+      if (results.isEmpty()) {
         generator.upsertGameObject(word);
       }
       return word;

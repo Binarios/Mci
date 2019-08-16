@@ -10,5 +10,5 @@ public interface IImageProvider {
 
   List<Image> selectImagesByEntityId(String entityId) throws ProviderException;
 
-  Image getImage() throws ProviderException;
+  List<String> getImageIds() throws ProviderException;
 }

@@ -51,36 +51,48 @@ public class ImageProvider implements IImageProvider {
   @Autowired
   private IMciModelReader model;
 
+
+  @Override
+  public List<String> getImageIds() throws ProviderException {
+    return dao.getObjectIds(Image.class);
+  }
+
+
   @Override
   public Image selectImageByNode(String nodeName) throws ProviderException {
     String id = model.removePrefix(nodeName);
-    Image img = new Image();
-    img.setId(id);
+    Image criteria = new Image();
+    criteria.setId(id);
     try {
-      generator.selectObj(img);
+      List<Image> images = generator.selectGameObject(criteria);
+      if (images.size() != 1) {
+        throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id);
+      }
+      return images.get(0);
     } catch (EngineException e) {
-      throw Exceptions.UnableToGetWord("node name = " + nodeName, e);
+      throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id, e);
     }
-    return img;
   }
 
   @Override
   public List<Image> selectImagesByEntityId(String entityId) throws ProviderException {
-    List<String> ids = dao.getAssociatedImagesOfId(entityId);
+    List<String> ids = dao.getAssociatedObjectOfId(entityId, Image.class);
     List<Image> images = new ArrayList<>();
     for (String id : ids) {
-      Image image = new Image();
-      image.setId(id);
+      Image criteria = new Image();
+      criteria.setId(id);
       try {
-        generator.selectObj(image);
-        images.add(image);
+        List<Image> results = generator.selectGameObject(criteria);
+        if (results.size() != 1) {
+          throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id);
+        }
+        images.add(results.get(0));
       } catch (EngineException e) {
-        throw Exceptions.UnableToGetWord("entityId = " + entityId, e);
+        throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id, e);
       }
     }
     return images;
   }
-
 
   @PostConstruct
   void readImages() throws ProviderException {
@@ -97,21 +109,20 @@ public class ImageProvider implements IImageProvider {
     for (String line : lines) {
       String[] fragments = line.split(config.getDelimiter());
       String url = fragments[config.getUrlIndex()];
-      Image img = new Image();
-      img.setPath(url);
+      Image criteria = new Image();
+      criteria.setPath(url);
       String title = fragments[config.getTitleIndex()];
       String subject = fragments[config.getSubjectIndex()];
-
       try {
-        generator.selectObj(img);
-        if (img.getId() == null) {
-          generator.upsertGameObject(img);
+        List<Image> results = generator.selectGameObject(criteria);
+        if (results.isEmpty()) {
+          generator.upsertGameObject(criteria);
         }
 
         Word titleWord = wordProvider.getWordWithValue(title);
         Word subjectWord = wordProvider.getWordWithValue(subject);
-        generator.createObjRelation(img.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
-        generator.createObjRelation(img.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
+        generator.createObjRelation(criteria.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
+        generator.createObjRelation(criteria.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
       } catch (EngineException e) {
         throw Exceptions.GenerationError(Image.NAME, e);
       }

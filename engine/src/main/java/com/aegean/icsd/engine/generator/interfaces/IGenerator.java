@@ -11,7 +11,7 @@ import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 
 public interface IGenerator {
 
-  void selectObj(Object object) throws EngineException;
+  <T extends BaseGameObject> List<T> selectGameObject(T criteria) throws EngineException;
 
   <T extends BaseGame> String upsertGame(T game) throws EngineException;
 
