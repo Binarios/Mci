@@ -7,6 +7,12 @@ public class EntityProperty {
   private String name;
 
   /**
+   * The name of the parent property
+   */
+  private String parent;
+
+
+  /**
    * The type of the values this property is associated with
    */
   private String range;
@@ -91,5 +97,13 @@ public class EntityProperty {
 
   public void setObjectProperty(boolean objectProperty) {
     this.objectProperty = objectProperty;
+  }
+
+  public String getParent() {
+    return parent;
+  }
+
+  public void setParent(String parent) {
+    this.parent = parent;
   }
 }

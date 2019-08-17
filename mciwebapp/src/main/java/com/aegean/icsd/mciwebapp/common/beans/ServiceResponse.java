@@ -1,5 +1,7 @@
 package com.aegean.icsd.mciwebapp.common.beans;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.aegean.icsd.engine.generator.beans.BaseGame;
 
 public class ServiceResponse<T extends BaseGame> {
@@ -8,17 +10,15 @@ public class ServiceResponse<T extends BaseGame> {
 
   public ServiceResponse(T game) {
     this.game = game;
+    this.solved = !StringUtils.isEmpty(game.getCompletedDate());
   }
 
   public T getGame() {
     return game;
   }
 
-  public boolean isSolved() {
+  public Boolean isSolved() {
     return solved;
   }
 
-  public void setSolved(boolean solved) {
-    this.solved = solved;
-  }
 }

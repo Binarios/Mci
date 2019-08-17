@@ -150,7 +150,6 @@ public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> impl
       throw GameExceptions.GenerationError(Antonyms.NAME, e);
     }
     AntonymResponse response = new AntonymResponse(toCreate);
-    response.setSolved(toCreate.getCompletedDate() != null);
     if (mainWord != null) {
       response.setWord(mainWord.getValue());
     }

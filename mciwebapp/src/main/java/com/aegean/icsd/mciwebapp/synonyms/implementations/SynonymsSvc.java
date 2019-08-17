@@ -156,7 +156,6 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
       throw GameExceptions.GenerationError(Synonyms.NAME, e);
     }
     SynonymResponse response = new SynonymResponse(toCreate);
-    response.setSolved(toCreate.getCompletedDate() != null);
     if (mainWord != null) {
       response.setWord(mainWord.getValue());
     }

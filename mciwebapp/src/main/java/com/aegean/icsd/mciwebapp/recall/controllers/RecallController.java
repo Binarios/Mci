@@ -22,8 +22,10 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
+import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationRequest;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
+import com.aegean.icsd.mciwebapp.recall.beans.Recall;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallRequest;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallResponse;
 import com.aegean.icsd.mciwebapp.recall.interfaces.IRecallSvc;
@@ -43,11 +45,11 @@ public class RecallController {
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<RecallResponse>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
-                                                 @RequestParam(name = "completed", required = false) Boolean completed,
-                                                 @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    List<RecallResponse> responses = recallSvc.getGames(player);
-    List<RecallResponse> filtered = FilterResponse.by(responses, difficulty, completed);
+  public Response<List<ServiceResponse<Recall>>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
+                                                          @RequestParam(name = "completed", required = false) Boolean completed,
+                                                          @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+    List<ServiceResponse<Recall>> responses = recallSvc.getGames(player, Recall.class);
+    List<ServiceResponse<Recall>> filtered = FilterResponse.by(responses, difficulty, completed);
     return new Response<>(filtered);
   }
 
@@ -58,7 +60,7 @@ public class RecallController {
                                              @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createRecall request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
-    RecallResponse resp = recallSvc.createGame(player, dif);
+    RecallResponse resp = recallSvc.createGame(player, dif, Recall.class);
     return new Response<>(resp);
   }
 
@@ -67,7 +69,7 @@ public class RecallController {
   @ResponseStatus(HttpStatus.OK)
   public Response<RecallResponse> getGame(@PathVariable("id") String id,
                                           @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    RecallResponse obs = recallSvc.getGame(id, player);
+    RecallResponse obs = recallSvc.getGame(id, player, Recall.class);
     return new Response<>(obs);
   }
 
@@ -78,7 +80,7 @@ public class RecallController {
   public Response<RecallResponse> solveGame(@PathVariable("id") String id,
                                             @RequestBody RecallRequest req,
                                             @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    RecallResponse response = recallSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution());
+    RecallResponse response = recallSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution(), Recall.class);
     return new Response<>(response);
   }
 }

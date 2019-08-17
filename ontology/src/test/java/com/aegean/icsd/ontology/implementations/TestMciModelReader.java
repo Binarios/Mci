@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.jena.ontology.AllValuesFromRestriction;
 import org.apache.jena.ontology.EnumeratedClass;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
@@ -96,6 +97,9 @@ public class TestMciModelReader {
     String rangeMockName = "Sound";
 
     given(ontPropertyMock.getLocalName()).willReturn(objectPropertyMockName);
+    given(ontPropertyMock.getSuperProperty()).willReturn(ontPropertyMock);
+    given(ontPropertyMock.isAnon()).willReturn(false);
+    given(ontPropertyMock.isOntLanguageTerm()).willReturn(false);
     given(ontPropertyMock.isObjectProperty()).willReturn(true);
     given(ontPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
@@ -116,6 +120,9 @@ public class TestMciModelReader {
     String rangeMockName = "xsd:integer";
 
     given(ontPropertyMock.getLocalName()).willReturn(propertyMockName);
+    given(ontPropertyMock.getSuperProperty()).willReturn(ontPropertyMock);
+    given(ontPropertyMock.isAnon()).willReturn(false);
+    given(ontPropertyMock.isOntLanguageTerm()).willReturn(false);
     given(ontPropertyMock.isObjectProperty()).willReturn(false);
     given(ontPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
@@ -139,6 +146,9 @@ public class TestMciModelReader {
     String rangeMockName = "testEnum";
 
     given(ontPropertyMock.getLocalName()).willReturn(propertyMockName);
+    given(ontPropertyMock.getSuperProperty()).willReturn(ontPropertyMock);
+    given(ontPropertyMock.isAnon()).willReturn(false);
+    given(ontPropertyMock.isOntLanguageTerm()).willReturn(false);
     given(ontPropertyMock.isObjectProperty()).willReturn(false);
     given(ontPropertyMock.getRange()).willReturn(resourceMock);
     given(resourceMock.asClass()).willReturn(ontClassMock);
@@ -193,8 +203,13 @@ public class TestMciModelReader {
 
   @Test
   public void testGenerateAllValuesRestrictions() throws OntologyException {
+    AllValuesFromRestriction allValMock = mock(AllValuesFromRestriction.class);
     given(resMock.getOnProperty()).willReturn(ontPropertyMock);
     given(resMock.isAllValuesFromRestriction()).willReturn(true);
+    given(resMock.asAllValuesFromRestriction()).willReturn(allValMock);
+    given(allValMock.getAllValuesFrom()).willReturn(resourceMock);
+    given(resourceMock.getLocalName()).willReturn("asdf");
+
 
     Mockito.doReturn(new PropertySchema()).when(model).getPropertySchema(ontPropertyMock);
 
