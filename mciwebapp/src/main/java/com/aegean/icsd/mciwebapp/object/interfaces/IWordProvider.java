@@ -14,7 +14,7 @@ public interface IWordProvider {
 
   Word selectWordByNode(String nodeName) throws ProviderException;
 
-  Word selectWordByWordId(String wordId) throws ProviderException;
+  Word selectWordById(String wordId) throws ProviderException;
 
   List<Word> selectWordsByEntityId(String entityId) throws ProviderException;
 

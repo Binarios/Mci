@@ -13,6 +13,7 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
@@ -37,9 +38,9 @@ public class GeneratorDao implements IGeneratorDao {
   private IAnnotationReader ano;
 
   @Override
-  public Map<String, Object> selectObject(Map<String, Object> relations) throws EngineException {
+  public <T extends BaseGameObject> List<T> selectGameObject(Map<String, Object> relations, Class<T> aClass) throws EngineException {
     SelectQuery.Builder qBuilder = new SelectQuery.Builder()
-      .select("p", "o");
+      .select("s", "p", "o");
 
     int i = 0;
     for (Map.Entry<String, Object> entry : relations.entrySet()) {
@@ -62,21 +63,22 @@ public class GeneratorDao implements IGeneratorDao {
       }
       i++;
     }
-    qBuilder.where("s", "p", "o");
+    qBuilder.where("s", "p", "o")
+      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "");
 
     try {
-      JsonArray result = ontology.select(qBuilder.build());
-      Map<String, Object> existingRelations = null;
-      if (result.size() != 0) {
-        existingRelations = new HashMap<>();
-        for (JsonElement element : result) {
-          JsonObject obj = element.getAsJsonObject();
-          String dataProperty = model.removePrefix(obj.get("p").getAsString());
-          String value = model.removePrefix(obj.get("o").getAsString());
-          existingRelations.put(dataProperty, value);
+      JsonArray results = ontology.select(qBuilder.build());
+      List<T> objects = new ArrayList<>();
+      Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
+      for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
+        try {
+          T object = mapJsonToObject(entry.getValue(), aClass);
+          objects.add(object);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+          throw DaoExceptions.ConstructorNotFound(aClass.getSimpleName(), e);
         }
       }
-      return existingRelations;
+      return objects;
     } catch (OntologyException e) {
       throw DaoExceptions.SelectObjectQuery("No extra msg", e);
     }

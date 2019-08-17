@@ -22,6 +22,8 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
+import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
+import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationRequest;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
@@ -41,11 +43,11 @@ public class ObservationsController {
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<ObservationResponse>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
-                                                      @RequestParam(name = "completed", required = false) Boolean completed,
-                                                      @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    List<ObservationResponse> responses = observationImpl.getGames(player);
-    List<ObservationResponse> filtered = FilterResponse.by(responses, difficulty, completed);
+  public Response<List<ServiceResponse<Observation>>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
+                                                  @RequestParam(name = "completed", required = false) Boolean completed,
+                                                  @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+    List<ServiceResponse<Observation>> responses = observationImpl.getGames(player, Observation.class);
+    List<ServiceResponse<Observation>> filtered = FilterResponse.by(responses, difficulty, completed);
     return new Response<>(filtered);
   }
 
@@ -56,7 +58,7 @@ public class ObservationsController {
                                                   @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createObservation request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
-    ObservationResponse resp = observationImpl.createGame(player, dif);
+    ObservationResponse resp = observationImpl.createGame(player, dif, Observation.class);
     return new Response<>(resp);
   }
 
@@ -65,7 +67,7 @@ public class ObservationsController {
   @ResponseStatus(HttpStatus.OK)
   public Response<ObservationResponse> getGame(@PathVariable("id") String id,
                                                @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    ObservationResponse obs = observationImpl.getGame(id, player);
+    ObservationResponse obs = observationImpl.getGame(id, player, Observation.class);
     return new Response<>(obs);
   }
 
@@ -76,7 +78,7 @@ public class ObservationsController {
   public Response<ObservationResponse> solveGame(@PathVariable("id") String id,
                                                  @RequestBody ObservationRequest req,
                                                  @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    ObservationResponse response = observationImpl.solveGame(id, player, req.getCompletionTime(), req.getSolution());
+    ObservationResponse response = observationImpl.solveGame(id, player, req.getCompletionTime(), req.getSolution(), Observation.class);
     return new Response<>(response);
   }
 }

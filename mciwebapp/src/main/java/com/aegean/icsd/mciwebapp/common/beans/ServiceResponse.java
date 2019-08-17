@@ -6,7 +6,7 @@ public class ServiceResponse<T extends BaseGame> {
   private T game;
   private Boolean solved;
 
-  protected ServiceResponse(T game) {
+  public ServiceResponse(T game) {
     this.game = game;
   }
 

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -30,7 +31,7 @@ public class AnnotationReader implements IAnnotationReader {
 
   @Override
   public String setEntityId(Object object) throws EngineException {
-    String objName = getEntityValue(object);
+    String objName = getEntityValue(object.getClass());
     LOGGER.debug(String.format("Setting Entity ID for object %s", objName));
     List<String> keys = new LinkedList<>();
     Field idField = null;
@@ -63,12 +64,12 @@ public class AnnotationReader implements IAnnotationReader {
   }
 
   @Override
-  public String getEntityValue(Object object) throws EngineException {
+  public String getEntityValue(Class<?> objectClass) throws EngineException {
     LOGGER.debug("Reading object entity name");
-    if (!object.getClass().isAnnotationPresent(Entity.class)) {
+    if (!objectClass.isAnnotationPresent(Entity.class)) {
       throw Exceptions.UnableToReadAnnotation(Entity.class.getSimpleName());
     }
-    Entity entityAno = object.getClass().getAnnotation(Entity.class);
+    Entity entityAno = objectClass.getAnnotation(Entity.class);
     return entityAno.value();
   }
 
@@ -182,9 +183,18 @@ public class AnnotationReader implements IAnnotationReader {
 
   List<Field> getTotalFields (Object object) {
     //Arrays.asList returns an unmodifiable List. That is why we create a new one
-    List<Field> totalFields = new ArrayList<>(Arrays.asList(object.getClass().getSuperclass().getDeclaredFields()));
     List<Field> derivedClassFields = new ArrayList<>(Arrays.asList(object.getClass().getDeclaredFields()));
-    totalFields.addAll(derivedClassFields);
-    return totalFields;
+    List<Field> superFields = new ArrayList<>(Arrays.asList(object.getClass().getSuperclass().getDeclaredFields()));
+
+    superFields.removeIf(superField -> {
+      List<String> shadowed = derivedClassFields.stream()
+        .filter(derivedField -> derivedField.getName().equals(superField.getName()))
+        .map(Field::getName)
+        .collect(Collectors.toList());
+      return shadowed.contains(superField.getName());
+    });
+
+    derivedClassFields.addAll(superFields);
+    return derivedClassFields;
   }
 }

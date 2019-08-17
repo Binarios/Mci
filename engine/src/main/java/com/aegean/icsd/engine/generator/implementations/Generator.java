@@ -50,23 +50,16 @@ public class Generator implements IGenerator {
   private IMciModelReader model;
 
   @Override
-  public void selectObj(Object object) throws EngineException {
-    Map<String, Object> relations = ano.getDataProperties(object);
-    Map<String, Object> existingRelations = dao.selectObject(relations);
-    if (existingRelations == null) {
-      ano.setDataPropertyValue(object, "hasId", null);
-    } else {
-      for (Map.Entry<String, Object> entry : existingRelations.entrySet()) {
-        ano.setDataPropertyValue(object, entry.getKey(), entry.getValue());
-      }
-    }
+  public <T extends BaseGameObject> List<T> selectGameObject(T criteria) throws EngineException {
+    Map<String, Object> relations = ano.getDataProperties(criteria);
+    return (List<T>) dao.selectGameObject(relations, criteria.getClass());
   }
 
   @Override
   public <T extends BaseGame> String upsertGame(T game) throws EngineException {
     LOGGER.debug("Upserting new Game");
     String id = ano.setEntityId(game);
-    String gameName = ano.getEntityValue(game);
+    String gameName = ano.getEntityValue(game.getClass());
     String fullName = Utils.getFullGameName(gameName, game.getDifficulty());
     return upsertObject(fullName, game);
   }
@@ -74,7 +67,7 @@ public class Generator implements IGenerator {
   @Override
   public <T extends BaseGameObject> String upsertGameObject(T object) throws EngineException {
     LOGGER.debug("Upserting new Object");
-    String name = ano.getEntityValue(object);
+    String name = ano.getEntityValue(object.getClass());
     return upsertObject(name, object);
   }
 
@@ -109,8 +102,9 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
+  public <T extends BaseGame> List<T> getGamesForPlayer(String playerName, Class<T> gameObjClass)
       throws EngineException {
+    String gameName = ano.getEntityValue(gameObjClass);
     return  dao.getGamesForPlayer(gameName, playerName, gameObjClass);
   }
 

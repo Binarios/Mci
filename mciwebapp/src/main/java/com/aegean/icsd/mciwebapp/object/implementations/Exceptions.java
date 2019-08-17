@@ -5,6 +5,8 @@ import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 final class Exceptions {
   private final static String CODE_NAME = "OP";
 
+  private Exceptions() { }
+
   static ProviderException UnableToGetWord(String criteria, Throwable t) {
     return new ProviderException(CODE_NAME + "." + 1, String.format("Unable to get the word with the associated criteria: %s", criteria), t);
   }
@@ -32,4 +34,13 @@ final class Exceptions {
     return new ProviderException(CODE_NAME + "." + 6,
       String.format("Unable to generate a new %s", name));
   }
+
+  static ProviderException UnableToGetObject(String message, Throwable t) {
+    return new ProviderException(CODE_NAME + "." + 7, String.format("Unable to get the word with the associated criteria: %s", message), t);
+  }
+
+  static ProviderException UnableToGetObject(String message) {
+    return new ProviderException(CODE_NAME + "." + 8, String.format("Unable to get the word with the associated criteria: %s", message));
+  }
+
 }
