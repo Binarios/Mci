@@ -1,6 +1,9 @@
 package com.aegean.icsd.mciwebapp.object.implementations;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -51,44 +54,66 @@ public class ObservationProvider implements IObservationProvider {
       throw Exceptions.UnableToRetrieveRules(ObservationObj.NAME, e);
     }
 
-    ObservationObj criteria = new ObservationObj();
-    criteria.setNbOfImages(imageTotalNb);
-    List<ObservationObj> existing;
-    try {
-      existing = generator.selectGameObject(criteria);
-    } catch (EngineException e) {
-      throw Exceptions.GenerationError(ObservationObj.NAME, e);
-    }
-
+    ObservationObj toCreate = null;
     List<String> imageIds = imageProvider.getImageIds();
-    ObservationObj obs = null;
-    String newImageId = null;
+    Collections.shuffle(imageIds, new Random(System.currentTimeMillis()));
     for (String imageId : imageIds) {
-      ObservationObj found = existing.stream()
-        .filter(obj -> imageId.equals(obj.getId()))
-        .findFirst()
-        .orElse(null);
-
-      if (found == null) {
-        obs = new ObservationObj();
-        obs.setNbOfImages(totalImageNumber);
-        newImageId = imageId;
-        break;
+      List<String> associatedObsObjIds = dao.getIdAssociatedWithOtherOnProperty(imageId, imageRes.getOnProperty());
+      if (associatedObsObjIds.isEmpty()) {
+        toCreate = new ObservationObj();
+        toCreate.setNbOfImages(imageTotalNb);
+        try {
+          generator.upsertGameObject(toCreate);
+          generator.createObjRelation(toCreate.getId(), imageRes.getOnProperty(), imageId);
+          break;
+        } catch (EngineException e) {
+          throw Exceptions.GenerationError(ObservationObj.NAME, e);
+        }
+      } else {
+        for (String id : associatedObsObjIds) {
+          ObservationObj criteria = new ObservationObj();
+          criteria.setNbOfImages(imageTotalNb);
+          criteria.setId(id);
+          try {
+            List<ObservationObj> objs = generator.selectGameObject(criteria);
+            if (objs.isEmpty()) {
+              toCreate = new ObservationObj();
+              toCreate.setNbOfImages(imageTotalNb);
+              generator.upsertGameObject(toCreate);
+              generator.createObjRelation(toCreate.getId(), imageRes.getOnProperty(), imageId);
+            } else {
+              toCreate = objs.get(0);
+            }
+            break;
+          } catch (EngineException e) {
+            throw Exceptions.GenerationError(ObservationObj.NAME, e);
+          }
+        }
+        if (toCreate == null) {
+          throw Exceptions.UnableToGetObject(String.format("Found association with imageId %s," +
+            "but could not select the observationObj associated with", imageId));
+        }
       }
     }
 
-    if (obs == null || StringUtils.isEmpty(newImageId)) {
-      throw Exceptions.UnableToGenerateObject(ObservationObj.NAME);
-    }
+    return toCreate;
+  }
 
-    try {
-      generator.upsertGameObject(obs);
-      generator.createObjRelation(obs.getId(), imageRes.getOnProperty(), newImageId);
-    } catch (EngineException e) {
-      throw Exceptions.GenerationError(ObservationObj.NAME, e);
+  @Override
+  public List<ObservationObj> selectObservationObjByEntityId(String entityId) throws ProviderException {
+    List<String> ids = dao.getAssociatedObjectOfId(entityId, ObservationObj.class);
+    List<ObservationObj> observationObjs = new ArrayList<>();
+    for (String id : ids) {
+      ObservationObj obj = new ObservationObj();
+      obj.setId(id);
+      try {
+        List<ObservationObj> results = generator.selectGameObject(obj);
+        observationObjs.add(results.get(0));
+      } catch (EngineException e) {
+        throw Exceptions.UnableToGetObject("entityId = " + entityId, e);
+      }
     }
-
-    return obs;
+    return observationObjs;
   }
 
 }

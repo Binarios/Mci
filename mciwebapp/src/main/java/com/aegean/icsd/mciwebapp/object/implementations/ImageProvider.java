@@ -2,6 +2,7 @@ package com.aegean.icsd.mciwebapp.object.implementations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -94,6 +95,18 @@ public class ImageProvider implements IImageProvider {
     return images;
   }
 
+  @Override
+  public String selectAssociatedSubject(String imageId) throws ProviderException {
+    EntityRestriction imageSubjRes;
+    try {
+      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasImageSubject");
+    } catch (RulesException e) {
+      throw Exceptions.GenerationError(Image.NAME, e);
+    }
+    List<String> wordId = dao.getAssociatedIdOnProperty(imageId, imageSubjRes.getOnProperty(), Word.class);
+    return wordId.get(0);
+  }
+
   @PostConstruct
   void readImages() throws ProviderException {
     List<String> lines = fileProvider.getLines(config.getLocation() + "/" + config.getFilename());
@@ -114,18 +127,31 @@ public class ImageProvider implements IImageProvider {
       String title = fragments[config.getTitleIndex()];
       String subject = fragments[config.getSubjectIndex()];
       try {
-        List<Image> results = generator.selectGameObject(criteria);
-        if (results.isEmpty()) {
-          generator.upsertGameObject(criteria);
-        }
-
+        Image image = getOrUpsertImage(criteria);
         Word titleWord = wordProvider.getWordWithValue(title);
         Word subjectWord = wordProvider.getWordWithValue(subject);
-        generator.createObjRelation(criteria.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
-        generator.createObjRelation(criteria.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
+        generator.createObjRelation(image.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
+        generator.createObjRelation(image.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
       } catch (EngineException e) {
         throw Exceptions.GenerationError(Image.NAME, e);
       }
+    }
+  }
+
+  Image getOrUpsertImage(Image image) throws ProviderException {
+    try {
+      List<Image> results = generator.selectGameObject(image);
+      if (results.isEmpty()) {
+        generator.upsertGameObject(image);
+        return image;
+      } else {
+        List<Image> found = results.stream()
+          .filter(x -> x.getPath().equals(image.getPath()))
+          .collect(Collectors.toList());
+        return found.get(0);
+      }
+    } catch (EngineException e) {
+      throw Exceptions.GenerationError(Word.NAME, e);
     }
   }
 }

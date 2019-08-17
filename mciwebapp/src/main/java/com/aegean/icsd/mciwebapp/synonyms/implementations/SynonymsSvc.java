@@ -1,10 +1,7 @@
 package com.aegean.icsd.mciwebapp.synonyms.implementations;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -13,7 +10,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
@@ -40,6 +37,9 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
 
   @Autowired
   private ISynonymsDao dao;
+
+  @Autowired
+  private IGenerator generator;
 
   @Override
   protected boolean isValid(Object solution) {
@@ -76,8 +76,8 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
   }
 
   @Override
-  protected Map<EntityRestriction, List<BaseGameObject>> getRestrictions(String fullName, Synonyms toCreate) throws MciException {
-    Map<EntityRestriction, List<BaseGameObject>> restrictions = new HashMap<>();
+  protected void handleRestrictions(String fullName, Synonyms toCreate) throws MciException {
+
     EntityRestriction hasMainWordRes;
     try {
       hasMainWordRes = rules.getEntityRestriction(fullName, "hasMainWord");
@@ -95,6 +95,15 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
     Word criteria = new Word();
     criteria.setSynonym(true);
 
+    Word mainWord;
+    try {
+      List<Word> mainWords = wordProvider.getNewWordsFor(fullName, hasMainWordRes.getCardinality(), criteria);
+      mainWord = mainWords.get(hasMainWordRes.getCardinality() - 1);
+      createObjRelation(toCreate, mainWords, hasMainWordRes.getOnProperty());
+    } catch (ProviderException e) {
+      throw GameExceptions.GenerationError(Synonyms.NAME, e);
+    }
+
     List<Word> words;
     try {
       words = wordProvider.getNewWordsFor(fullName, hasWordRes.getCardinality(), criteria);
@@ -106,13 +115,6 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
       throw GameExceptions.GenerationError(Synonyms.NAME, "No words are available for this level");
     }
 
-    Collections.shuffle(words, new Random(System.currentTimeMillis()));
-    Word mainWord = words.remove(0);
-
-    List<BaseGameObject> hasMainWordResObjs = new ArrayList<>();
-    hasMainWordResObjs.add(mainWord);
-    restrictions.put(hasMainWordRes, hasMainWordResObjs);
-
     List<Word> relatedWords;
     try {
       relatedWords = wordProvider.selectWordsByEntityId(mainWord.getId());
@@ -120,44 +122,26 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
       throw GameExceptions.GenerationError(Synonyms.NAME, e);
     }
 
-    Word antonym = relatedWords.stream()
-      .filter(x -> x.isSynonym() != null && x.isSynonym())
+    words.removeIf(x -> x.getId().equals(mainWord.getId()));
+    List<Word> existing = words.stream()
       .filter(x -> {
-        Word found = words.stream()
+        List<Word> found = relatedWords.stream()
           .filter(y -> y.getId().equals(x.getId()))
-          .findFirst()
-          .orElse(null);
-        return found == null;
-      })
-      .findFirst()
-      .orElse(null);
-
-    if (antonym == null) {
-      //means already exists in the word list. In that case we just get a new word.
-      try {
-        List<Word> existing = words.stream()
-          .filter(x->{
-            Word found = relatedWords.stream()
-              .filter(y -> y.getId().equals(x.getId()))
-              .findFirst()
-              .orElse(null);
-            return found != null;
-          })
           .collect(Collectors.toList());
-        words.removeAll(existing);
-        int nb = hasWordRes.getCardinality() - words.size();
-        List<Word> newWords = wordProvider.getNewWordsFor(fullName, nb, criteria);
-        words.addAll(newWords);
-      } catch (ProviderException e) {
-        throw GameExceptions.GenerationError(Synonyms.NAME, e);
-      }
+        return x.isSynonym() != null && x.isSynonym() && !found.isEmpty();
+      })
+      .collect(Collectors.toList());
+
+    if (!existing.isEmpty()) {
+      createObjRelation(toCreate, words, hasWordRes.getOnProperty());
+    } else {
+      Collections.shuffle(relatedWords, new Random(System.currentTimeMillis()));
+      Collections.shuffle(words, new Random(System.currentTimeMillis()));
+      Word relatedWord = relatedWords.get(0);
+      words.remove(0);
+      words.add(relatedWord);
+      createObjRelation(toCreate, words, hasWordRes.getOnProperty());
     }
-
-    List<BaseGameObject> hasWordResObjs = new ArrayList<>();
-    hasWordResObjs.addAll(words);
-    restrictions.put(hasMainWordRes, hasWordResObjs);
-
-    return restrictions;
   }
 
   @Override
@@ -183,6 +167,10 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
     return response;
   }
 
+  @Override
+  protected void handleDataTypeRestrictions(String fullName, Synonyms toCreate) throws MciException {
+    return;
+  }
   void removeWordFromList(Word toRemove, List<Word> words) {
     Word main = words.stream()
       .filter(x -> x.getId().equals(toRemove.getId()))

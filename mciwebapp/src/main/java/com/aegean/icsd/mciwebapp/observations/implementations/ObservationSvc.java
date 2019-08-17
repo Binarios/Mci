@@ -1,7 +1,6 @@
 package com.aegean.icsd.mciwebapp.observations.implementations;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -11,8 +10,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aegean.icsd.engine.common.beans.EngineException;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
@@ -20,9 +17,13 @@ import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.implementations.AbstractGameSvc;
+import com.aegean.icsd.mciwebapp.object.beans.Image;
 import com.aegean.icsd.mciwebapp.object.beans.ObservationObj;
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
+import com.aegean.icsd.mciwebapp.object.beans.Word;
+import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
 import com.aegean.icsd.mciwebapp.object.interfaces.IObservationProvider;
+import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationItem;
 import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
@@ -46,9 +47,15 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
   @Autowired
   private IObservationProvider observationProvider;
 
+  @Autowired
+  private IImageProvider imageProvider;
+
+  @Autowired
+  private IWordProvider wordProvider;
+
   @Override
   protected boolean isValid(Object solution) {
-    return ((Map)solution).isEmpty();
+    return !((Map)solution).isEmpty();
   }
 
   @Override
@@ -62,17 +69,8 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
   }
 
   @Override
-  protected Map<EntityRestriction, List<BaseGameObject>> getRestrictions(String fullName, Observation toCreate)
+  protected void handleRestrictions(String fullName, Observation toCreate)
       throws MciException {
-
-    Map<EntityRestriction, List<BaseGameObject>> restrictions = new HashMap<>();
-
-    EntityRestriction totalImages;
-    try {
-      totalImages = rules.getEntityRestriction(fullName, "hasTotalImages");
-    } catch (RulesException e) {
-      throw GameExceptions.UnableToRetrieveGameRules(Observation.NAME, e);
-    }
 
     EntityRestriction hasObservationRes;
     try {
@@ -81,15 +79,7 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
       throw GameExceptions.UnableToRetrieveGameRules(Observation.NAME, e);
     }
 
-    toCreate.setTotalImages(generator.generateIntDataValue(totalImages.getDataRange()));
-
-    try {
-      generator.upsertGame(toCreate);
-    } catch (EngineException e) {
-      throw GameExceptions.GenerationError(fullName, e);
-    }
-
-    List<BaseGameObject> objects = new ArrayList<>();
+    List<ObservationObj> objects = new ArrayList<>();
 
     int remaining = toCreate.getTotalImages();
     for (int i = 0; i < hasObservationRes.getCardinality(); i++) {
@@ -109,23 +99,45 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
         throw  GameExceptions.GenerationError(Observation.NAME, e);
       }
     }
-    restrictions.put(hasObservationRes, objects);
 
-    return restrictions;
+    createObjRelation(toCreate, objects, hasObservationRes.getOnProperty());
   }
 
   @Override
   protected ObservationResponse toResponse(Observation toCreate) throws MciException {
     ObservationResponse resp = new ObservationResponse(toCreate);
     resp.setSolved(!StringUtils.isEmpty(toCreate.getCompletedDate()));
-    List<String> words = dao.getAssociatedSubjects(toCreate.getId());
-    List<ObservationItem> images = dao.getObservationItems(toCreate.getId());
-    if (images != null) {
-      resp.setItems(images);
+    List<String> words = new ArrayList<>();
+    List<ObservationItem> items = new ArrayList<>();
+    try {
+      List<ObservationObj> observationObjs = observationProvider.selectObservationObjByEntityId(toCreate.getId());
+      for (ObservationObj obj : observationObjs) {
+        ObservationItem item = new ObservationItem();
+        item.setTotalInstances(obj.getNbOfImages());
+        List<Image> associatedImages = imageProvider.selectImagesByEntityId(obj.getId());
+        item.setImage(associatedImages.get(0).getPath());
+        String subjectId = imageProvider.selectAssociatedSubject(associatedImages.get(0).getId());
+        Word associatedWord = wordProvider.selectWordById(subjectId);
+
+        words.add(associatedWord.getValue());
+        items.add(item);
+      }
+    } catch (ProviderException e) {
+      throw GameExceptions.GenerationError(toCreate.getId(), "Error when constructing the response");
     }
-    if (words != null) {
-      resp.setWords(words);
-    }
+    resp.setWords(words);
+    resp.setItems(items);
     return resp;
+  }
+
+  @Override
+  protected void handleDataTypeRestrictions(String fullName, Observation toCreate) throws MciException {
+    EntityRestriction totalImages;
+    try {
+      totalImages = rules.getEntityRestriction(fullName, "hasTotalImages");
+      toCreate.setTotalImages(generator.generateIntDataValue(totalImages.getDataRange()));
+    } catch (RulesException e) {
+      throw GameExceptions.UnableToRetrieveGameRules(Observation.NAME, e);
+    }
   }
 }

@@ -14,6 +14,8 @@ public interface IWordProvider {
 
   Word selectWordByNode(String nodeName) throws ProviderException;
 
+  Word selectWordById(String wordId) throws ProviderException;
+
   List<Word> selectWordsByEntityId(String entityId) throws ProviderException;
 
   boolean areSynonyms(Word thisWord, Word otherWord) throws ProviderException;

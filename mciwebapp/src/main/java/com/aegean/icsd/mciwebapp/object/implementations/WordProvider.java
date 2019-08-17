@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -79,6 +80,9 @@ public class WordProvider implements IWordProvider {
       }
     }
 
+    if(availableWords.size() != count) {
+      throw Exceptions.UnableToGetObject(String.format("Unable to find %s new words for %s", count, entityName));
+    }
 
     return availableWords;
   }
@@ -93,13 +97,18 @@ public class WordProvider implements IWordProvider {
   @Override
   public Word selectWordByNode(String nodeName) throws ProviderException {
     String id = model.removePrefix(nodeName);
+   return selectWordById(id);
+  }
+
+  @Override
+  public Word selectWordById(String wordId) throws ProviderException {
     Word word = new Word();
-    word.setId(id);
+    word.setId(wordId);
     try {
       List<Word> results = generator.selectGameObject(word);
       return results.get(0);
     } catch (EngineException e) {
-      throw Exceptions.UnableToGetWord("node name = " + nodeName, e);
+      throw Exceptions.UnableToGetWord("id = " + wordId, e);
     }
   }
 
@@ -174,7 +183,7 @@ public class WordProvider implements IWordProvider {
       if (antonymWord.getId() != null) {
         try {
           generator.createObjRelation(value.getId(), antonymRes.getOnProperty(), antonymWord.getId());
-          if (!value.isAntonym()) {
+          if (value.isAntonym() == null || !value.isAntonym()) {
             value.setAntonym(true);
             generator.upsertGameObject(value);
           }
@@ -195,12 +204,12 @@ public class WordProvider implements IWordProvider {
 
     for (String synonym : synonyms) {
       Word synonymWord = toWord(synonym);
-      synonymWord.setAntonym(true);
-      getOrUpsertWord(synonymWord);
+      synonymWord.setSynonym(true);
+      synonymWord = getOrUpsertWord(synonymWord);
       if (synonymWord.getId() != null) {
         try {
           generator.createObjRelation(value.getId(), synonymRes.getOnProperty(), synonymWord.getId());
-          if (!value.isSynonym()) {
+          if (value.isSynonym() == null || !value.isSynonym()) {
             value.setSynonym(true);
             generator.upsertGameObject(value);
           }
@@ -216,8 +225,13 @@ public class WordProvider implements IWordProvider {
       List<Word> results = generator.selectGameObject(word);
       if (results.isEmpty()) {
         generator.upsertGameObject(word);
+        return word;
+      } else {
+        List<Word> found = results.stream()
+          .filter(x -> x.getValue().equals(word.getValue()))
+          .collect(Collectors.toList());
+        return found.get(0);
       }
-      return word;
     } catch (EngineException e) {
       throw Exceptions.GenerationError(Word.NAME, e);
     }

@@ -4,6 +4,7 @@ package com.aegean.icsd.mciwebapp.object.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -75,10 +76,11 @@ public class ObjectsDao implements IObjectsDao {
 
     SelectQuery q = new SelectQuery.Builder()
       .select("objId")
+      .setDistinct(true)
       .whereHasType("s", model.getPrefixedEntity(forEntity))
       .whereHasType("obj", model.getPrefixedEntity(objectName))
       .where("obj", "hasId", "objId")
-      .minus("s", "p", "word")
+      .minus("s", "p", "obj")
       .addIriParam("hasId", model.getPrefixedEntity("hasId"))
       .build();
 
@@ -128,11 +130,46 @@ public class ObjectsDao implements IObjectsDao {
   }
 
   @Override
+  public <T extends BaseGameObject> List<String> getAssociatedIdOnProperty(String id, EntityProperty onProperty, Class<T> object) throws ProviderException {
+    String objectName;
+    try {
+      objectName = ano.getEntityValue(object);
+    } catch (EngineException e) {
+      throw Exceptions.FailedToRetrieveObjects(object.getSimpleName(), e);
+    }
+
+    SelectQuery.Builder qBuilder = new SelectQuery.Builder()
+      .select("associatedId")
+      .where("s", "p", "id")
+      .where("s", onProperty.getName(), "obJ")
+      .whereHasType("obJ",  model.getPrefixedEntity(objectName))
+      .where("obJ", "hasId", "associatedId")
+      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
+      .addIriParam(onProperty.getName(), model.getPrefixedEntity(onProperty.getName()));
+
+
+    if (!StringUtils.isEmpty(id)) {
+      qBuilder.addLiteralParam("id", id);
+    }
+
+    try {
+      JsonArray results = ont.select(qBuilder.build());
+      List<String> ids = new ArrayList<>();
+      for (JsonElement result : results) {
+        ids.add(result.getAsJsonObject().get("associatedId").getAsString());
+      }
+      return ids;
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToRetrieveObjects(id, e);
+    }
+  }
+
+  @Override
   public List<String> getIdAssociatedWithOtherOnProperty(String otherId, EntityProperty onProperty) throws ProviderException {
     SelectQuery q = new SelectQuery.Builder()
       .select("thisId")
       .where("thisObj", "hasId", "thisId")
-      .where("thisId", onProperty.getName(), "otherObj")
+      .where("thisObj", onProperty.getName(), "otherObj")
       .where("otherObj", "hasId", "otherId")
       .addIriParam(onProperty.getName(), model.getPrefixedEntity(onProperty.getName()))
       .addIriParam("hasId", model.getPrefixedEntity("hasId"))
@@ -141,9 +178,6 @@ public class ObjectsDao implements IObjectsDao {
 
     try {
       JsonArray results = ont.select(q);
-      if (results.size() == 0) {
-        throw Exceptions.FailedToRetrieveObjects("associated object");
-      }
       List<String> ids = new ArrayList<>();
       for (JsonElement elem : results) {
         ids.add(elem.getAsJsonObject().get("thisId").getAsString());

@@ -16,6 +16,7 @@ import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
 import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
@@ -23,7 +24,6 @@ import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 import com.aegean.icsd.mciwebapp.common.interfaces.IGameService;
-import com.aegean.icsd.mciwebapp.observations.beans.Observation;
 import com.aegean.icsd.mciwebapp.synonyms.beans.Synonyms;
 
 public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResponse<T>>
@@ -42,7 +42,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
 
   protected abstract boolean isValid(Object solution);
   protected abstract boolean checkSolution(T game, Object solution) throws MciException;
-  protected abstract Map<EntityRestriction, List<BaseGameObject>> getRestrictions(String fullName, T toCreate)
+  protected abstract void handleRestrictions(String fullName, T toCreate)
       throws MciException;
   protected abstract R toResponse(T toCreate) throws MciException;
 
@@ -109,27 +109,18 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
     toCreate.setDifficulty(difficulty);
 
     try {
+      handleDataTypeRestrictions(fullName, toCreate);
       generator.upsertGame(toCreate);
     } catch (EngineException e) {
       throw GameExceptions.GenerationError(fullName, e);
     }
 
-    Map<EntityRestriction, List<BaseGameObject>> restrictions = getRestrictions(fullName, toCreate);
-
-    for (Map.Entry<EntityRestriction, List<BaseGameObject>> entry : restrictions.entrySet()) {
-      EntityRestriction restriction = entry.getKey();
-      List<BaseGameObject> gameObjects = entry.getValue();
-      try {
-        for (BaseGameObject gameObject : gameObjects) {
-          generator.createObjRelation(toCreate.getId(), restriction.getOnProperty(), gameObject.getId());
-        }
-      } catch (EngineException e) {
-        throw GameExceptions.GenerationError(Synonyms.NAME, e);
-      }
-    }
+    handleRestrictions(fullName, toCreate);
 
     return toResponse(toCreate);
   }
+
+  protected abstract void handleDataTypeRestrictions(String fullName, T toCreate) throws MciException;
 
   @Override
   public R getGame(String id, String player, Class<T> gameClass) throws MciException {
@@ -194,7 +185,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
     return toResponse(game);
   }
 
-  String getGameName (Class<? extends BaseGame> gameClass) throws MciException {
+  String getGameName (Class<T> gameClass) throws MciException {
     String gameName;
     try {
       gameName = ano.getEntityValue(gameClass);
@@ -202,6 +193,20 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       throw GameExceptions.GenerationError(gameClass.getSimpleName(), e);
     }
     return gameName;
+  }
+
+  protected <U extends BaseGameObject> void createObjRelation (T toCreate, List<U> gameObjs, EntityProperty onProperty) throws MciException {
+    for (U gameObj : gameObjs) {
+      createObjRelation(toCreate, gameObj, onProperty);
+    }
+  }
+
+  protected <U extends BaseGameObject> void createObjRelation (T toCreate, U gameObj, EntityProperty onProperty) throws MciException {
+    try {
+      generator.createObjRelation(toCreate.getId(), onProperty, gameObj.getId());
+    } catch (EngineException e) {
+      throw GameExceptions.GenerationError(toCreate.getId(), e);
+    }
   }
 
 }

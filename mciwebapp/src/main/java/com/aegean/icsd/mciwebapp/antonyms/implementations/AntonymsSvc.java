@@ -1,6 +1,5 @@
 package com.aegean.icsd.mciwebapp.antonyms.implementations;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -76,17 +75,12 @@ public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> impl
   }
 
   @Override
-  protected Map<EntityRestriction, List<BaseGameObject>> getRestrictions(String fullName, Antonyms toCreate) throws MciException {
+  protected void handleRestrictions(String fullName, Antonyms toCreate) throws MciException {
     Map<EntityRestriction, List<BaseGameObject>> restrictions = new HashMap<>();
     EntityRestriction hasMainWordRes;
-    try {
-      hasMainWordRes = rules.getEntityRestriction(fullName, "hasMainWord");
-    } catch (RulesException e) {
-      throw GameExceptions.UnableToRetrieveGameRules(Antonyms.NAME, e);
-    }
-
     EntityRestriction hasWordRes;
     try {
+      hasMainWordRes = rules.getEntityRestriction(fullName, "hasMainWord");
       hasWordRes = rules.getEntityRestriction(fullName, "hasWord");
     } catch (RulesException e) {
       throw GameExceptions.UnableToRetrieveGameRules(Antonyms.NAME, e);
@@ -94,6 +88,15 @@ public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> impl
 
     Word criteria = new Word();
     criteria.setAntonym(true);
+
+    Word mainWord;
+    try {
+      List<Word> mainWords = wordProvider.getNewWordsFor(fullName, hasMainWordRes.getCardinality(), criteria);
+      mainWord = mainWords.get(hasMainWordRes.getCardinality() - 1);
+      createObjRelation(toCreate, mainWords, hasMainWordRes.getOnProperty());
+    } catch (ProviderException e) {
+      throw GameExceptions.GenerationError(Antonyms.NAME, e);
+    }
 
     List<Word> words;
     try {
@@ -106,13 +109,6 @@ public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> impl
       throw GameExceptions.GenerationError(Antonyms.NAME, "No words are available for this level");
     }
 
-    Collections.shuffle(words, new Random(System.currentTimeMillis()));
-    Word mainWord = words.remove(0);
-
-    List<BaseGameObject> hasMainWordResObjs = new ArrayList<>();
-    hasMainWordResObjs.add(mainWord);
-    restrictions.put(hasMainWordRes, hasMainWordResObjs);
-
     List<Word> relatedWords;
     try {
       relatedWords = wordProvider.selectWordsByEntityId(mainWord.getId());
@@ -120,44 +116,26 @@ public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> impl
       throw GameExceptions.GenerationError(Antonyms.NAME, e);
     }
 
-    Word antonym = relatedWords.stream()
-      .filter(x -> x.isAntonym() != null && x.isAntonym())
+    words.removeIf(x -> x.getId().equals(mainWord.getId()));
+    List<Word> existing = words.stream()
       .filter(x -> {
-        Word found = words.stream()
+        List<Word> found = relatedWords.stream()
           .filter(y -> y.getId().equals(x.getId()))
-          .findFirst()
-          .orElse(null);
-        return found == null;
-      })
-      .findFirst()
-      .orElse(null);
-
-    if (antonym == null) {
-      //means already exists in the word list. In that case we just get a new word.
-      try {
-        List<Word> existing = words.stream()
-          .filter(x->{
-            Word found = relatedWords.stream()
-              .filter(y -> y.getId().equals(x.getId()))
-              .findFirst()
-              .orElse(null);
-            return found != null;
-          })
           .collect(Collectors.toList());
-        words.removeAll(existing);
-        int nb = hasWordRes.getCardinality() - words.size();
-        List<Word> newWords = wordProvider.getNewWordsFor(fullName, nb, criteria);
-        words.addAll(newWords);
-      } catch (ProviderException e) {
-        throw GameExceptions.GenerationError(Antonyms.NAME, e);
-      }
+        return x.isAntonym() != null && x.isAntonym() && !found.isEmpty();
+      })
+      .collect(Collectors.toList());
+
+    if (!existing.isEmpty()) {
+        createObjRelation(toCreate, words, hasWordRes.getOnProperty());
+    } else {
+      Collections.shuffle(relatedWords, new Random(System.currentTimeMillis()));
+      Collections.shuffle(words, new Random(System.currentTimeMillis()));
+      Word relatedWord = relatedWords.get(0);
+      words.remove(0);
+      words.add(relatedWord);
+      createObjRelation(toCreate, words, hasWordRes.getOnProperty());
     }
-
-    List<BaseGameObject> hasWordResObjs = new ArrayList<>();
-    hasWordResObjs.addAll(words);
-    restrictions.put(hasMainWordRes, hasWordResObjs);
-
-    return restrictions;
   }
 
   @Override
@@ -182,6 +160,12 @@ public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> impl
     }
     return response;
   }
+
+  @Override
+  protected void handleDataTypeRestrictions(String fullName, Antonyms toCreate) throws MciException {
+    return;
+  }
+
 
   void removeWordFromList(Word toRemove, List<Word> words) {
     Word main = words.stream()

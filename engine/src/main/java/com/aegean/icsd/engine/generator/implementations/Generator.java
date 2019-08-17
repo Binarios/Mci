@@ -59,7 +59,7 @@ public class Generator implements IGenerator {
   public <T extends BaseGame> String upsertGame(T game) throws EngineException {
     LOGGER.debug("Upserting new Game");
     String id = ano.setEntityId(game);
-    String gameName = ano.getEntityValue(game);
+    String gameName = ano.getEntityValue(game.getClass());
     String fullName = Utils.getFullGameName(gameName, game.getDifficulty());
     return upsertObject(fullName, game);
   }
@@ -67,7 +67,7 @@ public class Generator implements IGenerator {
   @Override
   public <T extends BaseGameObject> String upsertGameObject(T object) throws EngineException {
     LOGGER.debug("Upserting new Object");
-    String name = ano.getEntityValue(object);
+    String name = ano.getEntityValue(object.getClass());
     return upsertObject(name, object);
   }
 

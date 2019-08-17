@@ -15,6 +15,8 @@ public interface IObjectsDao {
 
   <T extends BaseGameObject> List<String> getAssociatedObjectOfId(String id, Class<T> object) throws ProviderException;
 
+  <T extends BaseGameObject> List<String> getAssociatedIdOnProperty(String id, EntityProperty onProperty, Class<T> object) throws ProviderException;
+
   List<String> getIdAssociatedWithOtherOnProperty (String otherId, EntityProperty onProperty) throws ProviderException;
 
   boolean areSynonyms(Word thisWord, Word otherWord) throws ProviderException;

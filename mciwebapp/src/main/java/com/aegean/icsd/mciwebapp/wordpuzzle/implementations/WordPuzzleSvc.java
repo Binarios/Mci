@@ -1,11 +1,8 @@
 package com.aegean.icsd.mciwebapp.wordpuzzle.implementations;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
@@ -49,7 +45,7 @@ public class WordPuzzleSvc extends AbstractGameSvc<WordPuzzle, WordPuzzleRespons
 
   @Override
   protected boolean isValid(Object solution) {
-    return StringUtils.isEmpty(solution.toString());
+    return !StringUtils.isEmpty(solution.toString());
   }
 
   @Override
@@ -58,21 +54,11 @@ public class WordPuzzleSvc extends AbstractGameSvc<WordPuzzle, WordPuzzleRespons
   }
 
   @Override
-  protected Map<EntityRestriction, List<BaseGameObject>> getRestrictions(String fullName, WordPuzzle toCreate) throws MciException {
-    Map<EntityRestriction, List<BaseGameObject>> restrictions = new HashMap<>();
-    EntityRestriction wordLengthRes;
-    try {
-      wordLengthRes = rules.getEntityRestriction(fullName, "hasWordLength");
-    } catch (RulesException e) {
-      throw GameExceptions.UnableToRetrieveGameRules(WordPuzzle.NAME, e);
-    }
-
-    toCreate.setWordLength(generator.generateIntDataValue(wordLengthRes.getDataRange()));
+  protected void handleRestrictions(String fullName, WordPuzzle toCreate) throws MciException {
     Word word;
     try {
       generator.upsertGame(toCreate);
       word = wordProvider.getNewWordFor(fullName, toCreate.getWordLength());
-
     } catch (EngineException | ProviderException e) {
       throw GameExceptions.GenerationError(WordPuzzle.NAME, e);
     }
@@ -80,13 +66,10 @@ public class WordPuzzleSvc extends AbstractGameSvc<WordPuzzle, WordPuzzleRespons
     EntityRestriction hasWordRes;
     try {
       hasWordRes = rules.getEntityRestriction(fullName, "hasWord");
+      createObjRelation(toCreate, word, hasWordRes.getOnProperty());
     } catch (RulesException e) {
       throw GameExceptions.UnableToRetrieveGameRules(WordPuzzle.NAME, e);
     }
-    List<BaseGameObject> hasWordResObjs = new ArrayList<>();
-    hasWordResObjs.add(word);
-    restrictions.put(hasWordRes, hasWordResObjs);
-    return restrictions;
   }
 
   @Override
@@ -103,6 +86,19 @@ public class WordPuzzleSvc extends AbstractGameSvc<WordPuzzle, WordPuzzleRespons
     Collections.shuffle(shuffled, new Random(System.currentTimeMillis()));
     WordPuzzleResponse res = new WordPuzzleResponse(toCreate);
     res.setLetters(shuffled);
+    res.setSolved(!StringUtils.isEmpty(toCreate.getCompletedDate()));
     return res;
+  }
+
+  @Override
+  protected void handleDataTypeRestrictions(String fullName, WordPuzzle toCreate) throws MciException {
+    EntityRestriction wordLengthRes;
+    try {
+      wordLengthRes = rules.getEntityRestriction(fullName, "hasWordLength");
+    } catch (RulesException e) {
+      throw GameExceptions.UnableToRetrieveGameRules(WordPuzzle.NAME, e);
+    }
+
+    toCreate.setWordLength(generator.generateIntDataValue(wordLengthRes.getDataRange()));
   }
 }
