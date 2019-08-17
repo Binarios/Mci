@@ -6,10 +6,11 @@ import java.util.Map;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 
 public interface IGeneratorDao {
 
-  Map<String, Object> selectObject(Map<String, Object> relations) throws EngineException;
+  <T extends BaseGameObject> List<T> selectGameObject(Map<String, Object> relations, Class<T> aClass) throws EngineException;
 
   boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)
     throws EngineException;

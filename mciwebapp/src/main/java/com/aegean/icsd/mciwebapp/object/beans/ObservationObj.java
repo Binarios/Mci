@@ -14,7 +14,7 @@ public class ObservationObj extends BaseGameObject {
   private String id;
 
   @DataProperty("hasTotalImages")
-  private int nbOfImages;
+  private Integer nbOfImages;
 
   public String getId() {
     return id;
@@ -24,11 +24,11 @@ public class ObservationObj extends BaseGameObject {
     this.id = id;
   }
 
-  public int getNbOfImages() {
+  public Integer getNbOfImages() {
     return nbOfImages;
   }
 
-  public void setNbOfImages(int nbOfImages) {
+  public void setNbOfImages(Integer nbOfImages) {
     this.nbOfImages = nbOfImages;
   }
 

@@ -22,6 +22,9 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
+import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
+import com.aegean.icsd.mciwebapp.object.beans.Word;
+import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzle;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzleResponse;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WorldPuzzleRequest;
 import com.aegean.icsd.mciwebapp.wordpuzzle.interfaces.IWordPuzzleSvc;
@@ -41,12 +44,12 @@ public class WordPuzzlesController {
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<WordPuzzleResponse>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
-                                                     @RequestParam(name = "completed", required = false) Boolean completed,
-                                                     @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+  public Response<List<ServiceResponse<WordPuzzle>>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
+                                                              @RequestParam(name = "completed", required = false) Boolean completed,
+                                                              @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
 
-    List<WordPuzzleResponse> responses = wordPuzzleSvc.getGames(player);
-    List<WordPuzzleResponse> filtered = FilterResponse.by(responses, difficulty, completed);
+    List<ServiceResponse<WordPuzzle>> responses = wordPuzzleSvc.getGames(player, WordPuzzle.class);
+    List<ServiceResponse<WordPuzzle>> filtered = FilterResponse.by(responses, difficulty, completed);
 
     return new Response<>(filtered);
   }
@@ -58,7 +61,7 @@ public class WordPuzzlesController {
                                                  @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createWordPuzzle request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
-    WordPuzzleResponse resp = wordPuzzleSvc.createGame(player, dif);
+    WordPuzzleResponse resp = wordPuzzleSvc.createGame(player, dif, WordPuzzle.class);
     return new Response<>(resp);
   }
 
@@ -67,7 +70,7 @@ public class WordPuzzlesController {
   @ResponseStatus(HttpStatus.OK)
   public Response<WordPuzzleResponse> getGame(@PathVariable("id") String id,
                                               @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    WordPuzzleResponse obs = wordPuzzleSvc.getGame(id, player);
+    WordPuzzleResponse obs = wordPuzzleSvc.getGame(id, player, WordPuzzle.class);
     return new Response<>(obs);
   }
 
@@ -78,7 +81,7 @@ public class WordPuzzlesController {
   public Response<WordPuzzleResponse> solveGame(@PathVariable("id") String id,
                                                 @RequestBody WorldPuzzleRequest req,
                                                 @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    WordPuzzleResponse response = wordPuzzleSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution());
+    WordPuzzleResponse response = wordPuzzleSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution(), WordPuzzle.class);
     return new Response<>(response);
   }
 }
