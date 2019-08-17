@@ -123,7 +123,7 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
         items.add(item);
       }
     } catch (ProviderException e) {
-      throw GameExceptions.GenerationError(toCreate.getId(), "Error when constructing the response");
+      throw GameExceptions.GenerationError(toCreate.getId(), e);
     }
     resp.setWords(words);
     resp.setItems(items);
