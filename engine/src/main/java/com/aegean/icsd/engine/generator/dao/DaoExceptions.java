@@ -7,6 +7,7 @@ final class DaoExceptions {
 
   private static final String CODE_NAME = "GG.DAO";
 
+  private DaoExceptions() { }
 
   static EngineException InsertQuery(String extraMsg, Throwable t) {
     return new EngineException(CODE_NAME + "." + 2, String.format("There was a problem when inserting an entry. More details: %s", extraMsg), t);

@@ -75,6 +75,7 @@ public class WebAppConfig implements WebMvcConfigurer {
     config.setUrlIndex(Integer.parseInt(getPropertyValue("image.index.url")));
     config.setTitleIndex(Integer.parseInt(getPropertyValue("image.index.title")));
     config.setSubjectIndex(Integer.parseInt(getPropertyValue("image.index.subject")));
+    config.setParentIndex(Integer.parseInt(getPropertyValue("image.index.parentImage")));
     return config;
   }
 

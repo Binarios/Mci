@@ -4,6 +4,8 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 
 public class Utils {
 
+  private Utils () { }
+
   public static String getFullGameName(String gameName, Difficulty difficulty) {
     return capitalize(difficulty.name()) + gameName;
   }

@@ -7,6 +7,7 @@ public class ImageConfiguration {
   private int urlIndex;
   private int titleIndex;
   private int subjectIndex;
+  private int parentIndex;
 
   public String getLocation() {
     return location;
@@ -54,5 +55,13 @@ public class ImageConfiguration {
 
   public void setFilename(String filename) {
     this.filename = filename;
+  }
+
+  public int getParentIndex() {
+    return parentIndex;
+  }
+
+  public void setParentIndex(int parentIndex) {
+    this.parentIndex = parentIndex;
   }
 }

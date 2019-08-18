@@ -5,6 +5,8 @@ import com.aegean.icsd.engine.common.beans.EngineException;
 final class Exceptions {
   private static final String CODE_NAME = "ARD";
 
+  private Exceptions() { }
+
   static EngineException UnableToReadAnnotation(String annotation) {
     return new EngineException(CODE_NAME + "." + 1, String.format("Annotation <%s> was not found in the provided bean.", annotation));
   }

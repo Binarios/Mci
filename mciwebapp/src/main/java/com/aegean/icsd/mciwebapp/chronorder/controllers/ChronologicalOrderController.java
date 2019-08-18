@@ -1,4 +1,4 @@
-package com.aegean.icsd.mciwebapp.recall.controllers;
+package com.aegean.icsd.mciwebapp.chronorder.controllers;
 
 import java.util.List;
 
@@ -19,57 +19,58 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.mciwebapp.chronorder.beans.ChronologicalOrder;
+import com.aegean.icsd.mciwebapp.chronorder.beans.ChronologicalOrderRequest;
+import com.aegean.icsd.mciwebapp.chronorder.beans.ChronologicalOrderResponse;
+import com.aegean.icsd.mciwebapp.chronorder.interfaces.IChronologicalOrderSvc;
 import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
 import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationRequest;
-import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.recall.beans.Recall;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallRequest;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallResponse;
-import com.aegean.icsd.mciwebapp.recall.interfaces.IRecallSvc;
 
 /**
- * https://localhost:8443/mci/recall
+ * https://localhost:8443/mci/chronologicalOrders
  */
 @RestController
-@RequestMapping("recall")
-public class RecallController {
+@RequestMapping("chronologicalOrders")
+public class ChronologicalOrderController {
 
-  private static final Logger LOGGER = LogManager.getLogger(RecallController.class);
+  private static final Logger LOGGER = LogManager.getLogger(ChronologicalOrderController.class);
 
   @Autowired
-  private IRecallSvc recallSvc;
+  private IChronologicalOrderSvc chronoSvc;
 
   @GetMapping(value = "",
     produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<List<ServiceResponse<Recall>>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
+  public Response<List<ServiceResponse<ChronologicalOrder>>> getGames(@RequestParam(name = "difficulty", required = false) String difficulty,
                                                           @RequestParam(name = "completed", required = false) Boolean completed,
                                                           @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    List<ServiceResponse<Recall>> responses = recallSvc.getGames(player, Recall.class);
-    List<ServiceResponse<Recall>> filtered = FilterResponse.by(responses, difficulty, completed);
+    List<ServiceResponse<ChronologicalOrder>> responses = chronoSvc.getGames(player, ChronologicalOrder.class);
+    List<ServiceResponse<ChronologicalOrder>> filtered = FilterResponse.by(responses, difficulty, completed);
     return new Response<>(filtered);
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
-  public Response<RecallResponse> createGame(@RequestBody RecallRequest req,
-                                             @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
+  public Response<ChronologicalOrderResponse> createGame(@RequestBody ChronologicalOrderRequest req,
+                                                         @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
     LOGGER.info("createRecall request received");
     Difficulty dif = Difficulty.valueOf(req.getDifficulty().toUpperCase());
-    RecallResponse resp = recallSvc.createGame(player, dif, Recall.class);
+    ChronologicalOrderResponse resp = chronoSvc.createGame(player, dif, ChronologicalOrder.class);
     return new Response<>(resp);
   }
 
   @GetMapping(value = "/{id}",
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<RecallResponse> getGame(@PathVariable("id") String id,
+  public Response<ChronologicalOrderResponse> getGame(@PathVariable("id") String id,
                                           @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    RecallResponse resp = recallSvc.getGame(id, player, Recall.class);
+    ChronologicalOrderResponse resp = chronoSvc.getGame(id, player, ChronologicalOrder.class);
     return new Response<>(resp);
   }
 
@@ -77,10 +78,10 @@ public class RecallController {
           consumes = MediaType.APPLICATION_JSON_VALUE,
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.OK)
-  public Response<RecallResponse> solveGame(@PathVariable("id") String id,
-                                            @RequestBody RecallRequest req,
+  public Response<ChronologicalOrderResponse> solveGame(@PathVariable("id") String id,
+                                            @RequestBody ChronologicalOrderRequest req,
                                             @RequestHeader("X-INFO-PLAYER") String player) throws MciException {
-    RecallResponse response = recallSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution(), Recall.class);
+    ChronologicalOrderResponse response = chronoSvc.solveGame(id, player, req.getCompletionTime(), req.getSolution(), ChronologicalOrder.class);
     return new Response<>(response);
   }
 }

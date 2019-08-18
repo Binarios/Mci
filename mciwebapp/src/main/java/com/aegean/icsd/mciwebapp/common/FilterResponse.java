@@ -11,9 +11,12 @@ import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 
 public class FilterResponse {
 
+  private FilterResponse() { }
+
   public static  <T extends ServiceResponse<? extends BaseGame>> List<T> by(List<T> responses,
                                                                             String difficulty, Boolean completed ) {
-    List<T> filtered = responses.stream().filter(x -> {
+
+    return responses.stream().filter(x -> {
       boolean choose = true;
       if (!StringUtils.isEmpty(difficulty)) {
         Difficulty diff = Difficulty.valueOf(difficulty.toUpperCase());
@@ -29,8 +32,6 @@ public class FilterResponse {
       }
       return choose;
     }).collect(Collectors.toList());
-
-    return filtered;
   }
 
 }
