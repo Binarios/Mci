@@ -5,6 +5,8 @@ import com.aegean.icsd.engine.rules.beans.RulesException;
 final class Exceptions {
   private static final String CODE_NAME = "GR";
 
+  private Exceptions() { }
+
   static RulesException InvalidParameters() {
     return new RulesException(CODE_NAME + "." + 1, "The provided parameters are invalid. Please check that the parameters are not null or empty");
   }

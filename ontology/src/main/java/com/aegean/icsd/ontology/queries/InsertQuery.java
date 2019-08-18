@@ -15,7 +15,9 @@ public class InsertQuery {
   private Map<String, String> prefixes = new HashMap<>();
   private List<InsertParam> params = new LinkedList<>();
 
-  private InsertQuery () { }
+  private InsertQuery () {
+    // for code inspector
+  }
 
   public String getCommand() {
     return command;

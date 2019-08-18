@@ -15,4 +15,8 @@ public class Response<T> {
   public void setError(AppError appError) {
     this.error = appError;
   }
+
+  public T getPayload() {
+    return payload;
+  }
 }

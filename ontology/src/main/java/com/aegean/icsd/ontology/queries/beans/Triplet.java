@@ -5,10 +5,6 @@ public class Triplet {
   private String predicate;
   private String object;
 
-  public Triplet () {
-
-  }
-
   public Triplet (String subject, String predicate, String object) {
     this.subject = subject;
     this.predicate = predicate;
