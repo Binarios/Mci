@@ -40,8 +40,6 @@ public class OntologyConnector implements IOntologyConnector {
   @Autowired
   private DatasetProperties ontologyProps;
 
-  private HttpClient client;
-
   @Override
   public boolean ask(AskQuery ask) throws OntologyException {
     ParameterizedSparqlString sparql = getPrefixedSparql(new HashMap<>());
@@ -70,20 +68,14 @@ public class OntologyConnector implements IOntologyConnector {
       throw new OntologyException("ASK.1", "Error when constructing the query", ex);
     }
 
-    HttpRequest request = HttpRequest.newBuilder()
-      .uri(URI.create(ontologyProps.getDatasetLocation() + "/query"))
-      .timeout(Duration.ofMinutes(5))
-      .header("Content-Type", "application/x-www-form-urlencoded")
-      .header("Accept", "application/sparql-results+json,*/*;q=0.9")
-      .POST(HttpRequest.BodyPublishers.ofString("query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
-      .build();
+    HttpRequest request = buildRequest("query", query);
 
     try {
-
-      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response = getClient().send(request, HttpResponse.BodyHandlers.ofString());
       if (response.statusCode() >= 400) {
         throw new OntologyException("SEL.400", "Error when executing the query");
       }
+
       String body = response.body();
       FusekiResponse res = new Gson().fromJson(body, FusekiResponse.class);
       return res.getAskResponse();
@@ -119,16 +111,10 @@ public class OntologyConnector implements IOntologyConnector {
       throw new OntologyException("SEL.1", "Error when constructing the query", ex);
     }
 
-    HttpRequest request = HttpRequest.newBuilder()
-      .uri(URI.create(ontologyProps.getDatasetLocation() + "/query"))
-      .timeout(Duration.ofMinutes(5))
-      .header("Content-Type", "application/x-www-form-urlencoded")
-      .header("Accept", "application/sparql-results+json,*/*;q=0.9")
-      .POST(HttpRequest.BodyPublishers.ofString("query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
-      .build();
+    HttpRequest request = buildRequest("query", query);
 
     try {
-      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response = getClient().send(request, HttpResponse.BodyHandlers.ofString());
       if (response.statusCode() >= 400) {
         throw new OntologyException("SEL.400", "Error when executing the query");
       }
@@ -181,15 +167,10 @@ public class OntologyConnector implements IOntologyConnector {
       throw new OntologyException("INS.1", "Error when constructing the query", ex);
     }
 
-    HttpRequest request = HttpRequest.newBuilder()
-      .uri(URI.create(ontologyProps.getDatasetLocation() + "/update"))
-      .timeout(Duration.ofMinutes(5))
-      .header("Content-Type", "application/x-www-form-urlencoded")
-      .POST(HttpRequest.BodyPublishers.ofString("update=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
-      .build();
+    HttpRequest request = buildRequest("update", query);
 
     try {
-      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response = getClient().send(request, HttpResponse.BodyHandlers.ofString());
       if (response.statusCode() != 200) {
         throw new OntologyException("INS.2", "Error when inserting the data");
       }
@@ -198,7 +179,6 @@ public class OntologyConnector implements IOntologyConnector {
       throw new OntologyException("INS.99", "Error when executing the query", e);
     }
   }
-
 
   ParameterizedSparqlString getPrefixedSparql(Map<String, String> prefixes) {
     Map<String, String> defaultPrefixes = new HashMap<>();
@@ -215,12 +195,20 @@ public class OntologyConnector implements IOntologyConnector {
     return sparql;
   }
 
-  @PostConstruct
-  void setupModel () {
-    LOGGER.info("START: Setting up the httpClient");
-    client = HttpClient.newBuilder()
+  HttpClient getClient () {
+    return HttpClient.newBuilder()
       .version(HttpClient.Version.HTTP_2)
       .followRedirects(HttpClient.Redirect.NEVER)
+      .build();
+  }
+
+  HttpRequest buildRequest (String action, String query) {
+    return HttpRequest.newBuilder()
+      .uri(URI.create(ontologyProps.getDatasetLocation() + "/" + action))
+      .timeout(Duration.ofMinutes(5))
+      .header("Content-Type", "application/x-www-form-urlencoded")
+      .header("Accept", "application/sparql-results+json,*/*;q=0.9")
+      .POST(HttpRequest.BodyPublishers.ofString("query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
       .build();
   }
 

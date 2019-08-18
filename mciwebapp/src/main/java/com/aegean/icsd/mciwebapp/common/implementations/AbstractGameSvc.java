@@ -142,22 +142,12 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       Object solution, Class<T> gameClass) throws MciException {
     String gameName = getGameName(gameClass);
 
-    if (StringUtils.isEmpty(id)
-        || StringUtils.isEmpty(player)
-        || completionTime == null) {
-      throw GameExceptions.InvalidRequest(gameName);
-    }
-
     if (!isValid(solution)) {
       throw GameExceptions.InvalidRequest(gameName);
     }
 
-    T game;
-    try {
-      game = generator.getGameWithId(id, player, gameClass);
-    } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(gameName, id, player, e);
-    }
+    R gameResponse = getGame(id,player,gameClass);
+    T game = gameResponse.getGame();
 
     if (completionTime > game.getMaxCompletionTime()) {
       throw GameExceptions.SurpassedMaxCompletionTime(gameName, id, game.getMaxCompletionTime());

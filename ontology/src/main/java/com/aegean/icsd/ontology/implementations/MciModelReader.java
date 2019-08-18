@@ -106,8 +106,6 @@ public class MciModelReader implements IMciModelReader {
     return entity;
   }
 
-
-
   List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {
     List<PropertySchema> properties = new ArrayList<>();
 
