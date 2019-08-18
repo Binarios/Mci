@@ -1,18 +1,19 @@
 package com.aegean.icsd.ontology.implementations;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.URI;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryException;
 import org.apache.log4j.Logger;
@@ -61,6 +62,11 @@ public class OntologyConnector implements IOntologyConnector {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
 
+    for (Map.Entry<String, Boolean> entry : ask.getBoolLiteralParams().entrySet()) {
+      sparql.setLiteral(entry.getKey(), entry.getValue());
+    }
+
+
     String query;
     try {
       query = sparql.asQuery().toString();
@@ -68,19 +74,24 @@ public class OntologyConnector implements IOntologyConnector {
       throw new OntologyException("ASK.1", "Error when constructing the query", ex);
     }
 
-    HttpRequest request = buildRequest("query", query);
-
+    CloseableHttpClient client = HttpClients.createDefault();
     try {
-      HttpResponse<String> response = getClient().send(request, HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() >= 400) {
-        throw new OntologyException("SEL.400", "Error when executing the query");
+      HttpPost request = buildPostRequest("query", query);
+      CloseableHttpResponse response = client.execute(request);
+      if (response.getStatusLine().getStatusCode() >= 400) {
+        throw new OntologyException("ASK.400", "Error when executing the query");
       }
-
-      String body = response.body();
+      String body = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
       FusekiResponse res = new Gson().fromJson(body, FusekiResponse.class);
       return res.getAskResponse();
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       throw new OntologyException("ASK.999", "Error when executing the query", e);
+    } finally {
+      try {
+        client.close();
+      } catch (IOException e) {
+        LOGGER.error("Error when closing the client", e);
+      }
     }
   }
 
@@ -111,15 +122,16 @@ public class OntologyConnector implements IOntologyConnector {
       throw new OntologyException("SEL.1", "Error when constructing the query", ex);
     }
 
-    HttpRequest request = buildRequest("query", query);
-
+    CloseableHttpClient client = HttpClients.createDefault();
     try {
-      HttpResponse<String> response = getClient().send(request, HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() >= 400) {
+      HttpPost request = buildPostRequest("query", query);
+
+      CloseableHttpResponse response = client.execute(request);
+      if (response.getStatusLine().getStatusCode() >= 400) {
         throw new OntologyException("SEL.400", "Error when executing the query");
       }
 
-      String body = response.body();
+      String body = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
       FusekiResponse res = new Gson().fromJson(body, FusekiResponse.class);
       List<String> varNames = res.getHead().getVars();
       for (JsonElement elem : res.getResults().getBindings()) {
@@ -135,9 +147,16 @@ public class OntologyConnector implements IOntologyConnector {
           array.add(resultObj);
         }
       }
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       throw new OntologyException("SEL.1", "Error when executing the query", e);
+    } finally {
+      try {
+        client.close();
+      } catch (IOException e) {
+        LOGGER.error("Error when closing the client", e);
+      }
     }
+
     return array;
   }
 
@@ -167,17 +186,24 @@ public class OntologyConnector implements IOntologyConnector {
       throw new OntologyException("INS.1", "Error when constructing the query", ex);
     }
 
-    HttpRequest request = buildRequest("update", query);
-
+    CloseableHttpClient client = HttpClients.createDefault();
     try {
-      HttpResponse<String> response = getClient().send(request, HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() != 200) {
+      HttpPost request = buildPostRequest("update", query);
+      CloseableHttpResponse response = client.execute(request);
+      if (response.getStatusLine().getStatusCode() != 200) {
         throw new OntologyException("INS.2", "Error when inserting the data");
       }
       return true;
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       throw new OntologyException("INS.99", "Error when executing the query", e);
+    } finally {
+      try {
+        client.close();
+      } catch (IOException e) {
+        LOGGER.error("Error when closing the client", e);
+      }
     }
+
   }
 
   ParameterizedSparqlString getPrefixedSparql(Map<String, String> prefixes) {
@@ -195,21 +221,15 @@ public class OntologyConnector implements IOntologyConnector {
     return sparql;
   }
 
-  HttpClient getClient () {
-    return HttpClient.newBuilder()
-      .version(HttpClient.Version.HTTP_2)
-      .followRedirects(HttpClient.Redirect.NEVER)
-      .build();
-  }
 
-  HttpRequest buildRequest (String action, String query) {
-    return HttpRequest.newBuilder()
-      .uri(URI.create(ontologyProps.getDatasetLocation() + "/" + action))
-      .timeout(Duration.ofMinutes(5))
-      .header("Content-Type", "application/x-www-form-urlencoded")
-      .header("Accept", "application/sparql-results+json,*/*;q=0.9")
-      .POST(HttpRequest.BodyPublishers.ofString("query=" + URLEncoder.encode(query, StandardCharsets.UTF_8)))
-      .build();
+  HttpPost buildPostRequest (String action, String query) throws UnsupportedEncodingException {
+    HttpPost httpPost = new HttpPost(ontologyProps.getDatasetLocation() + "/" + action);
+    String body = action + "=" + URLEncoder.encode(query, StandardCharsets.UTF_8);
+    StringEntity entity = new StringEntity(body);
+    httpPost.setEntity(entity);
+    httpPost.setHeader("Accept", "application/sparql-results+json,*/*;q=0.9");
+    httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+    return httpPost;
   }
 
 }

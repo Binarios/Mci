@@ -16,6 +16,9 @@ public class Image extends BaseGameObject {
   @DataProperty("hasAssetPath")
   private String path;
 
+  @DataProperty("hasChronologicalOrder")
+  private Boolean ordered;
+
   public String getId() {
     return id;
   }
@@ -30,5 +33,13 @@ public class Image extends BaseGameObject {
 
   public void setPath(String path) {
     this.path = path;
+  }
+
+  public void setOrdered(Boolean ordered) {
+    this.ordered = ordered;
+  }
+
+  public Boolean isOrdered() {
+    return this.ordered;
   }
 }
