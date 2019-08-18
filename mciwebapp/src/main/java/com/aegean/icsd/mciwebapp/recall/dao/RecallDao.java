@@ -43,7 +43,7 @@ public class RecallDao implements IRecallDao{
     SelectQuery q = new SelectQuery.Builder()
       .select("recallNumber")
       .where("s", "hasId", "id")
-      .where("s", "hasRecallNumberValue;", "recallNumber")
+      .where("s", "hasRecallNumberValue", "recallNumber")
       .addIriParam("hasId", model.getPrefixedEntity("hasId"))
       .addIriParam("hasRecallNumberValue", model.getPrefixedEntity("hasRecallNumberValue"))
       .addLiteralParam("id", id)

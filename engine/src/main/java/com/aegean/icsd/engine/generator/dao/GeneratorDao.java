@@ -72,7 +72,7 @@ public class GeneratorDao implements IGeneratorDao {
       Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
       for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
         try {
-          T object = mapJsonToObject(entry.getValue(), aClass);
+          T object = mapJsonToObject(entry.getValue(), "p", aClass);
           objects.add(object);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
           throw DaoExceptions.ConstructorNotFound(aClass.getSimpleName(), e);
@@ -162,7 +162,7 @@ public class GeneratorDao implements IGeneratorDao {
       Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
       for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
         try {
-          T game = mapJsonToObject(entry.getValue(), gameObjClass);
+          T game = mapJsonToObject(entry.getValue(), "p", gameObjClass);
           games.add(game);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
           throw DaoExceptions.ConstructorNotFound(gameName, e);
@@ -196,7 +196,7 @@ public class GeneratorDao implements IGeneratorDao {
         Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
         for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
           try {
-            game = mapJsonToObject(entry.getValue(), gameObjClass);
+            game = mapJsonToObject(entry.getValue(), "p", gameObjClass);
           } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             throw DaoExceptions.ConstructorNotFound(id, e);
           }
@@ -231,17 +231,32 @@ public class GeneratorDao implements IGeneratorDao {
     }
   }
 
-  <T> T mapJsonToObject(JsonArray dataProperties, Class<T> objectClass)
+  <T> T mapJsonToObject(JsonArray dataProperties, String propertyNodeName, Class<T> objectClass)
     throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, EngineException {
     T object = objectClass.getDeclaredConstructor().newInstance();
-    for (JsonElement element : dataProperties) {
-      JsonObject obj = element.getAsJsonObject();
-      String prefixedDataProperty = obj.get("p").getAsString();
-      String dataProperty = model.removePrefix(prefixedDataProperty);
-      String value = obj.get("o").getAsString();
-      //TODO handle Lists
-      ano.setDataPropertyValue(object, dataProperty, value);
+    Map<String, JsonArray> groupedByProperty = groupByNodeName(propertyNodeName, dataProperties);
+    for (Map.Entry<String, JsonArray> entry : groupedByProperty.entrySet()) {
+      String dataProperty = model.removePrefix(entry.getKey());
+      Object genericValue;
+      if (entry.getValue().size() > 1) {
+        List<String> values = new ArrayList<>();
+        for (JsonElement element : entry.getValue()) {
+          values.add(element.getAsJsonObject().get("o").getAsString());
+        }
+        genericValue = values;
+      } else {
+        genericValue = entry.getValue().get(0).getAsJsonObject().get("o").getAsString();
+      }
+      ano.setDataPropertyValue(object, dataProperty, genericValue);
     }
+//    for (JsonElement element : dataProperties) {
+//      JsonObject obj = element.getAsJsonObject();
+//      String prefixedDataProperty = obj.get("p").getAsString();
+//      String dataProperty = model.removePrefix(prefixedDataProperty);
+//      String value = obj.get("o").getAsString();
+//      //TODO handle Lists
+//      ano.setDataPropertyValue(object, dataProperty, value);
+//    }
     return object;
   }
 
