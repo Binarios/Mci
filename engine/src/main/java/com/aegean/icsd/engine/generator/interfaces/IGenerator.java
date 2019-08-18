@@ -27,5 +27,5 @@ public interface IGenerator {
   <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass)
     throws EngineException;
 
-  int generateIntDataValue(ValueRangeRestriction res);
+  Long generateLongDataValue(ValueRangeRestriction res);
 }

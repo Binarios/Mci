@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.jena.ontology.AllValuesFromRestriction;
 import org.apache.jena.ontology.HasValueRestriction;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
@@ -105,8 +106,6 @@ public class MciModelReader implements IMciModelReader {
     return entity;
   }
 
-
-
   List<PropertySchema> getDeclaredPropertiesSchemas(OntClass ontClass) {
     List<PropertySchema> properties = new ArrayList<>();
 
@@ -178,11 +177,20 @@ public class MciModelReader implements IMciModelReader {
       if (onClass == null) {
         onClass = restriction.getPropertyResourceValue(OWL2.someValuesFrom);
       }
-      result.getOnPropertySchema().setRange(onClass.getLocalName());
+      if (onClass != null) {
+        result.getOnPropertySchema().setRange(onClass.getLocalName());
+      }
     }
 
     if (restriction.isAllValuesFromRestriction()) {
       result.setType(RestrictionSchema.ONLY_TYPE);
+      AllValuesFromRestriction allVal = restriction.asAllValuesFromRestriction();
+      if (!allVal.getAllValuesFrom().isAnon()) {
+        result.getOnPropertySchema().setRange(allVal.getAllValuesFrom().getLocalName());
+      }
+      CardinalitySchema cardinalitySchema = new CardinalitySchema();
+      cardinalitySchema.setDataRangeRestrictions(generateDataRangeRestrictions(allVal.getAllValuesFrom()));
+      result.setCardinalitySchema(cardinalitySchema);
     } else if (restriction.isHasValueRestriction()) {
       result.setType(RestrictionSchema.VALUE_TYPE);
       HasValueRestriction valueRes = restriction.asHasValueRestriction();
@@ -202,6 +210,10 @@ public class MciModelReader implements IMciModelReader {
       return descriptor;
     }
     descriptor.setName(property.getLocalName());
+    OntProperty parent = property.getSuperProperty();
+    if (!parent.isAnon() && !parent.isOntLanguageTerm() && !property.getLocalName().equals(parent.getLocalName())) {
+      descriptor.setParent(parent.getLocalName());
+    }
     descriptor.setObjectProperty(property.isObjectProperty());
     OntResource rangeResource = property.getRange();
     OntClass rangeClass = rangeResource.asClass();
@@ -268,15 +280,18 @@ public class MciModelReader implements IMciModelReader {
   }
 
   List<DataRangeRestrinctionSchema> generateDataRangeRestrictions(OntClass ont) {
-    List<DataRangeRestrinctionSchema> dataRanges = new ArrayList<>();
     Resource dataRangeResource = ont.getPropertyResourceValue(OWL2.onDataRange);
-    if(dataRangeResource != null) {
-      Resource withRestrictionResource = dataRangeResource.getPropertyResourceValue(OWL2.withRestrictions);
+    return generateDataRangeRestrictions(dataRangeResource);
+  }
+
+  List<DataRangeRestrinctionSchema> generateDataRangeRestrictions(Resource resource) {
+    List<DataRangeRestrinctionSchema> dataRanges = new ArrayList<>();
+    if (resource != null) {
+      Resource withRestrictionResource = resource.getPropertyResourceValue(OWL2.withRestrictions);
       if (withRestrictionResource != null) {
         getDataRanges(withRestrictionResource, dataRanges);
       }
     }
-
     return dataRanges;
   }
 

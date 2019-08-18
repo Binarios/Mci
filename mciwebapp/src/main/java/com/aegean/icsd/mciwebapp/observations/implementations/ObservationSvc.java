@@ -106,7 +106,6 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
   @Override
   protected ObservationResponse toResponse(Observation toCreate) throws MciException {
     ObservationResponse resp = new ObservationResponse(toCreate);
-    resp.setSolved(!StringUtils.isEmpty(toCreate.getCompletedDate()));
     List<String> words = new ArrayList<>();
     List<ObservationItem> items = new ArrayList<>();
     try {
@@ -135,7 +134,7 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
     EntityRestriction totalImages;
     try {
       totalImages = rules.getEntityRestriction(fullName, "hasTotalImages");
-      toCreate.setTotalImages(generator.generateIntDataValue(totalImages.getDataRange()));
+      toCreate.setTotalImages(Integer.parseInt(generator.generateLongDataValue(totalImages.getDataRange()).toString()));
     } catch (RulesException e) {
       throw GameExceptions.UnableToRetrieveGameRules(Observation.NAME, e);
     }

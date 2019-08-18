@@ -86,7 +86,6 @@ public class WordPuzzleSvc extends AbstractGameSvc<WordPuzzle, WordPuzzleRespons
     Collections.shuffle(shuffled, new Random(System.currentTimeMillis()));
     WordPuzzleResponse res = new WordPuzzleResponse(toCreate);
     res.setLetters(shuffled);
-    res.setSolved(!StringUtils.isEmpty(toCreate.getCompletedDate()));
     return res;
   }
 
@@ -99,6 +98,6 @@ public class WordPuzzleSvc extends AbstractGameSvc<WordPuzzle, WordPuzzleRespons
       throw GameExceptions.UnableToRetrieveGameRules(WordPuzzle.NAME, e);
     }
 
-    toCreate.setWordLength(generator.generateIntDataValue(wordLengthRes.getDataRange()));
+    toCreate.setWordLength(Integer.parseInt(generator.generateLongDataValue(wordLengthRes.getDataRange()).toString()));
   }
 }

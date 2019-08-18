@@ -114,8 +114,8 @@ public class Generator implements IGenerator {
   }
 
   @Override
-  public int generateIntDataValue(ValueRangeRestriction res) {
-    int rangeValue = -1;
+  public Long generateLongDataValue(ValueRangeRestriction res) {
+    long rangeValue = -1;
     int min = Integer.MAX_VALUE;
     int max = Integer.MIN_VALUE;
 
@@ -176,71 +176,20 @@ public class Generator implements IGenerator {
       if (property.isMandatory() && rangeValue == null) {
         throw Exceptions.MissingMandatoryRelation(name, property.getName());
       }
-
       if (rangeValue != null) {
         Class<?> rangeClass = model.getJavaClassFromOwlType(property.getRange());
-        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
+        if (List.class.isAssignableFrom(rangeValue.getClass())) {
+          for (Object elem : (List) rangeValue) {
+            dao.createValueRelation(id, property.getName(), elem, rangeClass);
+          }
+        } else {
+          dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
+        }
       }
     }
     return id;
   }
 
-  int calculateCardinality(List<EntityRestriction> restrictions) {
-    int cardinality = calculateMinMaxCardinality(restrictions);
-    if (cardinality == -1) {
-      EntityRestriction er = restrictions.get(0);
-      cardinality = calculateRestrictionCardinality(er);
-    }
-    return cardinality;
-  }
-
-  int calculateMinMaxCardinality(List<EntityRestriction> restrictions) {
-    int min = Integer.MAX_VALUE;
-    int max = Integer.MIN_VALUE;
-    int cardinality = -1;
-
-    for (EntityRestriction res : restrictions) {
-      if (RestrictionType.MAX.equals(res.getType()) && max < res.getCardinality()) {
-        max = res.getCardinality() + 1;
-      } else if (RestrictionType.MIN.equals(res.getType()) && min > res.getCardinality()) {
-        min = res.getCardinality();
-      }
-    }
-
-    if (min == Integer.MAX_VALUE && max < Integer.MAX_VALUE) {
-      min = 0;
-    }
-
-    if (min >= 0) {
-      if (min == max) {
-        cardinality = min;
-      } else if (min < max) {
-        cardinality = ThreadLocalRandom.current().nextInt(min, max);
-      }
-    }
-
-    return cardinality;
-  }
-
-  int calculateRestrictionCardinality(EntityRestriction restriction) {
-    int minCardinality = Integer.MAX_VALUE;
-    int maxCardinality = Integer.MIN_VALUE;
-    int cardinality = -1;
-
-    if (RestrictionType.EXACTLY.equals(restriction.getType())) {
-      cardinality = restriction.getCardinality();
-    } else if (RestrictionType.SOME.equals(restriction.getType())) {
-      minCardinality = 4;
-      maxCardinality = 6;
-    }
-
-    if (cardinality == -1
-      && minCardinality < maxCardinality) {
-      cardinality = ThreadLocalRandom.current().nextInt(minCardinality, maxCardinality + 1);
-    }
-
-    return cardinality;
-  }
 
 
 }

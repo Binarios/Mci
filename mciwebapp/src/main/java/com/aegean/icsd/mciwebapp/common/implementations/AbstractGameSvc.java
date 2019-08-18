@@ -3,7 +3,6 @@ package com.aegean.icsd.mciwebapp.common.implementations;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -40,10 +39,10 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
   @Autowired
   private IRules rules;
 
+  protected abstract void handleDataTypeRestrictions(String fullName, T toCreate) throws MciException;
+  protected abstract void handleRestrictions(String fullName, T toCreate) throws MciException;
   protected abstract boolean isValid(Object solution);
   protected abstract boolean checkSolution(T game, Object solution) throws MciException;
-  protected abstract void handleRestrictions(String fullName, T toCreate)
-      throws MciException;
   protected abstract R toResponse(T toCreate) throws MciException;
 
   @Override
@@ -65,7 +64,6 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
     List<ServiceResponse<T>> gameResponses = new ArrayList<>();
     for (T game : games) {
       ServiceResponse<T> respItem = new ServiceResponse<>(game);
-      respItem.setSolved(!StringUtils.isEmpty(game.getCompletedDate()));
       gameResponses.add(respItem);
     }
     return gameResponses;
@@ -103,7 +101,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       throw GameExceptions.GenerationError(gameName, e);
     }
 
-    toCreate.setMaxCompletionTime(Long.parseLong("" + generator.generateIntDataValue(maxCompleteTimeRes.getDataRange())));
+    toCreate.setMaxCompletionTime(generator.generateLongDataValue(maxCompleteTimeRes.getDataRange()));
     toCreate.setPlayerName(playerName);
     toCreate.setLevel(newLevel);
     toCreate.setDifficulty(difficulty);
@@ -119,8 +117,6 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
 
     return toResponse(toCreate);
   }
-
-  protected abstract void handleDataTypeRestrictions(String fullName, T toCreate) throws MciException;
 
   @Override
   public R getGame(String id, String player, Class<T> gameClass) throws MciException {
@@ -146,22 +142,12 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       Object solution, Class<T> gameClass) throws MciException {
     String gameName = getGameName(gameClass);
 
-    if (StringUtils.isEmpty(id)
-        || StringUtils.isEmpty(player)
-        || completionTime == null) {
-      throw GameExceptions.InvalidRequest(gameName);
-    }
-
     if (!isValid(solution)) {
       throw GameExceptions.InvalidRequest(gameName);
     }
 
-    T game;
-    try {
-      game = generator.getGameWithId(id, player, gameClass);
-    } catch (EngineException e) {
-      throw GameExceptions.UnableToRetrieveGame(gameName, id, player, e);
-    }
+    R gameResponse = getGame(id,player,gameClass);
+    T game = gameResponse.getGame();
 
     if (completionTime > game.getMaxCompletionTime()) {
       throw GameExceptions.SurpassedMaxCompletionTime(gameName, id, game.getMaxCompletionTime());

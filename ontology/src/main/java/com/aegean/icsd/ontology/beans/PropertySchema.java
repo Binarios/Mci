@@ -7,6 +7,12 @@ public class PropertySchema {
   private String name;
 
   /**
+   * The name of the parent property
+   */
+  private String parent;
+
+
+  /**
    * The type of the property. Either ObjectProperty or DataTypeProperty
    */
   private boolean objectProperty;
@@ -90,5 +96,13 @@ public class PropertySchema {
 
   public void setObjectProperty(boolean objectProperty) {
     this.objectProperty = objectProperty;
+  }
+
+  public String getParent() {
+    return parent;
+  }
+
+  public void setParent(String parent) {
+    this.parent = parent;
   }
 }

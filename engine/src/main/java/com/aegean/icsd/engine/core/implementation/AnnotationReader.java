@@ -86,11 +86,7 @@ public class AnnotationReader implements IAnnotationReader {
       for (String relation : dataProperty.value()) {
         if (List.class.isAssignableFrom(field.getType())) {
           List values = (List) invokeFieldGetter(field, object);
-          for (Object value : values) {
-            if (value != null) {
-              relations.put(relation, value);
-            }
-          }
+          relations.put(relation, values);
         } else {
           relations.put(relation, invokeFieldGetter(field, object));
         }
@@ -116,23 +112,26 @@ public class AnnotationReader implements IAnnotationReader {
       }
       if (found) {
         Class<?> fieldClass = field.getType();
-        if(Integer.class.isAssignableFrom(fieldClass)) {
+        if (List.class.isAssignableFrom(field.getType())) {
+          invokeFieldSetter(field, object, value);
+        }
+        if (Integer.class.isAssignableFrom(fieldClass)) {
           invokeFieldSetter(field, object, Integer.parseInt(value.toString()));
         }
-        if(Long.class.isAssignableFrom(fieldClass)) {
+        if (Long.class.isAssignableFrom(fieldClass)) {
           invokeFieldSetter(field, object, Long.parseLong(value.toString()));
         }
-        if(String.class.isAssignableFrom(fieldClass)) {
+        if (String.class.isAssignableFrom(fieldClass)) {
           if (value == null) {
             invokeFieldSetter(field, object, (Object) null);
           } else {
             invokeFieldSetter(field, object, value.toString());
           }
         }
-        if(Enum.class.isAssignableFrom(fieldClass)) {
+        if (Enum.class.isAssignableFrom(fieldClass)) {
           invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase(Locale.ENGLISH)));
         }
-        if(Boolean.class.isAssignableFrom(fieldClass)) {
+        if (Boolean.class.isAssignableFrom(fieldClass)) {
           if (value == null) {
             invokeFieldSetter(field, object, (Object)null);
           } else {
