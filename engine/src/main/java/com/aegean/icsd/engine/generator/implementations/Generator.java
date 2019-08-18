@@ -176,10 +176,15 @@ public class Generator implements IGenerator {
       if (property.isMandatory() && rangeValue == null) {
         throw Exceptions.MissingMandatoryRelation(name, property.getName());
       }
-
       if (rangeValue != null) {
         Class<?> rangeClass = model.getJavaClassFromOwlType(property.getRange());
-        dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
+        if (List.class.isAssignableFrom(rangeValue.getClass())) {
+          for (Object elem : (List) rangeValue) {
+            dao.createValueRelation(id, property.getName(), elem, rangeClass);
+          }
+        } else {
+          dao.createValueRelation(id, property.getName(), rangeValue, rangeClass);
+        }
       }
     }
     return id;

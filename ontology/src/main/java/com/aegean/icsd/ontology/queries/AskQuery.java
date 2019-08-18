@@ -14,6 +14,7 @@ public class AskQuery {
   private Map<String, String> iriParams = new LinkedHashMap<>();
   private Map<String, String> strLiteralParams = new LinkedHashMap<>();
   private Map<String, Integer> intLiteralParams = new LinkedHashMap<>();
+  private Map<String, Long> longLiteralParams = new LinkedHashMap<>();
 
   private AskQuery() { }
 
@@ -37,11 +38,16 @@ public class AskQuery {
     return intLiteralParams;
   }
 
+  public Map<String, Long> getLongLiteralParams() {
+    return longLiteralParams;
+  }
+
   public static class Builder {
     private Map<String, List<Triplet>> conditions = new LinkedHashMap<>();
     private Map<String, String> iriParams = new LinkedHashMap<>();
     private Map<String, String> strLiteralParams = new LinkedHashMap<>();
     private Map<String, Integer> intLiteralParams = new LinkedHashMap<>();
+    private Map<String, Long> longLiteralParams = new LinkedHashMap<>();
 
     public Builder addIriParam(String param, String value) {
       iriParams.put(param, value);
@@ -55,6 +61,11 @@ public class AskQuery {
 
     public Builder addLiteralParam(String param, Integer value) {
       intLiteralParams.put(param, value);
+      return this;
+    }
+
+    public Builder addLiteralParam(String param, Long value) {
+      longLiteralParams.put(param, value);
       return this;
     }
 
@@ -86,6 +97,7 @@ public class AskQuery {
       query.iriParams = iriParams;
       query.strLiteralParams = strLiteralParams;
       query.intLiteralParams = intLiteralParams;
+      query.longLiteralParams = longLiteralParams;
       return query;
     }
 

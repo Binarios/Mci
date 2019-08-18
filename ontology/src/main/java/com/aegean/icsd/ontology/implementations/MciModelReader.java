@@ -187,7 +187,12 @@ public class MciModelReader implements IMciModelReader {
     if (restriction.isAllValuesFromRestriction()) {
       result.setType(RestrictionSchema.ONLY_TYPE);
       AllValuesFromRestriction allVal = restriction.asAllValuesFromRestriction();
-      result.getOnPropertySchema().setRange(allVal.getAllValuesFrom().getLocalName());
+      if (!allVal.getAllValuesFrom().isAnon()) {
+        result.getOnPropertySchema().setRange(allVal.getAllValuesFrom().getLocalName());
+      }
+      CardinalitySchema cardinalitySchema = new CardinalitySchema();
+      cardinalitySchema.setDataRangeRestrictions(generateDataRangeRestrictions(allVal.getAllValuesFrom()));
+      result.setCardinalitySchema(cardinalitySchema);
     } else if (restriction.isHasValueRestriction()) {
       result.setType(RestrictionSchema.VALUE_TYPE);
       HasValueRestriction valueRes = restriction.asHasValueRestriction();
@@ -277,15 +282,18 @@ public class MciModelReader implements IMciModelReader {
   }
 
   List<DataRangeRestrinctionSchema> generateDataRangeRestrictions(OntClass ont) {
-    List<DataRangeRestrinctionSchema> dataRanges = new ArrayList<>();
     Resource dataRangeResource = ont.getPropertyResourceValue(OWL2.onDataRange);
-    if(dataRangeResource != null) {
-      Resource withRestrictionResource = dataRangeResource.getPropertyResourceValue(OWL2.withRestrictions);
+    return generateDataRangeRestrictions(dataRangeResource);
+  }
+
+  List<DataRangeRestrinctionSchema> generateDataRangeRestrictions(Resource resource) {
+    List<DataRangeRestrinctionSchema> dataRanges = new ArrayList<>();
+    if (resource != null) {
+      Resource withRestrictionResource = resource.getPropertyResourceValue(OWL2.withRestrictions);
       if (withRestrictionResource != null) {
         getDataRanges(withRestrictionResource, dataRanges);
       }
     }
-
     return dataRanges;
   }
 

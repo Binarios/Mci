@@ -239,6 +239,7 @@ public class GeneratorDao implements IGeneratorDao {
       String prefixedDataProperty = obj.get("p").getAsString();
       String dataProperty = model.removePrefix(prefixedDataProperty);
       String value = obj.get("o").getAsString();
+      //TODO handle Lists
       ano.setDataPropertyValue(object, dataProperty, value);
     }
     return object;

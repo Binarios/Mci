@@ -86,11 +86,7 @@ public class AnnotationReader implements IAnnotationReader {
       for (String relation : dataProperty.value()) {
         if (List.class.isAssignableFrom(field.getType())) {
           List values = (List) invokeFieldGetter(field, object);
-          for (Object value : values) {
-            if (value != null) {
-              relations.put(relation, value);
-            }
-          }
+          relations.put(relation, values);
         } else {
           relations.put(relation, invokeFieldGetter(field, object));
         }

@@ -59,6 +59,10 @@ public class OntologyConnector implements IOntologyConnector {
       sparql.setLiteral(entry.getKey(), entry.getValue());
     }
 
+    for (Map.Entry<String, Long> entry : ask.getLongLiteralParams().entrySet()) {
+      sparql.setLiteral(entry.getKey(), entry.getValue());
+    }
+
     String query;
     try {
       query = sparql.asQuery().toString();
