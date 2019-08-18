@@ -40,7 +40,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
   private IRules rules;
 
   protected abstract void handleDataTypeRestrictions(String fullName, T toCreate) throws MciException;
-  protected abstract void handleRestrictions(String fullName, T toCreate) throws MciException;
+  protected abstract void handleObjectRestrictions(String fullName, T toCreate) throws MciException;
   protected abstract boolean isValid(Object solution);
   protected abstract boolean checkSolution(T game, Object solution) throws MciException;
   protected abstract R toResponse(T toCreate) throws MciException;
@@ -113,7 +113,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       throw GameExceptions.GenerationError(fullName, e);
     }
 
-    handleRestrictions(fullName, toCreate);
+    handleObjectRestrictions(fullName, toCreate);
 
     return toResponse(toCreate);
   }

@@ -54,7 +54,7 @@ public class WordPuzzleSvc extends AbstractGameSvc<WordPuzzle, WordPuzzleRespons
   }
 
   @Override
-  protected void handleRestrictions(String fullName, WordPuzzle toCreate) throws MciException {
+  protected void handleObjectRestrictions(String fullName, WordPuzzle toCreate) throws MciException {
     Word word;
     try {
       generator.upsertGame(toCreate);

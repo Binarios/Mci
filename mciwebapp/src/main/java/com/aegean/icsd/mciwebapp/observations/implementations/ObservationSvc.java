@@ -69,7 +69,7 @@ public class ObservationSvc extends AbstractGameSvc<Observation, ObservationResp
   }
 
   @Override
-  protected void handleRestrictions(String fullName, Observation toCreate)
+  protected void handleObjectRestrictions(String fullName, Observation toCreate)
       throws MciException {
 
     EntityRestriction hasObservationRes;

@@ -76,7 +76,7 @@ public class SynonymsSvc extends AbstractGameSvc<Synonyms, SynonymResponse> impl
   }
 
   @Override
-  protected void handleRestrictions(String fullName, Synonyms toCreate) throws MciException {
+  protected void handleObjectRestrictions(String fullName, Synonyms toCreate) throws MciException {
 
     EntityRestriction hasMainWordRes;
     try {

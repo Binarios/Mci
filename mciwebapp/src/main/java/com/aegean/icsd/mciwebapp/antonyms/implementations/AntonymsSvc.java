@@ -75,7 +75,7 @@ public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> impl
   }
 
   @Override
-  protected void handleRestrictions(String fullName, Antonyms toCreate) throws MciException {
+  protected void handleObjectRestrictions(String fullName, Antonyms toCreate) throws MciException {
     Map<EntityRestriction, List<BaseGameObject>> restrictions = new HashMap<>();
     EntityRestriction hasMainWordRes;
     EntityRestriction hasWordRes;
