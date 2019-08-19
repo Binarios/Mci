@@ -27,6 +27,11 @@ public final class GameExceptions {
       String.format("Game with id %s and player %s doesn't exist", id, player), e);
   }
 
+  public static MciException UnableToRetrieveGame(String game, String id, String player) {
+    return new MciException(game + "." + 4,
+      String.format("Game with id %s and player %s doesn't exist", id, player));
+  }
+
   public static MciException GameIsAlreadySolvedAt(String game, String id, String date) {
     return new MciException(game + "." + 5,
       String.format("Game with id %s has already been solved at %s", id, date));

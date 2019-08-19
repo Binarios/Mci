@@ -57,8 +57,10 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
 
     List<T> games;
     try {
-      games = generator.getGamesForPlayer(playerName, gameClass);
-    } catch (EngineException e) {
+      T criteria = gameClass.getDeclaredConstructor().newInstance();
+      criteria.setPlayerName(playerName);
+      games = generator.selectGameByCriteria(criteria);
+    } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | EngineException e) {
       throw GameExceptions.FailedToRetrieveGames(gameClass.getSimpleName(), playerName, e);
     }
     List<ServiceResponse<T>> gameResponses = new ArrayList<>();
@@ -127,14 +129,20 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       throw GameExceptions.InvalidRequest(gameName);
     }
 
-    T game;
     try {
-      game = generator.getGameWithId(id, player, gameClass);
-    } catch (EngineException e) {
+      T criteria = gameClass.getDeclaredConstructor().newInstance();
+      criteria.setId(id);
+      criteria.setPlayerName(player);
+      List<T> results =  generator.selectGameByCriteria(criteria);
+      if (results.size() != 1) {
+        throw GameExceptions.UnableToRetrieveGame(gameName, id, player);
+      }
+      return toResponse(results.get(0));
+    } catch (EngineException | InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
       throw GameExceptions.UnableToRetrieveGame(gameName, id, player, e);
     }
 
-    return toResponse(game);
+
   }
 
   @Override
@@ -146,7 +154,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       throw GameExceptions.InvalidRequest(gameName);
     }
 
-    R gameResponse = getGame(id,player,gameClass);
+    R gameResponse = getGame(id, player, gameClass);
     T game = gameResponse.getGame();
 
     if (completionTime > game.getMaxCompletionTime()) {

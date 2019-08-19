@@ -13,6 +13,8 @@ public interface IGenerator {
 
   <T extends BaseGameObject> List<T> selectGameObject(T criteria) throws EngineException;
 
+  <T extends BaseGame> List<T> selectGameByCriteria(T criteria) throws EngineException;
+
   <T extends BaseGame> String upsertGame(T game) throws EngineException;
 
   <T extends BaseGameObject> String upsertGameObject(T gameObject) throws EngineException;
@@ -20,12 +22,6 @@ public interface IGenerator {
   boolean createObjRelation(String id, EntityProperty onProperty, String rangeId) throws EngineException;
 
   int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException;
-
-  <T extends BaseGame> List<T> getGamesForPlayer(String playerName, Class<T> gameObjClass)
-      throws EngineException;
-
-  <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass)
-    throws EngineException;
 
   Long generateLongDataValue(ValueRangeRestriction res);
 }

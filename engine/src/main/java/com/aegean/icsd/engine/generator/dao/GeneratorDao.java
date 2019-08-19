@@ -39,49 +39,13 @@ public class GeneratorDao implements IGeneratorDao {
 
   @Override
   public <T extends BaseGameObject> List<T> selectGameObject(Map<String, Object> relations, Class<T> aClass) throws EngineException {
-    SelectQuery.Builder qBuilder = new SelectQuery.Builder()
-      .select("s", "p", "o");
+    return selectObjects(relations, aClass);
+  }
 
-    int i = 0;
-    for (Map.Entry<String, Object> entry : relations.entrySet()) {
-      String dataProperty = entry.getKey();
-      Object value = entry.getValue();
-      if (value == null) {
-        continue;
-      }
-      String param = "value" + i;
-      qBuilder.where("s", dataProperty, param)
-        .addIriParam(dataProperty, model.getPrefixedEntity(dataProperty));
-      if (Integer.class.isAssignableFrom(value.getClass())) {
-        qBuilder.addLiteralParam(param, Integer.parseInt(value.toString()));
-      } else if (Long.class.isAssignableFrom(value.getClass())) {
-        qBuilder.addLiteralParam(param, Long.parseLong(value.toString()));
-      } else if (Boolean.class.isAssignableFrom(value.getClass())) {
-        qBuilder.addLiteralParam(param, Boolean.parseBoolean(value.toString()));
-      } else {
-        qBuilder.addLiteralParam(param, value.toString());
-      }
-      i++;
-    }
-    qBuilder.where("s", "p", "o")
-      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "");
-
-    try {
-      JsonArray results = ontology.select(qBuilder.build());
-      List<T> objects = new ArrayList<>();
-      Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
-      for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
-        try {
-          T object = mapJsonToObject(entry.getValue(), "p", aClass);
-          objects.add(object);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-          throw DaoExceptions.ConstructorNotFound(aClass.getSimpleName(), e);
-        }
-      }
-      return objects;
-    } catch (OntologyException e) {
-      throw DaoExceptions.SelectObjectQuery("No extra msg", e);
-    }
+  @Override
+  public <T extends BaseGame> List<T> selectGame(Map<String, Object> relations, Class<T> aClass)
+    throws EngineException {
+    return selectObjects(relations, aClass);
   }
 
   @Override
@@ -140,74 +104,53 @@ public class GeneratorDao implements IGeneratorDao {
     }
   }
 
-  @Override
-  public <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
-    throws EngineException {
-    SelectQuery query = new SelectQuery.Builder()
-      .select("s", "p", "o")
-      .where("s", "rdfType", "type")
-      .where("s", "hasPlayer", "player")
-      .where("s", "p", "o")
-      .regexFilter("type", "gameName")
+  <T> List<T> selectObjects(Map<String, Object> relations, Class<T> aClass) throws EngineException {
+    String entityValue = ano.getEntityValue(aClass);
+    int i = 0;
+
+    SelectQuery.Builder qBuilder = new SelectQuery.Builder()
+      .select("s", "p", "o");
+
+    for (Map.Entry<String, Object> entry : relations.entrySet()) {
+      String dataProperty = entry.getKey();
+      Object value = entry.getValue();
+      if (value == null) {
+        continue;
+      }
+      String param = "value" + i;
+      qBuilder.where("s", dataProperty, param)
+        .addIriParam(dataProperty, model.getPrefixedEntity(dataProperty));
+      if (Integer.class.isAssignableFrom(value.getClass())) {
+        qBuilder.addLiteralParam(param, Integer.parseInt(value.toString()));
+      } else if (Long.class.isAssignableFrom(value.getClass())) {
+        qBuilder.addLiteralParam(param, Long.parseLong(value.toString()));
+      } else if (Boolean.class.isAssignableFrom(value.getClass())) {
+        qBuilder.addLiteralParam(param, Boolean.parseBoolean(value.toString()));
+      } else {
+        qBuilder.addLiteralParam(param, value.toString());
+      }
+      i++;
+    }
+    qBuilder.where("s", "p", "o")
+      .regexFilter("s", entityValue)
       .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
-      .addIriParam("hasPlayer", model.getPrefixedEntity("hasPlayer"))
-      .addIriParam("rdfType", "rdf:type")
-      .addLiteralParam("player", playerName)
-      .addLiteralParam("gameName", gameName)
-      .build();
+      .addLiteralParam(entityValue, entityValue);
 
     try {
-      JsonArray results = ontology.select(query);
-      List<T> games = new ArrayList<>();
+      JsonArray results = ontology.select(qBuilder.build());
+      List<T> objects = new ArrayList<>();
       Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
       for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
         try {
-          T game = mapJsonToObject(entry.getValue(), "p", gameObjClass);
-          games.add(game);
+          T object = mapJsonToObject(entry.getValue(), "p", aClass);
+          objects.add(object);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-          throw DaoExceptions.ConstructorNotFound(gameName, e);
+          throw DaoExceptions.ConstructorNotFound(aClass.getSimpleName(), e);
         }
       }
-
-      return games;
+      return objects;
     } catch (OntologyException e) {
-      throw DaoExceptions.FailedToRetrieveGames(playerName, e);
-    }
-  }
-
-  @Override
-  public <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass) throws EngineException {
-    SelectQuery query = new SelectQuery.Builder()
-      .select("s", "p", "o")
-      .where("s", "hasPlayer", "player")
-      .where("s", "hasId", "id")
-      .where("s", "p", "o")
-      .addIriParam("hasId", model.getPrefixedEntity("hasId"))
-      .addIriParam("hasPlayer", model.getPrefixedEntity("hasPlayer"))
-      .addLiteralParam("player", playerName)
-      .addLiteralParam("id", id)
-      .filter("o", SelectQuery.Builder.Operator.IS_LITERAL, "")
-      .build();
-
-    try {
-      JsonArray results = ontology.select(query);
-      T game = null;
-      if (results.size() > 0) {
-        Map<String, JsonArray> groupedByNodeName = groupByNodeName("s", results);
-        for (Map.Entry<String, JsonArray> entry : groupedByNodeName.entrySet()) {
-          try {
-            game = mapJsonToObject(entry.getValue(), "p", gameObjClass);
-          } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            throw DaoExceptions.ConstructorNotFound(id, e);
-          }
-        }
-      }
-      if (game == null) {
-        throw DaoExceptions.FailedToRetrieveGames(playerName);
-      }
-      return game;
-    } catch (OntologyException e) {
-      throw DaoExceptions.FailedToRetrieveGames(playerName, e);
+      throw DaoExceptions.SelectObjectQuery("No extra msg", e);
     }
   }
 
@@ -249,14 +192,6 @@ public class GeneratorDao implements IGeneratorDao {
       }
       ano.setDataPropertyValue(object, dataProperty, genericValue);
     }
-//    for (JsonElement element : dataProperties) {
-//      JsonObject obj = element.getAsJsonObject();
-//      String prefixedDataProperty = obj.get("p").getAsString();
-//      String dataProperty = model.removePrefix(prefixedDataProperty);
-//      String value = obj.get("o").getAsString();
-//      //TODO handle Lists
-//      ano.setDataPropertyValue(object, dataProperty, value);
-//    }
     return object;
   }
 

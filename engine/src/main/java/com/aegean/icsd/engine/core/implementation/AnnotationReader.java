@@ -3,6 +3,7 @@ package com.aegean.icsd.engine.core.implementation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,6 +24,8 @@ import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.annotations.Key;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
+
+import com.github.jsonldjava.utils.Obj;
 
 @Service
 public class AnnotationReader implements IAnnotationReader {
@@ -113,31 +116,39 @@ public class AnnotationReader implements IAnnotationReader {
       if (found) {
         Class<?> fieldClass = field.getType();
         if (List.class.isAssignableFrom(field.getType())) {
-          invokeFieldSetter(field, object, value);
-        }
-        if (Integer.class.isAssignableFrom(fieldClass)) {
-          invokeFieldSetter(field, object, Integer.parseInt(value.toString()));
-        }
-        if (Long.class.isAssignableFrom(fieldClass)) {
-          invokeFieldSetter(field, object, Long.parseLong(value.toString()));
-        }
-        if (String.class.isAssignableFrom(fieldClass)) {
-          if (value == null) {
-            invokeFieldSetter(field, object, (Object) null);
-          } else {
-            invokeFieldSetter(field, object, value.toString());
+          ParameterizedType listParamType = (ParameterizedType) field.getGenericType();
+          Class<?> listType = (Class<?>) listParamType.getActualTypeArguments()[0];
+          List castedList = new ArrayList();
+          for (Object obj : (List) value) {
+            castedList.add(parseValue(listType, obj));
           }
+          invokeFieldSetter(field, object, castedList);
+        } else {
+          invokeFieldSetter(field, object, parseValue(fieldClass, value));
         }
-        if (Enum.class.isAssignableFrom(fieldClass)) {
-          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase(Locale.ENGLISH)));
-        }
-        if (Boolean.class.isAssignableFrom(fieldClass)) {
-          if (value == null) {
-            invokeFieldSetter(field, object, (Object)null);
-          } else {
-            invokeFieldSetter(field, object, Boolean.valueOf(value.toString()));
-          }
-        }
+//        if (Integer.class.isAssignableFrom(fieldClass)) {
+//          invokeFieldSetter(field, object, Integer.parseInt(value.toString()));
+//        }
+//        if (Long.class.isAssignableFrom(fieldClass)) {
+//          invokeFieldSetter(field, object, Long.parseLong(value.toString()));
+//        }
+//        if (String.class.isAssignableFrom(fieldClass)) {
+//          if (value == null) {
+//            invokeFieldSetter(field, object, (Object) null);
+//          } else {
+//            invokeFieldSetter(field, object, value.toString());
+//          }
+//        }
+//        if (Enum.class.isAssignableFrom(fieldClass)) {
+//          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase(Locale.ENGLISH)));
+//        }
+//        if (Boolean.class.isAssignableFrom(fieldClass)) {
+//          if (value == null) {
+//            invokeFieldSetter(field, object, (Object)null);
+//          } else {
+//            invokeFieldSetter(field, object, Boolean.valueOf(value.toString()));
+//          }
+//        }
         break;
       }
     }
@@ -196,4 +207,23 @@ public class AnnotationReader implements IAnnotationReader {
     derivedClassFields.addAll(superFields);
     return derivedClassFields;
   }
+
+  Object parseValue (Class<?> clazz, Object value) {
+    Object parsedValue;
+    if (Integer.class.isAssignableFrom(clazz)) {
+      parsedValue = Integer.parseInt(value.toString());
+    } else if (Long.class.isAssignableFrom(clazz)) {
+      parsedValue = Long.parseLong(value.toString());
+    } else if (String.class.isAssignableFrom(clazz)) {
+      parsedValue = value != null ? value.toString() : null;
+    } else if (Enum.class.isAssignableFrom(clazz)) {
+      parsedValue = Enum.valueOf((Class<Enum>)clazz, value.toString().toUpperCase(Locale.ENGLISH));
+    } else if (Boolean.class.isAssignableFrom(clazz)) {
+      parsedValue = value != null ? Boolean.valueOf(value.toString()) : null;
+    } else {
+      parsedValue = value;
+    }
+    return parsedValue;
+  }
+
 }
