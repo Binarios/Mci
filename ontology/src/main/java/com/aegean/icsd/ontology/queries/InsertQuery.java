@@ -38,9 +38,6 @@ public class InsertQuery {
     private Map<InsertParam, List<InsertParam>> relations = new LinkedHashMap<>();
     private List<InsertParam> params = new LinkedList<>();
 
-
-    public Builder() { }
-
     public Builder addPrefix (String prefix, String Uri) {
       prefixes.put(prefix, Uri);
       return this;

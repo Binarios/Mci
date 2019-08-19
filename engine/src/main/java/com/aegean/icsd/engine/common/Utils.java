@@ -2,7 +2,7 @@ package com.aegean.icsd.engine.common;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 
-public class Utils {
+public final class Utils {
 
   private Utils () { }
 
