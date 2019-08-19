@@ -38,7 +38,7 @@ public class ChronologicalOrderSvc extends AbstractGameSvc<ChronologicalOrder, C
   }
 
   @Override
-  protected void handleRestrictions(String fullName, ChronologicalOrder toCreate) throws MciException {
+  protected void handleObjectRestrictions(String fullName, ChronologicalOrder toCreate) throws MciException {
     EntityRestriction hasImageRes;
     try {
       hasImageRes = rules.getEntityRestriction(fullName, "hasOrderedImage");

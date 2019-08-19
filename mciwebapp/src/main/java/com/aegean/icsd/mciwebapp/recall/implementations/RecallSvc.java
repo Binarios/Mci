@@ -89,7 +89,7 @@ public class RecallSvc extends AbstractGameSvc<Recall, RecallResponse> implement
   }
 
   @Override
-  protected void handleRestrictions(String fullName, Recall toCreate) throws MciException {
+  protected void handleObjectRestrictions(String fullName, Recall toCreate) throws MciException {
     // no object restrictions
   }
 

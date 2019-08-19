@@ -56,6 +56,12 @@ public class Generator implements IGenerator {
   }
 
   @Override
+  public <T extends BaseGame> List<T> selectGameByCriteria(T criteria) throws EngineException {
+    Map<String, Object> relations = ano.getDataProperties(criteria);
+    return (List<T>) dao.selectGame(relations, criteria.getClass());
+  }
+
+  @Override
   public <T extends BaseGame> String upsertGame(T game) throws EngineException {
     LOGGER.debug("Upserting new Game");
     String id = ano.setEntityId(game);
@@ -99,18 +105,6 @@ public class Generator implements IGenerator {
   @Override
   public int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException {
     return dao.getLastCompletedLevel(gameName, difficulty, playerName);
-  }
-
-  @Override
-  public <T extends BaseGame> List<T> getGamesForPlayer(String playerName, Class<T> gameObjClass)
-      throws EngineException {
-    String gameName = ano.getEntityValue(gameObjClass);
-    return  dao.getGamesForPlayer(gameName, playerName, gameObjClass);
-  }
-
-  @Override
-  public <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass) throws EngineException {
-    return dao.getGameWithId(id, playerName, gameObjClass);
   }
 
   @Override

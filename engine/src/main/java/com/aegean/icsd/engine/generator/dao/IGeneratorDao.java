@@ -12,18 +12,15 @@ public interface IGeneratorDao {
 
   <T extends BaseGameObject> List<T> selectGameObject(Map<String, Object> relations, Class<T> aClass) throws EngineException;
 
+  <T extends BaseGame> List<T> selectGame(Map<String, Object> relations, Class<T> aClass)  throws EngineException;
+
   boolean createValueRelation(String id, String name, Object rangeValue, Class<?> valueClass)
     throws EngineException;
 
   boolean createObjRelation(String id, String name, String objId) throws EngineException;
 
-  boolean instantiateObject(String id, String type) throws EngineException;
-
   int getLastCompletedLevel(String gameName, Difficulty difficulty, String playerName) throws EngineException;
 
-  <T extends BaseGame> List<T> getGamesForPlayer(String gameName, String playerName, Class<T> gameObjClass)
-    throws EngineException;
+  boolean instantiateObject(String id, String type) throws EngineException;
 
-  <T extends BaseGame> T getGameWithId(String id, String playerName, Class<T> gameObjClass)
-    throws EngineException;
 }
