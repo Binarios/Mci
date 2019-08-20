@@ -170,7 +170,7 @@ public class ImageProvider implements IImageProvider {
   public String selectAssociatedSubject(String imageId) throws ProviderException {
     EntityRestriction imageSubjRes;
     try {
-      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasImageSubject");
+      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasSubject");
     } catch (RulesException e) {
       throw ProviderExceptions.GenerationError(Image.NAME, e);
     }
@@ -185,8 +185,8 @@ public class ImageProvider implements IImageProvider {
     EntityRestriction imageTitleRes;
     EntityRestriction hasPreviousImage;
     try {
-      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasImageSubject");
-      imageTitleRes = rules.getEntityRestriction(Image.NAME, "hasImageTitle");
+      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasSubject");
+      imageTitleRes = rules.getEntityRestriction(Image.NAME, "hasTitle");
       hasPreviousImage = rules.getEntityRestriction("OrderedImage", "hasPreviousImage");
     } catch (RulesException e) {
       throw ProviderExceptions.GenerationError(Image.NAME, e);
@@ -258,7 +258,7 @@ public class ImageProvider implements IImageProvider {
         return found.get(0);
       }
     } catch (EngineException e) {
-      throw ProviderExceptions.GenerationError(Word.NAME, e);
+      throw ProviderExceptions.GenerationError(Image.NAME, e);
     }
   }
 }

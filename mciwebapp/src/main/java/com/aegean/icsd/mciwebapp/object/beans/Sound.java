@@ -9,19 +9,8 @@ import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 public class Sound extends BaseGameObject {
   public static final String NAME = "Sound";
 
-  @Key
-  private String imageName;
-
   @DataProperty("hasAssetPath")
   private String path;
-
-  public String getImageName() {
-    return imageName;
-  }
-
-  public void setImageName(String imageName) {
-    this.imageName = imageName;
-  }
 
   public String getPath() {
     return path;

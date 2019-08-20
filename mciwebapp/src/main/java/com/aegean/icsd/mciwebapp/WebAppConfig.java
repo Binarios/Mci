@@ -19,6 +19,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.aegean.icsd.mciwebapp.object.configurations.ImageConfiguration;
+import com.aegean.icsd.mciwebapp.object.configurations.SoundConfiguration;
 import com.aegean.icsd.mciwebapp.object.configurations.WordConfiguration;
 
 import com.google.gson.GsonBuilder;
@@ -78,6 +79,20 @@ public class WebAppConfig implements WebMvcConfigurer {
     config.setParentIndex(Integer.parseInt(getPropertyValue("image.index.parentImage")));
     return config;
   }
+
+  @Bean
+  public SoundConfiguration getSoundConfiguration() {
+    SoundConfiguration config = new SoundConfiguration();
+    config.setLocation(getPropertyValue("sound.loc"));
+    config.setFilename(getPropertyValue("sound.filename"));
+    config.setDelimiter(getPropertyValue("sound.delimiter"));
+    config.setUrlIndex(Integer.parseInt(getPropertyValue("sound.index.url")));
+    config.setTitleIndex(Integer.parseInt(getPropertyValue("sound.index.title")));
+    config.setSubjectIndex(Integer.parseInt(getPropertyValue("sound.index.subject")));
+    return config;
+  }
+
+
 
   private String getPropertyValue (String propertyName) {
     String value = env.getProperty(propertyName);

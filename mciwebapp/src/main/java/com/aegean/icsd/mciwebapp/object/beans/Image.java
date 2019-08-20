@@ -19,6 +19,9 @@ public class Image extends BaseGameObject {
   @DataProperty("hasChronologicalOrder")
   private Boolean ordered;
 
+  @DataProperty("isSoundAssociated")
+  private Boolean soundAssociated;
+
   public String getId() {
     return id;
   }
@@ -41,5 +44,13 @@ public class Image extends BaseGameObject {
 
   public Boolean isOrdered() {
     return this.ordered;
+  }
+
+  public void setSoundAssociated(Boolean soundAssociated) {
+    this.soundAssociated = soundAssociated;
+  }
+
+  public Boolean isSoundAssociated() {
+    return this.soundAssociated;
   }
 }
