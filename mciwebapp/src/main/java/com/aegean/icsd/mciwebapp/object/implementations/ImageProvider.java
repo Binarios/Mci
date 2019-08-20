@@ -88,7 +88,7 @@ public class ImageProvider implements IImageProvider {
         }
 
       } catch (EngineException e) {
-        throw Exceptions.UnableToGetObject(Image.NAME, e);
+        throw ProviderExceptions.UnableToGetObject(Image.NAME, e);
       }
       if (images.size() == cardinality) {
         break;
@@ -96,8 +96,31 @@ public class ImageProvider implements IImageProvider {
     }
 
     if (images.isEmpty()) {
-      throw Exceptions.UnableToGetObject("Unable to retrieve new ordered Images for this level");
+      throw ProviderExceptions.UnableToGetObject("Unable to retrieve new ordered Images for this level");
     }
+    return images;
+  }
+
+  @Override
+  public List<Image> selectNewImagesForEntity(String entityName, int count) throws ProviderException {
+    List<Image> images = new ArrayList<>();
+    try {
+      List<String> imageIds = dao.getNewObjectIdsFor(entityName, Image.class);
+      for(String imageId : imageIds) {
+        if (images.size() == count) {
+          break;
+        }
+        Image criteria = new Image();
+        criteria.setId(imageId);
+        List<Image> result = generator.selectGameObject(criteria);
+        if (!result.isEmpty()) {
+          images.addAll(result);
+        }
+      }
+    } catch (ProviderException | EngineException e) {
+      throw ProviderExceptions.UnableToGetObject(Image.NAME, e);
+    }
+
     return images;
   }
 
@@ -115,11 +138,11 @@ public class ImageProvider implements IImageProvider {
     try {
       List<Image> images = generator.selectGameObject(criteria);
       if (images.size() != 1) {
-        throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id);
+        throw ProviderExceptions.UnableToGetObject("No image or more than one image found with the same id :" + id);
       }
       return images.get(0);
     } catch (EngineException e) {
-      throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id, e);
+      throw ProviderExceptions.UnableToGetObject("No image or more than one image found with the same id :" + id, e);
     }
   }
 
@@ -133,11 +156,11 @@ public class ImageProvider implements IImageProvider {
       try {
         List<Image> results = generator.selectGameObject(criteria);
         if (results.size() != 1) {
-          throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id);
+          throw ProviderExceptions.UnableToGetObject("No image or more than one image found with the same id :" + id);
         }
         images.add(results.get(0));
       } catch (EngineException e) {
-        throw Exceptions.UnableToGetObject("No image or more than one image found with the same id :" + id, e);
+        throw ProviderExceptions.UnableToGetObject("No image or more than one image found with the same id :" + id, e);
       }
     }
     return images;
@@ -149,7 +172,7 @@ public class ImageProvider implements IImageProvider {
     try {
       imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasImageSubject");
     } catch (RulesException e) {
-      throw Exceptions.GenerationError(Image.NAME, e);
+      throw ProviderExceptions.GenerationError(Image.NAME, e);
     }
     List<String> wordId = dao.getAssociatedIdOnProperty(imageId, imageSubjRes.getOnProperty(), Word.class);
     return wordId.get(0);
@@ -166,7 +189,7 @@ public class ImageProvider implements IImageProvider {
       imageTitleRes = rules.getEntityRestriction(Image.NAME, "hasImageTitle");
       hasPreviousImage = rules.getEntityRestriction("OrderedImage", "hasPreviousImage");
     } catch (RulesException e) {
-      throw Exceptions.GenerationError(Image.NAME, e);
+      throw ProviderExceptions.GenerationError(Image.NAME, e);
     }
 
     for (String line : lines) {
@@ -218,7 +241,7 @@ public class ImageProvider implements IImageProvider {
       }
       return image;
     } catch (EngineException e) {
-      throw Exceptions.GenerationError(Image.NAME, e);
+      throw ProviderExceptions.GenerationError(Image.NAME, e);
     }
   }
 
@@ -235,7 +258,7 @@ public class ImageProvider implements IImageProvider {
         return found.get(0);
       }
     } catch (EngineException e) {
-      throw Exceptions.GenerationError(Word.NAME, e);
+      throw ProviderExceptions.GenerationError(Word.NAME, e);
     }
   }
 }

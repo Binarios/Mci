@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,7 +50,7 @@ public class ObservationProvider implements IObservationProvider {
     try {
       imageRes = rules.getEntityRestriction(ObservationObj.NAME, "hasImage");
     } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveRules(ObservationObj.NAME, e);
+      throw ProviderExceptions.UnableToRetrieveRules(ObservationObj.NAME, e);
     }
 
     ObservationObj toCreate = null;
@@ -67,7 +66,7 @@ public class ObservationProvider implements IObservationProvider {
           generator.createObjRelation(toCreate.getId(), imageRes.getOnProperty(), imageId);
           break;
         } catch (EngineException e) {
-          throw Exceptions.GenerationError(ObservationObj.NAME, e);
+          throw ProviderExceptions.GenerationError(ObservationObj.NAME, e);
         }
       } else {
         for (String id : associatedObsObjIds) {
@@ -86,11 +85,11 @@ public class ObservationProvider implements IObservationProvider {
             }
             break;
           } catch (EngineException e) {
-            throw Exceptions.GenerationError(ObservationObj.NAME, e);
+            throw ProviderExceptions.GenerationError(ObservationObj.NAME, e);
           }
         }
         if (toCreate == null) {
-          throw Exceptions.UnableToGetObject(String.format("Found association with imageId %s," +
+          throw ProviderExceptions.UnableToGetObject(String.format("Found association with imageId %s," +
             "but could not select the observationObj associated with", imageId));
         }
       }
@@ -110,7 +109,7 @@ public class ObservationProvider implements IObservationProvider {
         List<ObservationObj> results = generator.selectGameObject(obj);
         observationObjs.add(results.get(0));
       } catch (EngineException e) {
-        throw Exceptions.UnableToGetObject("entityId = " + entityId, e);
+        throw ProviderExceptions.UnableToGetObject("entityId = " + entityId, e);
       }
     }
     return observationObjs;
