@@ -70,6 +70,11 @@ public final class GameExceptions {
     return new MciException(game + "." + 12, String.format("Unable to solve game %s, %s", game, info));
   }
 
+  public static MciException UnableToResponse(String game, Throwable t) {
+    return new MciException(game + "." + 13, String.format("Unable to construct response for game %s", game), t);
+  }
+
+
   public static MciException GenerationError(String game, String msg) {
     return new MciException(game + "." + 99, String.format("There was a problem during the " +
       "generation of the game %s. %s", game, msg));
