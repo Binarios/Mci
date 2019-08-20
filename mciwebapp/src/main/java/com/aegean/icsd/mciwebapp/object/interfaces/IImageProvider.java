@@ -17,5 +17,7 @@ public interface IImageProvider {
 
   List<Image> getNewOrderedImagesFor(String entityName, int cardinality) throws ProviderException;
 
+  List<Image> selectNewImagesForEntity(String entityName, int count) throws ProviderException;
+
   boolean isSolutionCorrect(List<ImageData> solution) throws ProviderException;
 }

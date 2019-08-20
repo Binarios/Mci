@@ -2,10 +2,10 @@ package com.aegean.icsd.mciwebapp.object.implementations;
 
 import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
-final class Exceptions {
+final class ProviderExceptions {
   private final static String CODE_NAME = "OP";
 
-  private Exceptions() { }
+  private ProviderExceptions() { }
 
   static ProviderException UnableToGetWord(String criteria, Throwable t) {
     return new ProviderException(CODE_NAME + "." + 1, String.format("Unable to get the word with the associated criteria: %s", criteria), t);

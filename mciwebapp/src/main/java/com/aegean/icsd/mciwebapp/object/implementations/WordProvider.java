@@ -60,7 +60,7 @@ public class WordProvider implements IWordProvider {
   public List<Word> getNewWordsFor(String entityName, int count, Word criteria) throws ProviderException {
     List<String> availableIds = dao.getNewObjectIdsFor(entityName, Word.class);
     if (availableIds.isEmpty()) {
-      throw Exceptions.UnableToGenerateObject(Word.NAME);
+      throw ProviderExceptions.UnableToGenerateObject(Word.NAME);
     }
     List<Word> availableWords = new ArrayList<>();
     Collections.shuffle(availableIds, new Random(System.currentTimeMillis()));
@@ -73,7 +73,7 @@ public class WordProvider implements IWordProvider {
           availableWords.add(results.get(0));
         }
       } catch (EngineException e) {
-        throw Exceptions.GenerationError(Word.NAME, e);
+        throw ProviderExceptions.GenerationError(Word.NAME, e);
       }
       if(availableWords.size() == count) {
         break;
@@ -81,7 +81,7 @@ public class WordProvider implements IWordProvider {
     }
 
     if(availableWords.size() != count) {
-      throw Exceptions.UnableToGetObject(String.format("Unable to find %s new words for %s", count, entityName));
+      throw ProviderExceptions.UnableToGetObject(String.format("Unable to find %s new words for %s", count, entityName));
     }
 
     return availableWords;
@@ -108,7 +108,7 @@ public class WordProvider implements IWordProvider {
       List<Word> results = generator.selectGameObject(word);
       return results.get(0);
     } catch (EngineException e) {
-      throw Exceptions.UnableToGetWord("id = " + wordId, e);
+      throw ProviderExceptions.UnableToGetWord("id = " + wordId, e);
     }
   }
 
@@ -123,7 +123,7 @@ public class WordProvider implements IWordProvider {
         List<Word> results = generator.selectGameObject(word);
         words.add(results.get(0));
       } catch (EngineException e) {
-        throw Exceptions.UnableToGetWord("entityId = " + entityId, e);
+        throw ProviderExceptions.UnableToGetWord("entityId = " + entityId, e);
       }
     }
     return words;
@@ -173,7 +173,7 @@ public class WordProvider implements IWordProvider {
     try {
       antonymRes = rules.getEntityRestriction("AntonymWord", "hasAntonym");
     } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveRules("AntonymWord", e);
+      throw ProviderExceptions.UnableToRetrieveRules("AntonymWord", e);
     }
 
     for (String antonym : antonyms) {
@@ -188,7 +188,7 @@ public class WordProvider implements IWordProvider {
             generator.upsertGameObject(value);
           }
         } catch (EngineException e) {
-          throw Exceptions.GenerationError(Word.NAME, e);
+          throw ProviderExceptions.GenerationError(Word.NAME, e);
         }
       }
     }
@@ -199,7 +199,7 @@ public class WordProvider implements IWordProvider {
     try {
       synonymRes = rules.getEntityRestriction("SynonymWord", "hasSynonym");
     } catch (RulesException e) {
-      throw Exceptions.UnableToRetrieveRules("SynonymWord", e);
+      throw ProviderExceptions.UnableToRetrieveRules("SynonymWord", e);
     }
 
     for (String synonym : synonyms) {
@@ -214,7 +214,7 @@ public class WordProvider implements IWordProvider {
             generator.upsertGameObject(value);
           }
         } catch (EngineException e) {
-          throw Exceptions.GenerationError(Word.NAME, e);
+          throw ProviderExceptions.GenerationError(Word.NAME, e);
         }
       }
     }
@@ -233,7 +233,7 @@ public class WordProvider implements IWordProvider {
         return found.get(0);
       }
     } catch (EngineException e) {
-      throw Exceptions.GenerationError(Word.NAME, e);
+      throw ProviderExceptions.GenerationError(Word.NAME, e);
     }
   }
 

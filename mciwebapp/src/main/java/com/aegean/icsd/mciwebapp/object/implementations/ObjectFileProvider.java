@@ -36,7 +36,7 @@ public class ObjectFileProvider implements IObjectFileProvider {
         file, 180000, 180000);
       allLines = Files.readAllLines(Paths.get(file.getPath()));
     } catch (IOException e) {
-      throw Exceptions.UnableToGetFileFromUrl(url, fileName, e);
+      throw ProviderExceptions.UnableToGetFileFromUrl(url, fileName, e);
     }
     return allLines;
   }
@@ -48,14 +48,14 @@ public class ObjectFileProvider implements IObjectFileProvider {
     Supplier<Stream<String>> streamSupplier = getLines(url)::stream;
 
     if (streamSupplier.get() == null ) {
-      throw Exceptions.UnableToReadFile(String.format("Error when reading file at: %s", url));
+      throw ProviderExceptions.UnableToReadFile(String.format("Error when reading file at: %s", url));
     }
 
     long totalNb = streamSupplier.get().count();
     long lineNumber = ThreadLocalRandom.current().nextLong(0, totalNb);
     String line = streamSupplier.get().skip(lineNumber).findFirst().orElse(null);
     if (line == null) {
-      throw Exceptions.UnableToReadFile("Could not read the line");
+      throw ProviderExceptions.UnableToReadFile("Could not read the line");
     }
 
     return line.replace("\\r", "").trim();

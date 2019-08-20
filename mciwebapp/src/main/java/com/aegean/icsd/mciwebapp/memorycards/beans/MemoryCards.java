@@ -11,7 +11,7 @@ public class MemoryCards extends BaseGame {
   @DataProperty("displayTime")
   private Long displayTime;
 
-  @DataProperty("objectsPerCards")
+  @DataProperty("objectsPerCard")
   private Integer objectsPerCards;
 
   public Long getDisplayTime() {

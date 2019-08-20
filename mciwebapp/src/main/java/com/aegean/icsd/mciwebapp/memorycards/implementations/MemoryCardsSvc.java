@@ -1,11 +1,13 @@
 package com.aegean.icsd.mciwebapp.memorycards.implementations;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
@@ -44,7 +46,6 @@ public class MemoryCardsSvc extends AbstractGameSvc<MemoryCards, MemoryCardsResp
     Integer objectsPerCard = Integer.parseInt(objectsPerCardRes.getDataRange().getRanges().get(0).getValue());
     toCreate.setDisplayTime(displayTime);
     toCreate.setObjectsPerCards(objectsPerCard);
-
   }
 
   @Override
@@ -56,10 +57,17 @@ public class MemoryCardsSvc extends AbstractGameSvc<MemoryCards, MemoryCardsResp
       throw GameExceptions.GenerationError(MemoryCards.NAME,e);
     }
 
+    List<BaseGameObject> objects = new ArrayList<>();
     if (Image.NAME.equals(hasObjectRes.getDataRange().getDataType())) {
-
+      try {
+        List<Image> images = imageProvider.selectNewImagesForEntity(fullName, hasObjectRes.getCardinality());
+        objects.addAll(images);
+      } catch (ProviderException e) {
+        throw GameExceptions.GenerationError(MemoryCards.NAME, e);
+      }
     }
 
+    createObjRelation(toCreate, objects, hasObjectRes.getOnProperty());
   }
 
   @Override
@@ -69,7 +77,33 @@ public class MemoryCardsSvc extends AbstractGameSvc<MemoryCards, MemoryCardsResp
 
   @Override
   protected boolean checkSolution(MemoryCards game, Object solution) throws MciException {
-    return false;
+    List<ImageData> castedSolution = (List) solution;
+    List<Image> associatedImages;
+    try {
+      associatedImages = imageProvider.selectImagesByEntityId(game.getId());
+    } catch (ProviderException e) {
+      throw GameExceptions.UnableToResponse(MemoryCards.NAME, e);
+    }
+
+    List<ImageData> existingImageData = associatedImages.stream()
+      .map(x -> {
+        ImageData imageData = new ImageData();
+        imageData.setPath(x.getPath());
+        imageData.setId(x.getId());
+        return imageData;
+      }).collect(Collectors.toList());
+
+    List<ImageData> notFound = castedSolution.stream()
+      .filter(x -> {
+        ImageData foundItem = existingImageData.stream()
+          .filter(y -> y.getId().equals(x.getId()) && y.getPath().equals(x.getPath()))
+          .findFirst()
+          .orElse(null);
+        return foundItem == null;
+      }).collect(Collectors.toList());
+
+
+    return notFound.isEmpty();
   }
 
   @Override
