@@ -23,7 +23,6 @@ import com.aegean.icsd.mciwebapp.common.FilterResponse;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.Response;
 import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
-import com.aegean.icsd.mciwebapp.object.beans.Word;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzle;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WordPuzzleResponse;
 import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WorldPuzzleRequest;

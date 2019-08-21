@@ -2,7 +2,7 @@ package com.aegean.icsd.mciwebapp.memorycards.beans;
 
 import java.util.List;
 
-import com.aegean.icsd.mciwebapp.common.beans.ImageData;
+import com.aegean.icsd.mciobjects.images.beans.ImageData;
 import com.aegean.icsd.mciwebapp.common.beans.Request;
 
 public class MemoryCardsRequest extends Request {

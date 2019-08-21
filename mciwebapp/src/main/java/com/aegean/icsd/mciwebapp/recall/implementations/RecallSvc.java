@@ -17,7 +17,6 @@ import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.implementations.AbstractGameSvc;
-import com.aegean.icsd.mciwebapp.object.interfaces.INumberProvider;
 import com.aegean.icsd.mciwebapp.recall.beans.Recall;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallResponse;
 import com.aegean.icsd.mciwebapp.recall.dao.IRecallDao;
@@ -31,9 +30,6 @@ public class RecallSvc extends AbstractGameSvc<Recall, RecallResponse> implement
 
   @Autowired
   private IGenerator generator;
-
-  @Autowired
-  private INumberProvider numberProvider;
 
   @Autowired
   private IRecallDao dao;

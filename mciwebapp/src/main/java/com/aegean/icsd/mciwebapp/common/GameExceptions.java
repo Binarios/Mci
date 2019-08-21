@@ -2,7 +2,6 @@ package com.aegean.icsd.mciwebapp.common;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
-import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
 public final class GameExceptions {
   private GameExceptions () { }
@@ -74,6 +73,9 @@ public final class GameExceptions {
     return new MciException(game + "." + 13, String.format("Unable to construct response for game %s", game), t);
   }
 
+  public static MciException UnableToResponse(String game, String msg) {
+    return new MciException(game + "." + 14, String.format("Unable to construct response for game %s. More info: %s", game, msg));
+  }
 
   public static MciException GenerationError(String game, String msg) {
     return new MciException(game + "." + 99, String.format("There was a problem during the " +
