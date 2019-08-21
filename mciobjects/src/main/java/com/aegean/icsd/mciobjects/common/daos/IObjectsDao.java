@@ -16,6 +16,8 @@ public interface IObjectsDao {
 
   <T extends BaseGameObject> List<String> getAssociatedIdOnProperty(String id, EntityProperty onProperty, Class<T> object) throws ProviderException;
 
+  <T extends BaseGameObject> boolean areObjectsAssociatedOn(T thisObj, T thatObj, EntityProperty onProperty) throws ProviderException;
+
   List<String> getIdAssociatedWithOtherOnProperty(String otherId, EntityProperty onProperty) throws ProviderException;
 
   List<String> getIdAssociatedWithOtherOnProperty(String thisType, String otherType, String otherId, EntityProperty onProperty) throws ProviderException;

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
+import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
@@ -17,6 +18,7 @@ import com.aegean.icsd.mciobjects.words.beans.Word;
 import com.aegean.icsd.ontology.beans.OntologyException;
 import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 import com.aegean.icsd.ontology.interfaces.IOntologyConnector;
+import com.aegean.icsd.ontology.queries.AskQuery;
 import com.aegean.icsd.ontology.queries.SelectQuery;
 
 import com.google.gson.JsonArray;
@@ -160,6 +162,25 @@ public class ObjectsDao implements IObjectsDao {
       return ids;
     } catch (OntologyException e) {
       throw Exceptions.FailedToRetrieveObjects(id, e);
+    }
+  }
+
+  @Override
+  public <T extends BaseGameObject> boolean areObjectsAssociatedOn(T thisObj, T thatObj, EntityProperty onProperty) throws ProviderException {
+    AskQuery query = new AskQuery.Builder()
+      .is(thisObj.getId(), onProperty.getName(), thatObj.getId())
+      .addIriParam(thisObj.getId(), model.getPrefixedEntity(thisObj.getId()))
+      .addIriParam(thatObj.getId(), model.getPrefixedEntity(thatObj.getId()))
+      .addIriParam(onProperty.getName(), model.getPrefixedEntity(onProperty.getName()))
+      .build();
+
+    try {
+      return ont.ask(query);
+    } catch (OntologyException e) {
+      throw Exceptions.FailedToAsk(String.format("Id %s is associated with id %s on property %s",
+        thisObj.getId(),
+        thatObj.getId(),
+        onProperty.getName()), e);
     }
   }
 

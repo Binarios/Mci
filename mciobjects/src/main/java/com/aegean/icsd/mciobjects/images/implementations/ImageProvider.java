@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,7 @@ import com.aegean.icsd.mciobjects.images.beans.Image;
 import com.aegean.icsd.mciobjects.images.beans.ImageData;
 import com.aegean.icsd.mciobjects.images.daos.IImageDao;
 import com.aegean.icsd.mciobjects.images.interfaces.IImageProvider;
+import com.aegean.icsd.mciobjects.sounds.beans.Sound;
 import com.aegean.icsd.mciobjects.words.beans.Word;
 import com.aegean.icsd.ontology.interfaces.IMciModelReader;
 
@@ -51,6 +51,36 @@ public class ImageProvider implements IImageProvider {
   @Override
   public List<String> getImageIds() throws ProviderException {
     return dao.getObjectIds(Image.class);
+  }
+
+  @Override
+  public List<Image> getNewImagesFor(String entityName, int count, Image criteria) throws ProviderException {
+    List<String> availableIds = dao.getNewObjectIdsFor(entityName, Image.class);
+    if (availableIds.isEmpty()) {
+      throw ProviderExceptions.UnableToGenerateObject(Image.NAME);
+    }
+    List<Image> availableSounds = new ArrayList<>();
+    Collections.shuffle(availableIds, new Random(System.currentTimeMillis()));
+    for (String id : availableIds) {
+      Image cp = copy(criteria);
+      cp.setId(id);
+      try {
+        List<Image> results = generator.selectGameObject(cp);
+        if (!results.isEmpty()) {
+          availableSounds.add(results.get(0));
+        }
+      } catch (EngineException e) {
+        throw ProviderExceptions.GenerationError(Image.NAME, e);
+      }
+      if(availableSounds.size() == count) {
+        break;
+      }
+    }
+
+    if(availableSounds.size() != count) {
+      throw ProviderExceptions.UnableToGetObject(String.format("Unable to find %s new sounds for %s", count, entityName));
+    }
+    return availableSounds;
   }
 
   @Override
@@ -150,6 +180,17 @@ public class ImageProvider implements IImageProvider {
   }
 
   @Override
+  public boolean isAssociatedWithSound(Image image, Sound sound) throws ProviderException {
+    EntityRestriction hasAssociatedSound;
+    try {
+      hasAssociatedSound = rules.getEntityRestriction("ImageSound", "hasAssociatedSound");
+    } catch (RulesException e) {
+      throw ProviderExceptions.GenerationError(Image.NAME, e);
+    }
+    return dao.areObjectsAssociatedOn(image, sound, hasAssociatedSound.getOnProperty());
+  }
+
+  @Override
   public Image selectImageByNode(String nodeName) throws ProviderException {
     String id = model.removePrefix(nodeName);
     Image criteria = new Image();
@@ -195,5 +236,13 @@ public class ImageProvider implements IImageProvider {
     }
     List<String> wordId = dao.getAssociatedIdOnProperty(imageId, imageSubjRes.getOnProperty(), Word.class);
     return wordId.get(0);
+  }
+
+  Image copy(Image toCopy) {
+    Image cp = new Image();
+    cp.setId(toCopy.getId());
+    cp.setPath(toCopy.getPath());
+    cp.setSoundAssociated(toCopy.isSoundAssociated());
+    return cp;
   }
 }

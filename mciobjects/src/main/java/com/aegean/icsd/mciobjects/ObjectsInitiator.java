@@ -128,11 +128,11 @@ public class ObjectsInitiator {
         Image image = imageProvider.selectRandomImageWithSubject(subjectWord);
 
         if (image != null && !StringUtils.isEmpty(image.getId())) {
-          generator.createObjRelation(sound.getId(), hasAssociatedImageRes.getOnProperty(), image.getId());
           image.setSoundAssociated(true);
           generator.upsertGameObject(image);
           sound.setImageAssociated(true);
           generator.upsertGameObject(sound);
+          generator.createObjRelation(sound.getId(), hasAssociatedImageRes.getOnProperty(), image.getId());
         }
 
       } catch (EngineException e) {
@@ -250,11 +250,11 @@ public class ObjectsInitiator {
         generator.createObjRelation(image.getId(), hasPreviousImage.getOnProperty(), parentImage.getId());
       }
       if (sound != null && !StringUtils.isEmpty(sound.getId())) {
-        generator.createObjRelation(image.getId(), hasAssociatedSound.getOnProperty(), sound.getId());
         image.setSoundAssociated(true);
         generator.upsertGameObject(image);
         sound.setImageAssociated(true);
         generator.upsertGameObject(sound);
+        generator.createObjRelation(image.getId(), hasAssociatedSound.getOnProperty(), sound.getId());
       }
       return image;
     } catch (EngineException e) {
