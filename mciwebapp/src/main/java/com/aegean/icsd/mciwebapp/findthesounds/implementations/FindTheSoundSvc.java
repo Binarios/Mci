@@ -69,7 +69,7 @@ public class FindTheSoundSvc extends AbstractGameSvc<FindTheSound, FindTheSoundR
       List<Image> relatedImages = imageProvider.selectImagesByEntityId(soundToUse.getId());
 
       Collections.shuffle(images, new Random(System.currentTimeMillis()));
-      if (relatedImages.size() > 0) {
+      if (!relatedImages.isEmpty()) {
         images.subList(0, relatedImages.size()).clear();
       }
 
