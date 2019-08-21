@@ -16,6 +16,9 @@ import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciobjects.common.beans.ProviderException;
+import com.aegean.icsd.mciobjects.words.beans.Word;
+import com.aegean.icsd.mciobjects.words.interfaces.IWordProvider;
 import com.aegean.icsd.mciwebapp.antonyms.beans.AntonymResponse;
 import com.aegean.icsd.mciwebapp.antonyms.beans.Antonyms;
 import com.aegean.icsd.mciwebapp.antonyms.dao.IAntonymsDao;
@@ -23,9 +26,6 @@ import com.aegean.icsd.mciwebapp.antonyms.interfaces.IAntonymsSvc;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.implementations.AbstractGameSvc;
-import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
-import com.aegean.icsd.mciwebapp.object.beans.Word;
-import com.aegean.icsd.mciwebapp.object.interfaces.IWordProvider;
 
 @Service
 public class AntonymsSvc extends AbstractGameSvc<Antonyms, AntonymResponse> implements IAntonymsSvc {

@@ -168,6 +168,7 @@ public class Rules implements IRules {
     EntityProperty property = new EntityProperty();
     property.setName(prop.getName());
     property.setParent(prop.getParent());
+    property.setInverse(prop.getInverse());
     property.setRange(prop.getRange());
     property.setObjectProperty(prop.isObjectProperty());
     property.setIrreflexive(prop.isIrreflexive());

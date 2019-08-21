@@ -11,7 +11,10 @@ public class PropertySchema {
    */
   private String parent;
 
-
+  /**
+   * The inverse property
+   */
+  private String inverse;
   /**
    * The type of the property. Either ObjectProperty or DataTypeProperty
    */
@@ -104,5 +107,13 @@ public class PropertySchema {
 
   public void setParent(String parent) {
     this.parent = parent;
+  }
+
+  public String getInverse() {
+    return inverse;
+  }
+
+  public void setInverse(String inverse) {
+    this.inverse = inverse;
   }
 }

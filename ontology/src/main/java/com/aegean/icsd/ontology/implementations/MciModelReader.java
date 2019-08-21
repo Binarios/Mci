@@ -230,6 +230,14 @@ public class MciModelReader implements IMciModelReader {
     } else {
       descriptor.setRange(rangeClass.getLocalName());
     }
+
+    if (property.hasInverse()) {
+      OntProperty inverseProp = property.getInverseOf();
+      if (!inverseProp.getLocalName().equals(property.getLocalName())) {
+        descriptor.setInverse(inverseProp.getLocalName());
+      }
+    }
+
     descriptor.setMandatory(property.isFunctionalProperty());
     descriptor.setSymmetric(property.isSymmetricProperty());
     descriptor.setReflexive(property.hasRDFType(OWL2.ReflexiveProperty));

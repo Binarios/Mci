@@ -2,7 +2,6 @@ package com.aegean.icsd.mciwebapp.common;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
-import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
 
 public final class GameExceptions {
   private GameExceptions () { }

@@ -11,6 +11,10 @@ public class EntityProperty {
    */
   private String parent;
 
+  /**
+   * The name of the inverse property
+   */
+  private String inverse;
 
   /**
    * The type of the values this property is associated with
@@ -105,5 +109,13 @@ public class EntityProperty {
 
   public void setParent(String parent) {
     this.parent = parent;
+  }
+
+  public String getInverse() {
+    return inverse;
+  }
+
+  public void setInverse(String inverse) {
+    this.inverse = inverse;
   }
 }

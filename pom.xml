@@ -13,6 +13,7 @@
     <module>ontology</module>
     <module>engine</module>
     <module>mciwebapp</module>
+    <module>mciobjects</module>
   </modules>
 
   <properties>

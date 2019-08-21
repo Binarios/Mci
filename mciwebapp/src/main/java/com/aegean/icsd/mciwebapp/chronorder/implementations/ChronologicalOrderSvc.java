@@ -11,16 +11,16 @@ import org.springframework.stereotype.Service;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciobjects.common.beans.ProviderException;
+import com.aegean.icsd.mciobjects.images.beans.Image;
+import com.aegean.icsd.mciobjects.images.beans.ImageData;
+import com.aegean.icsd.mciobjects.images.interfaces.IImageProvider;
 import com.aegean.icsd.mciwebapp.chronorder.beans.ChronologicalOrder;
 import com.aegean.icsd.mciwebapp.chronorder.beans.ChronologicalOrderResponse;
 import com.aegean.icsd.mciwebapp.chronorder.interfaces.IChronologicalOrderSvc;
 import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.implementations.AbstractGameSvc;
-import com.aegean.icsd.mciwebapp.object.beans.Image;
-import com.aegean.icsd.mciwebapp.common.beans.ImageData;
-import com.aegean.icsd.mciwebapp.object.beans.ProviderException;
-import com.aegean.icsd.mciwebapp.object.interfaces.IImageProvider;
 
 @Service
 public class ChronologicalOrderSvc extends AbstractGameSvc<ChronologicalOrder, ChronologicalOrderResponse>

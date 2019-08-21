@@ -96,6 +96,10 @@ public class Generator implements IGenerator {
         LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getName()));
         success &= dao.createObjRelation(objId, onProperty.getName(), id);
       }
+      if (!StringUtils.isEmpty(onProperty.getInverse()) && !onProperty.isSymmetric()) {
+        LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getInverse()));
+        success &= dao.createObjRelation(objId, onProperty.getInverse(), id);
+      }
       return success;
     } catch (EngineException e) {
       throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);
