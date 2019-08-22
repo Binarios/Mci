@@ -98,7 +98,7 @@ public class ObjectsDao implements IObjectsDao {
   }
 
   @Override
-  public <T extends BaseGameObject> List<String> getAssociatedObjectOfId(String id, Class<T> object)
+  public <T extends BaseGameObject> List<String> getAssociatedObjectsOfEntityId(String id, Class<T> object)
     throws ProviderException {
 
     String objectName;
@@ -131,7 +131,9 @@ public class ObjectsDao implements IObjectsDao {
   }
 
   @Override
-  public <T extends BaseGameObject> List<String> getAssociatedIdOnProperty(String id, EntityProperty onProperty, Class<T> object) throws ProviderException {
+  public <T extends BaseGameObject> List<String> getAssociatedIdsOnPropertyForEntityId(String id,
+                                                                                       EntityProperty onProperty,
+                                                                                       Class<T> object) throws ProviderException {
     String objectName;
     try {
       objectName = ano.getEntityValue(object);
@@ -166,7 +168,8 @@ public class ObjectsDao implements IObjectsDao {
   }
 
   @Override
-  public <T extends BaseGameObject> boolean areObjectsAssociatedOn(T thisObj, T thatObj, EntityProperty onProperty) throws ProviderException {
+  public <T extends BaseGameObject> boolean areObjectsAssociatedOn(T thisObj, T thatObj, EntityProperty onProperty)
+    throws ProviderException {
     AskQuery query = new AskQuery.Builder()
       .is(thisObj.getId(), onProperty.getName(), thatObj.getId())
       .addIriParam(thisObj.getId(), model.getPrefixedEntity(thisObj.getId()))

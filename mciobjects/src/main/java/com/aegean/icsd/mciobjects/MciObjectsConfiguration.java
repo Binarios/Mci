@@ -10,8 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
 import org.springframework.core.env.Environment;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.aegean.icsd.mciobjects.images.configuration.ImageConfiguration;
 import com.aegean.icsd.mciobjects.questions.configurations.QuestionConfiguration;
@@ -23,7 +21,8 @@ import com.aegean.icsd.mciobjects.words.configuration.WordConfiguration;
 @PropertySources({
   @PropertySource("classpath:com/aegean/icsd/mciobjects/providers/words.properties"),
   @PropertySource("classpath:com/aegean/icsd/mciobjects/providers/images.properties"),
-  @PropertySource("classpath:com/aegean/icsd/mciobjects/providers/sounds.properties")
+  @PropertySource("classpath:com/aegean/icsd/mciobjects/providers/sounds.properties"),
+  @PropertySource("classpath:com/aegean/icsd/mciobjects/providers/questions.properties")
 })
 public class MciObjectsConfiguration {
   private static final Logger LOGGER = LogManager.getLogger(MciObjectsConfiguration.class);

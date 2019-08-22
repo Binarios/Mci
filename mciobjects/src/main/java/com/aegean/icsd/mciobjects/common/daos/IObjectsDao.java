@@ -12,9 +12,9 @@ public interface IObjectsDao {
 
   <T extends BaseGameObject> List<String> getNewObjectIdsFor(String forEntity, Class<T> object) throws ProviderException;
 
-  <T extends BaseGameObject> List<String> getAssociatedObjectOfId(String id, Class<T> object) throws ProviderException;
+  <T extends BaseGameObject> List<String> getAssociatedObjectsOfEntityId(String id, Class<T> object) throws ProviderException;
 
-  <T extends BaseGameObject> List<String> getAssociatedIdOnProperty(String id, EntityProperty onProperty, Class<T> object) throws ProviderException;
+  <T extends BaseGameObject> List<String> getAssociatedIdsOnPropertyForEntityId(String id, EntityProperty onProperty, Class<T> object) throws ProviderException;
 
   <T extends BaseGameObject> boolean areObjectsAssociatedOn(T thisObj, T thatObj, EntityProperty onProperty) throws ProviderException;
 

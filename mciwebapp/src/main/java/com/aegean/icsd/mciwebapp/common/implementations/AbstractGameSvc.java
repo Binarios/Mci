@@ -43,7 +43,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
   protected abstract void handleObjectRestrictions(String fullName, T toCreate) throws MciException;
   protected abstract boolean isValid(Object solution);
   protected abstract boolean checkSolution(T game, Object solution) throws MciException;
-  protected abstract R toResponse(T toCreate) throws MciException;
+  protected abstract R toResponse(T game) throws MciException;
 
   @Override
   public List<ServiceResponse<T>> getGames(String playerName, Class<T> gameClass)

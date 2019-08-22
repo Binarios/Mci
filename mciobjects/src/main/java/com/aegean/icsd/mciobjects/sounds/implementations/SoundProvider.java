@@ -70,7 +70,7 @@ public class SoundProvider implements ISoundProvider {
 
   @Override
   public List<Sound> selectSoundsByEntityId(String entityId) throws ProviderException {
-    List<String> ids = dao.getAssociatedObjectOfId(entityId, Sound.class);
+    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Sound.class);
     List<Sound> sounds = new ArrayList<>();
     for (String id : ids) {
       Sound sound = new Sound();

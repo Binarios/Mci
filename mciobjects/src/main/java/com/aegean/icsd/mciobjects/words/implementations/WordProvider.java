@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.daos.IObjectsDao;
@@ -119,7 +120,25 @@ public class WordProvider implements IWordProvider {
 
   @Override
   public List<Word> selectWordsByEntityId(String entityId) throws ProviderException {
-    List<String> ids = dao.getAssociatedObjectOfId(entityId, Word.class);
+    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Word.class);
+    List<Word> words = new ArrayList<>();
+    for (String id : ids) {
+      Word word = new Word();
+      word.setId(id);
+      try {
+        List<Word> results = generator.selectGameObject(word);
+        words.add(results.get(0));
+      } catch (EngineException e) {
+        throw ProviderExceptions.UnableToGetWord("entityId = " + entityId, e);
+      }
+    }
+    return words;
+  }
+
+  @Override
+  public List<Word> selectWordsByEntityIdOnProperty(String entityId, EntityProperty onProperty)
+    throws ProviderException {
+    List<String> ids = dao.getAssociatedIdsOnPropertyForEntityId(entityId, onProperty, Word.class);
     List<Word> words = new ArrayList<>();
     for (String id : ids) {
       Word word = new Word();

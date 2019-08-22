@@ -208,7 +208,7 @@ public class ImageProvider implements IImageProvider {
 
   @Override
   public List<Image> selectImagesByEntityId(String entityId) throws ProviderException {
-    List<String> ids = dao.getAssociatedObjectOfId(entityId, Image.class);
+    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Image.class);
     List<Image> images = new ArrayList<>();
     for (String id : ids) {
       Image criteria = new Image();
@@ -234,7 +234,7 @@ public class ImageProvider implements IImageProvider {
     } catch (RulesException e) {
       throw ProviderExceptions.GenerationError(Image.NAME, e);
     }
-    List<String> wordId = dao.getAssociatedIdOnProperty(imageId, imageSubjRes.getOnProperty(), Word.class);
+    List<String> wordId = dao.getAssociatedIdsOnPropertyForEntityId(imageId, imageSubjRes.getOnProperty(), Word.class);
     return wordId.get(0);
   }
 
