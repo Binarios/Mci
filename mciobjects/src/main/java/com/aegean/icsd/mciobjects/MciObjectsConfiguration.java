@@ -14,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.aegean.icsd.mciobjects.images.configuration.ImageConfiguration;
+import com.aegean.icsd.mciobjects.questions.configurations.QuestionConfiguration;
 import com.aegean.icsd.mciobjects.sounds.configurations.SoundConfiguration;
 import com.aegean.icsd.mciobjects.words.configuration.WordConfiguration;
 
@@ -68,6 +69,20 @@ public class MciObjectsConfiguration {
     return config;
   }
 
+  @Bean
+  public QuestionConfiguration getQuestionConfiguration() {
+    QuestionConfiguration config = new QuestionConfiguration();
+    config.setLocation(getPropertyValue("question.loc"));
+    config.setFilename(getPropertyValue("question.filename"));
+    config.setDelimiter(getPropertyValue("question.delimiter"));
+    config.setChoicesDelimiter(getPropertyValue("question.choicesDelimiter"));
+    config.setQuestionIndex(Integer.parseInt(getPropertyValue("question.questionIndex")));
+    config.setCorrectAnswerIndex(Integer.parseInt(getPropertyValue("question.correctAnswerIndex")));
+    config.setChoicesIndex(Integer.parseInt(getPropertyValue("question.choicesIndex")));
+    config.setCategoryIndex(Integer.parseInt(getPropertyValue("question.categoryIndex")));
+    config.setDifficultyIndex(Integer.parseInt(getPropertyValue("question.difficultyIndex")));
+    return config;
+  }
 
 
   private String getPropertyValue (String propertyName) {

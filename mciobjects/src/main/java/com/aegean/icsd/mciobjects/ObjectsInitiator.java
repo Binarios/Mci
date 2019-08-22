@@ -1,6 +1,5 @@
 package com.aegean.icsd.mciobjects;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +19,8 @@ import com.aegean.icsd.mciobjects.common.interfaces.IObjectFileProvider;
 import com.aegean.icsd.mciobjects.images.beans.Image;
 import com.aegean.icsd.mciobjects.images.configuration.ImageConfiguration;
 import com.aegean.icsd.mciobjects.images.interfaces.IImageProvider;
+import com.aegean.icsd.mciobjects.questions.beans.Question;
+import com.aegean.icsd.mciobjects.questions.configurations.QuestionConfiguration;
 import com.aegean.icsd.mciobjects.sounds.beans.Sound;
 import com.aegean.icsd.mciobjects.sounds.configurations.SoundConfiguration;
 import com.aegean.icsd.mciobjects.sounds.interfaces.ISoundProvider;
@@ -38,6 +39,9 @@ public class ObjectsInitiator {
 
   @Autowired
   private SoundConfiguration soundConfig;
+
+  @Autowired
+  private QuestionConfiguration questionConfig;
 
   @Autowired
   private IRules rules;
@@ -61,6 +65,7 @@ public class ObjectsInitiator {
     setupWords();
     setupSounds();
     setupImages();
+    setupQuestions();
   }
 
   void setupWords() throws ProviderException {
@@ -159,6 +164,20 @@ public class ObjectsInitiator {
     for (String line : lines) {
       createImages(line, lines, imageSubjRes, imageTitleRes, hasPreviousImage, hasAssociatedSound);
     }
+  }
+
+  void setupQuestions() throws ProviderException {
+    EntityRestriction hasCategoryRes;
+    EntityRestriction hasImageRes;
+    try {
+      hasCategoryRes = rules.getEntityRestriction(Question.NAME, "hasCategory");
+      hasImageRes = rules.getEntityRestriction(Question.NAME, "hasImage");
+    } catch (RulesException e) {
+      throw ProviderExceptions.GenerationError(Question.NAME, e);
+    }
+
+    List<String> lines = fileProvider.getLines(questionConfig.getLocation() + "/" + questionConfig.getFilename());
+
   }
 
   void handleAntonyms(Word value,EntityRestriction antonymRes, String... antonyms) throws ProviderException {
