@@ -101,7 +101,7 @@ public class ObservationProvider implements IObservationProvider {
 
   @Override
   public List<ObservationObj> selectObservationObjByEntityId(String entityId) throws ProviderException {
-    List<String> ids = dao.getAssociatedObjectOfId(entityId, ObservationObj.class);
+    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, ObservationObj.class);
     List<ObservationObj> observationObjs = new ArrayList<>();
     for (String id : ids) {
       ObservationObj obj = new ObservationObj();

@@ -1,6 +1,5 @@
 package com.aegean.icsd.mciobjects;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +19,7 @@ import com.aegean.icsd.mciobjects.common.interfaces.IObjectFileProvider;
 import com.aegean.icsd.mciobjects.images.beans.Image;
 import com.aegean.icsd.mciobjects.images.configuration.ImageConfiguration;
 import com.aegean.icsd.mciobjects.images.interfaces.IImageProvider;
+import com.aegean.icsd.mciobjects.questions.configurations.QuestionConfiguration;
 import com.aegean.icsd.mciobjects.sounds.beans.Sound;
 import com.aegean.icsd.mciobjects.sounds.configurations.SoundConfiguration;
 import com.aegean.icsd.mciobjects.sounds.interfaces.ISoundProvider;
@@ -38,6 +38,9 @@ public class ObjectsInitiator {
 
   @Autowired
   private SoundConfiguration soundConfig;
+
+  @Autowired
+  private QuestionConfiguration questionConfig;
 
   @Autowired
   private IRules rules;
@@ -161,7 +164,7 @@ public class ObjectsInitiator {
     }
   }
 
-  void handleAntonyms(Word value,EntityRestriction antonymRes, String... antonyms) throws ProviderException {
+  void handleAntonyms(Word value, EntityRestriction antonymRes, String... antonyms) throws ProviderException {
 
     for (String antonym : antonyms) {
       Word antonymWord = new Word();
@@ -183,7 +186,7 @@ public class ObjectsInitiator {
     }
   }
 
-  void handleSynonyms(Word value,EntityRestriction synonymRes, String... synonyms) throws ProviderException {
+  void handleSynonyms(Word value, EntityRestriction synonymRes, String... synonyms) throws ProviderException {
     for (String synonym : synonyms) {
       Word synonymWord = new Word();
       synonymWord.setValue(synonym);
