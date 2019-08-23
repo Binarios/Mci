@@ -17,9 +17,6 @@ public class Block extends BaseGameObject {
   @DataProperty("hasColumnNumber")
   private Integer column;
 
-  @DataProperty("isMovingBlock")
-  private Boolean moving;
-
   public void setRow(Integer row) {
     this.row = row;
   }
@@ -36,11 +33,4 @@ public class Block extends BaseGameObject {
     return this.column;
   }
 
-  public void setMoving(Boolean moving) {
-    this.moving = moving;
-  }
-
-  public Boolean isMoving() {
-    return this.moving;
-  }
 }

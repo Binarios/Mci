@@ -68,7 +68,7 @@ public class HidingBlocksSvc extends AbstractGameSvc<HidingBlocks, HidingBlocksR
 
     List<Block> blocks;
     try {
-      blocks = blockProvider.getNewBlockForEntity(fullName, toCreate.getColumns(), toCreate.getRows());
+      blocks = blockProvider.getBlocks(toCreate.getColumns(), toCreate.getRows());
     } catch (ProviderException e) {
       throw GameExceptions.GenerationError(HidingBlocks.NAME, e);
     }
