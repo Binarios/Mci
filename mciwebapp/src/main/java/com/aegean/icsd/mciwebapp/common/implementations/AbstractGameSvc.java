@@ -203,4 +203,14 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
     }
   }
 
+  protected String getFullGameName(T game) throws MciException {
+    String gameName;
+    try {
+      gameName = ano.getEntityValue(game.getClass());
+    } catch (EngineException e) {
+      throw GameExceptions.GenerationError(game.getClass().getSimpleName(), e);
+    }
+    return Utils.getFullGameName(gameName, game.getDifficulty());
+  }
+
 }
