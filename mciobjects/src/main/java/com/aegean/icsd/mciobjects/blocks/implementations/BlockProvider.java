@@ -1,11 +1,9 @@
 package com.aegean.icsd.mciobjects.blocks.implementations;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +31,7 @@ public class BlockProvider implements IBlockProvider {
   private IGenerator generator;
 
   @Autowired
-  private IRules rules;
+  private Map<String, EntityRestriction> blockRules;
 
   @Override
   public List<Block> getBlocks(int nbRows, int nbCols) throws ProviderException {
@@ -67,12 +65,7 @@ public class BlockProvider implements IBlockProvider {
 
   @Override
   public List<BlockSet> getNewBlockSets(int nbRows, int nbCols, int nbBlockSet) throws ProviderException {
-    EntityRestriction hasBlock;
-    try {
-      hasBlock = rules.getEntityRestriction(BlockSet.NAME, "hasBlock");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
-    }
+    EntityRestriction hasBlock = blockRules.get("hasBlock");
 
     List<BlockSet> blockSets = new ArrayList<>();
     for (int i = 0; i < nbBlockSet; i++) {
@@ -94,12 +87,7 @@ public class BlockProvider implements IBlockProvider {
 
   @Override
   public void orderBlockSets(List<BlockSet> blockSets) throws ProviderException {
-    EntityRestriction hasPreviousBlockSet;
-    try {
-      hasPreviousBlockSet = rules.getEntityRestriction(BlockSet.NAME, "hasPreviousBlockSet");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
-    }
+    EntityRestriction hasPreviousBlockSet = blockRules.get("hasPreviousBlockSet");
     try {
       blockSets.sort(Comparator.comparingInt(BlockSet::getOrder));
       generator.upsertGameObject(blockSets.get(0));
@@ -114,12 +102,7 @@ public class BlockProvider implements IBlockProvider {
 
   @Override
   public void updateMovingBlockFor(BlockSet blockSet, List<Block> toUpdate) throws ProviderException {
-    EntityRestriction hasMovingBlock;
-    try {
-      hasMovingBlock = rules.getEntityRestriction(BlockSet.NAME, "hasMovingBlock");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
-    }
+    EntityRestriction hasMovingBlock = blockRules.get("hasMovingBlock");
 
     for (Block block : toUpdate) {
       try {
@@ -173,12 +156,7 @@ public class BlockProvider implements IBlockProvider {
   }
 
   List<BlockSet> getBlockSetsFromIds(List<String> ids) throws ProviderException {
-    EntityRestriction hasMovingBlock;
-    try {
-      hasMovingBlock = rules.getEntityRestriction(BlockSet.NAME, "hasMovingBlock");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
-    }
+    EntityRestriction hasMovingBlock = blockRules.get("hasMovingBlock");
 
     List<BlockSet> blockSets = new ArrayList<>();
     for (String id : ids) {
@@ -192,7 +170,7 @@ public class BlockProvider implements IBlockProvider {
         result.setMovingBlocks(movingBlocks);
         blockSets.add(result);
       } catch (EngineException e) {
-        throw ProviderExceptions.UnableToGetWord("id = " + id, e);
+        throw ProviderExceptions.UnableToGetObject("id = " + id, e);
       }
     }
     return blockSets;

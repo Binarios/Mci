@@ -3,6 +3,7 @@ package com.aegean.icsd.mciobjects.sounds.implementations;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
-import com.aegean.icsd.engine.rules.beans.EntityRestriction;
-import com.aegean.icsd.engine.rules.beans.RulesException;
-import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.daos.IObjectsDao;
 import com.aegean.icsd.mciobjects.common.implementations.ProviderExceptions;
@@ -35,7 +34,7 @@ public class SoundProvider implements ISoundProvider {
   private IGenerator generator;
 
   @Autowired
-  private IRules rules;
+  private Map<String, EntityProperty> soundRules;
 
   @Override
   public List<Sound> getNewSoundsFor(String entityName, int count, Sound criteria) throws ProviderException {
@@ -87,25 +86,14 @@ public class SoundProvider implements ISoundProvider {
 
   @Override
   public boolean isAssociatedWithImage(Sound sound, Image image) throws ProviderException {
-    EntityRestriction hasAssociatedImageRes;
-    try {
-      hasAssociatedImageRes = rules.getEntityRestriction("SoundImage", "hasAssociatedImage");
-    } catch (RulesException e) {
-      throw ProviderExceptions.GenerationError(Sound.NAME, e);
-    }
-    return dao.areObjectsAssociatedOn(sound, image, hasAssociatedImageRes.getOnProperty());
+    EntityProperty hasAssociatedImageRes = soundRules.get("hasAssociatedImage");
+    return dao.areObjectsAssociatedOn(sound, image, hasAssociatedImageRes);
   }
 
   @Override
   public Sound selectRandomSoundWithSubject(Word word) throws ProviderException {
-    EntityRestriction imageSubjRes;
-    try {
-      imageSubjRes = rules.getEntityRestriction(Sound.NAME, "hasSubject");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToGetObject(Sound.NAME, e);
-    }
-
-    List<String> ids = dao.getIdAssociatedWithOtherOnProperty(Sound.NAME, Word.NAME, word.getId(), imageSubjRes.getOnProperty());
+    EntityProperty imageSubjRes = soundRules.get("hasSubject");
+    List<String> ids = dao.getIdAssociatedWithOtherOnProperty(Sound.NAME, Word.NAME, word.getId(), imageSubjRes);
     if (ids.isEmpty()) {
       return null;
     }

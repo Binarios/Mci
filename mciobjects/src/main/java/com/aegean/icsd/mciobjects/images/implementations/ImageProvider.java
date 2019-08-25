@@ -36,9 +36,6 @@ public class ImageProvider implements IImageProvider {
   private IGenerator generator;
 
   @Autowired
-  private IRules rules;
-
-  @Autowired
   private IObjectsDao dao;
 
   @Autowired
@@ -47,6 +44,8 @@ public class ImageProvider implements IImageProvider {
   @Autowired
   private IMciModelReader model;
 
+  @Autowired
+  private Map<String, EntityRestriction> imageRules;
 
   @Override
   public List<String> getImageIds() throws ProviderException {
@@ -59,7 +58,7 @@ public class ImageProvider implements IImageProvider {
     if (availableIds.isEmpty()) {
       throw ProviderExceptions.UnableToGenerateObject(Image.NAME);
     }
-    List<Image> availableSounds = new ArrayList<>();
+    List<Image> availableImages = new ArrayList<>();
     Collections.shuffle(availableIds, new Random(System.currentTimeMillis()));
     for (String id : availableIds) {
       Image cp = copy(criteria);
@@ -67,20 +66,20 @@ public class ImageProvider implements IImageProvider {
       try {
         List<Image> results = generator.selectGameObject(cp);
         if (!results.isEmpty()) {
-          availableSounds.add(results.get(0));
+          availableImages.add(results.get(0));
         }
       } catch (EngineException e) {
         throw ProviderExceptions.GenerationError(Image.NAME, e);
       }
-      if(availableSounds.size() == count) {
+      if(availableImages.size() == count) {
         break;
       }
     }
 
-    if(availableSounds.size() != count) {
-      throw ProviderExceptions.UnableToGetObject(String.format("Unable to find %s new sounds for %s", count, entityName));
+    if(availableImages.size() != count) {
+      throw ProviderExceptions.UnableToGetObject(String.format("Unable to find %s new images for %s", count, entityName));
     }
-    return availableSounds;
+    return availableImages;
   }
 
   @Override
@@ -144,12 +143,8 @@ public class ImageProvider implements IImageProvider {
 
   @Override
   public Image selectRandomImageWithSubject(Word word) throws ProviderException {
-    EntityRestriction imageSubjRes;
-    try {
-      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasSubject");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToGetObject(Image.NAME, e);
-    }
+    EntityRestriction imageSubjRes = imageRules.get("hasSubject");
+
     List<String> ids = dao.getIdAssociatedWithOtherOnProperty(Image.NAME, Word.NAME, word.getId(), imageSubjRes.getOnProperty());
     if (ids.isEmpty()) {
       return null;
@@ -181,12 +176,7 @@ public class ImageProvider implements IImageProvider {
 
   @Override
   public boolean isAssociatedWithSound(Image image, Sound sound) throws ProviderException {
-    EntityRestriction hasAssociatedSound;
-    try {
-      hasAssociatedSound = rules.getEntityRestriction("ImageSound", "hasAssociatedSound");
-    } catch (RulesException e) {
-      throw ProviderExceptions.GenerationError(Image.NAME, e);
-    }
+    EntityRestriction hasAssociatedSound = imageRules.get("hasAssociatedSound");
     return dao.areObjectsAssociatedOn(image, sound, hasAssociatedSound.getOnProperty());
   }
 
@@ -228,12 +218,7 @@ public class ImageProvider implements IImageProvider {
 
   @Override
   public String selectAssociatedSubject(String imageId) throws ProviderException {
-    EntityRestriction imageSubjRes;
-    try {
-      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasSubject");
-    } catch (RulesException e) {
-      throw ProviderExceptions.GenerationError(Image.NAME, e);
-    }
+    EntityRestriction imageSubjRes = imageRules.get("hasSubject");
     List<String> wordId = dao.getAssociatedIdsOnPropertyForEntityId(imageId, imageSubjRes.getOnProperty(), Word.class);
     return wordId.get(0);
   }

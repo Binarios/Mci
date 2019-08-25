@@ -34,4 +34,14 @@ public class Sound extends BaseGameObject {
   public Boolean isImageAssociated() {
     return this.imageAssociated;
   }
+
+  @Override
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  @Override
+  public String getId() {
+    return this.id;
+  }
 }

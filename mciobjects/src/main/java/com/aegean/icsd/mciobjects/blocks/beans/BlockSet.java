@@ -45,4 +45,14 @@ public class BlockSet extends BaseGameObject {
   public void setMovingBlocks(List<Block> movingBlocks) {
     this.movingBlocks = movingBlocks;
   }
+
+  @Override
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  @Override
+  public String getId() {
+    return this.id;
+  }
 }
