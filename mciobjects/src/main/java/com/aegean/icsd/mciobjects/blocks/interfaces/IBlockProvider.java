@@ -12,9 +12,15 @@ public interface IBlockProvider {
 
   List<BlockSet> getNewBlockSets(int nbRows, int nbCols, int nbBlockSet) throws ProviderException;
 
+  void orderBlockSets(List<BlockSet> blockSets) throws ProviderException;
+
   void updateMovingBlockFor(BlockSet blockSet, List<Block> toUpdate) throws ProviderException;
 
   List<Block> selectBlocksByEntityId(String entityId) throws ProviderException;
 
   List<Block> selectBlocksByEntityIdOnProperty(String entityId, EntityProperty onProperty) throws ProviderException;
+
+  List<BlockSet> selectBlockSetsByEntityId(String entityId) throws ProviderException;
+
+  List<BlockSet> selectBlockSetsByEntityIdOnProperty(String entityId, EntityProperty onProperty) throws ProviderException;
 }

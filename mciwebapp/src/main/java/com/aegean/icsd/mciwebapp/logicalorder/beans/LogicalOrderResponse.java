@@ -6,17 +6,27 @@ import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 
 public class LogicalOrderResponse extends ServiceResponse<LogicalOrder> {
 
-  private List<BlockSetItem> sets;
+  private List<BlockSetItem> sequence;
+
+  private List<BlockSetItem> choices;
 
   public LogicalOrderResponse(LogicalOrder game) {
     super(game);
   }
 
-  public List<BlockSetItem> getSets() {
-    return sets;
+  public List<BlockSetItem> getSequence() {
+    return sequence;
   }
 
-  public void setSets(List<BlockSetItem> sets) {
-    this.sets = sets;
+  public void setSequence(List<BlockSetItem> sequence) {
+    this.sequence = sequence;
+  }
+
+  public List<BlockSetItem> getChoices() {
+    return choices;
+  }
+
+  public void setChoices(List<BlockSetItem> choices) {
+    this.choices = choices;
   }
 }

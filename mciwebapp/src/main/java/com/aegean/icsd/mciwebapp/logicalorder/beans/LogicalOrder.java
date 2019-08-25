@@ -23,6 +23,9 @@ public class LogicalOrder extends BaseGame {
   @DataProperty("hasMovement")
   private String movement;
 
+  @DataProperty("choices")
+  private Integer choices;
+
   public Integer getStep() {
     return step;
   }
@@ -55,12 +58,19 @@ public class LogicalOrder extends BaseGame {
     this.totalMovingBlocks = totalMovingBlocks;
   }
 
-  public String getMovement() {
-    return movement;
-  }
-
   public void setMovement(String movement) {
     this.movement = movement;
   }
 
+  public String getMovement() {
+    return this.movement;
+  }
+
+  public void setChoices(Integer choices) {
+    this.choices = choices;
+  }
+
+  public Integer getChoices() {
+    return this.choices;
+  }
 }

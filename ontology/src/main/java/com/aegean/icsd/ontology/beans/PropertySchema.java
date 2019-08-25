@@ -1,5 +1,7 @@
 package com.aegean.icsd.ontology.beans;
 
+import java.util.List;
+
 public class PropertySchema {
   /**
    * The name of the property
@@ -24,6 +26,11 @@ public class PropertySchema {
    * The class name that is the range of the property values
    */
   private String range;
+
+  /**
+   * The enumerated values, if the range is an enumeration,. This can be applied to DataProperties only.
+   */
+  private List<String> enumerations;
 
   /**
    * If this property marked as functional
@@ -115,5 +122,13 @@ public class PropertySchema {
 
   public void setInverse(String inverse) {
     this.inverse = inverse;
+  }
+
+  public List<String> getEnumerations() {
+    return enumerations;
+  }
+
+  public void setEnumerations(List<String> enumerations) {
+    this.enumerations = enumerations;
   }
 }

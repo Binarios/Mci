@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
@@ -108,10 +109,10 @@ public class ObjectsInitiator {
   void setupSounds() throws ProviderException {
 
     EntityRestriction soundSubjRes;
-    EntityRestriction hasAssociatedImageRes;
+    EntityProperty hasAssociatedImage;
     try {
       soundSubjRes = rules.getEntityRestriction(Sound.NAME, "hasSubject");
-      hasAssociatedImageRes = rules.getEntityRestriction("SoundImage", "hasAssociatedImage");
+      hasAssociatedImage = rules.getProperty(Sound.NAME, "hasAssociatedImage");
     } catch (RulesException e) {
       throw ProviderExceptions.GenerationError(Sound.NAME, e);
     }
@@ -135,7 +136,7 @@ public class ObjectsInitiator {
           generator.upsertGameObject(image);
           sound.setImageAssociated(true);
           generator.upsertGameObject(sound);
-          generator.createObjRelation(sound.getId(), hasAssociatedImageRes.getOnProperty(), image.getId());
+          generator.createObjRelation(sound.getId(), hasAssociatedImage, image.getId());
         }
 
       } catch (EngineException e) {

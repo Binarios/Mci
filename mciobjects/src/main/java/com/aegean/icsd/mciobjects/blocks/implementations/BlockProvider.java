@@ -2,6 +2,7 @@ package com.aegean.icsd.mciobjects.blocks.implementations;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -67,10 +68,8 @@ public class BlockProvider implements IBlockProvider {
   @Override
   public List<BlockSet> getNewBlockSets(int nbRows, int nbCols, int nbBlockSet) throws ProviderException {
     EntityRestriction hasBlock;
-    EntityRestriction hasNextBlockSet;
     try {
       hasBlock = rules.getEntityRestriction(BlockSet.NAME, "hasBlock");
-      hasNextBlockSet = rules.getEntityRestriction(BlockSet.NAME, "hasNextBlockSet");
     } catch (RulesException e) {
       throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
     }
@@ -84,16 +83,33 @@ public class BlockProvider implements IBlockProvider {
         for (Block block : blocks) {
           generator.createObjRelation(set.getId(), hasBlock.getOnProperty(), block.getId());
         }
-
+        set.setBlocks(blocks);
         blockSets.add(set);
-        if (i > 0) {
-          generator.createObjRelation(blockSets.get(i - 1).getId(), hasNextBlockSet.getOnProperty(), set.getId());
-        }
       } catch (EngineException e) {
         throw ProviderExceptions.GenerationError(BlockSet.NAME, e);
       }
     }
     return blockSets;
+  }
+
+  @Override
+  public void orderBlockSets(List<BlockSet> blockSets) throws ProviderException {
+    EntityRestriction hasPreviousBlockSet;
+    try {
+      hasPreviousBlockSet = rules.getEntityRestriction(BlockSet.NAME, "hasPreviousBlockSet");
+    } catch (RulesException e) {
+      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
+    }
+    try {
+      blockSets.sort(Comparator.comparingInt(BlockSet::getOrder));
+      generator.upsertGameObject(blockSets.get(0));
+      for (int i = 1; i < blockSets.size(); i++) {
+        generator.createObjRelation(blockSets.get(i).getId(), hasPreviousBlockSet.getOnProperty(), blockSets.get(i - 1).getId());
+        generator.upsertGameObject(blockSets.get(i));
+      }
+    } catch (EngineException e) {
+      throw ProviderExceptions.GenerationError(BlockSet.NAME, e);
+    }
   }
 
   @Override
@@ -148,6 +164,64 @@ public class BlockProvider implements IBlockProvider {
       }
     }
     return blocks;
+  }
+
+  @Override
+  public List<BlockSet> selectBlockSetsByEntityId(String entityId) throws ProviderException {
+    EntityRestriction hasMovingBlock;
+    try {
+      hasMovingBlock = rules.getEntityRestriction(BlockSet.NAME, "hasMovingBlock");
+    } catch (RulesException e) {
+      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
+    }
+
+    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Block.class);
+    List<BlockSet> blockSets = new ArrayList<>();
+    for (String id : ids) {
+      BlockSet blockSet = new BlockSet();
+      blockSet.setId(id);
+      try {
+        BlockSet result = generator.selectGameObject(blockSet).get(0);
+        List<Block> blocks = selectBlocksByEntityId(result.getId());
+        List<Block> movingBlocks = selectBlocksByEntityIdOnProperty(result.getId(), hasMovingBlock.getOnProperty());
+        result.setBlocks(blocks);
+        result.setMovingBlocks(movingBlocks);
+        blockSets.add(result);
+      } catch (EngineException e) {
+        throw ProviderExceptions.UnableToGetObject(BlockSet.NAME + " for entityId = " + entityId, e);
+      }
+    }
+    blockSets.sort(Comparator.comparingInt(BlockSet::getOrder));
+    return blockSets;
+  }
+
+  @Override
+  public List<BlockSet> selectBlockSetsByEntityIdOnProperty(String entityId, EntityProperty onProperty)
+    throws ProviderException {
+    EntityRestriction hasMovingBlock;
+    try {
+      hasMovingBlock = rules.getEntityRestriction(BlockSet.NAME, "hasMovingBlock");
+    } catch (RulesException e) {
+      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
+    }
+
+    List<String> ids = dao.getAssociatedIdsOnPropertyForEntityId(entityId, onProperty, BlockSet.class);
+    List<BlockSet> blockSets = new ArrayList<>();
+    for (String id : ids) {
+      BlockSet blockSet = new BlockSet();
+      blockSet.setId(id);
+      try {
+        BlockSet result = generator.selectGameObject(blockSet).get(0);
+        List<Block> blocks = selectBlocksByEntityId(result.getId());
+        List<Block> movingBlocks = selectBlocksByEntityIdOnProperty(result.getId(), hasMovingBlock.getOnProperty());
+        result.setBlocks(blocks);
+        result.setMovingBlocks(movingBlocks);
+        blockSets.add(result);
+      } catch (EngineException e) {
+        throw ProviderExceptions.UnableToGetWord("entityId = " + entityId, e);
+      }
+    }
+    return blockSets;
   }
 
 

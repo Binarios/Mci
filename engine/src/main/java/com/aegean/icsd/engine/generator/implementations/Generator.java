@@ -171,12 +171,14 @@ public class Generator implements IGenerator {
 
     for (EntityProperty property : dataProperties) {
       Object rangeValue = relations.get(property.getName());
-      if (property.isMandatory() && rangeValue == null) {
-        throw Exceptions.MissingMandatoryRelation(name, property.getName());
-      }
       if (rangeValue != null) {
         Class<?> rangeClass = model.getJavaClassFromOwlType(property.getRange());
         if (List.class.isAssignableFrom(rangeValue.getClass())) {
+
+          if (property.isMandatory() && ((List)rangeValue).size() > 1) {
+            throw Exceptions.FunctionalRelation(name, property.getName());
+          }
+
           for (Object elem : (List) rangeValue) {
             dao.createValueRelation(id, property.getName(), elem, rangeClass);
           }
@@ -187,7 +189,5 @@ public class Generator implements IGenerator {
     }
     return id;
   }
-
-
 
 }

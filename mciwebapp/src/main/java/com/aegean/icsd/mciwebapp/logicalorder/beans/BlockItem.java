@@ -4,6 +4,7 @@ public class BlockItem {
   private String id;
   private Integer row;
   private Integer col;
+  private Boolean moved;
 
   public String getId() {
     return id;
@@ -29,4 +30,11 @@ public class BlockItem {
     this.col = col;
   }
 
+  public Boolean isMoved() {
+    return moved;
+  }
+
+  public void setMoved(Boolean moved) {
+    this.moved = moved;
+  }
 }

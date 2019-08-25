@@ -1,5 +1,7 @@
 package com.aegean.icsd.engine.rules.beans;
 
+import java.util.List;
+
 public class EntityProperty {
   /**
    * The name of the property
@@ -20,6 +22,11 @@ public class EntityProperty {
    * The type of the values this property is associated with
    */
   private String range;
+
+  /**
+   * The possible values this property might have (applicable on DataTypeProperty)
+   */
+  private List<String> enumerations;
 
   /**
    * The type of the property. Either ObjectProperty or DataTypeProperty
@@ -117,5 +124,13 @@ public class EntityProperty {
 
   public void setInverse(String inverse) {
     this.inverse = inverse;
+  }
+
+  public List<String> getEnumerations() {
+    return enumerations;
+  }
+
+  public void setEnumerations(List<String> enumerations) {
+    this.enumerations = enumerations;
   }
 }
