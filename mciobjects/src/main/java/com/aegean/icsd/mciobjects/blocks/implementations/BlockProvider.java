@@ -134,24 +134,30 @@ public class BlockProvider implements IBlockProvider {
   @Override
   public List<Block> selectBlocksByEntityId(String entityId) throws ProviderException {
     List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Block.class);
-    List<Block> blocks = new ArrayList<>();
-    for (String id : ids) {
-      Block block = new Block();
-      block.setId(id);
-      try {
-        List<Block> results = generator.selectGameObject(block);
-        blocks.add(results.get(0));
-      } catch (EngineException e) {
-        throw ProviderExceptions.UnableToGetObject(Block.NAME + " for entityId = " + entityId, e);
-      }
-    }
-    return blocks;
+    return getBlocksFromIds(ids);
   }
 
   @Override
   public List<Block> selectBlocksByEntityIdOnProperty(String entityId, EntityProperty onProperty)
     throws ProviderException {
     List<String> ids = dao.getAssociatedIdsOnPropertyForEntityId(entityId, onProperty, Block.class);
+    return getBlocksFromIds(ids);
+  }
+
+  @Override
+  public List<BlockSet> selectBlockSetsByEntityId(String entityId) throws ProviderException {
+    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Block.class);
+    return getBlockSetsFromIds(ids);
+  }
+
+  @Override
+  public List<BlockSet> selectBlockSetsByEntityIdOnProperty(String entityId, EntityProperty onProperty)
+    throws ProviderException {
+    List<String> ids = dao.getAssociatedIdsOnPropertyForEntityId(entityId, onProperty, BlockSet.class);
+    return getBlockSetsFromIds(ids);
+  }
+
+  List<Block> getBlocksFromIds(List<String> ids) throws ProviderException {
     List<Block> blocks = new ArrayList<>();
     for (String id : ids) {
       Block block = new Block();
@@ -160,14 +166,13 @@ public class BlockProvider implements IBlockProvider {
         List<Block> results = generator.selectGameObject(block);
         blocks.add(results.get(0));
       } catch (EngineException e) {
-        throw ProviderExceptions.UnableToGetWord("entityId = " + entityId, e);
+        throw ProviderExceptions.UnableToGetObject("id = " + id, e);
       }
     }
     return blocks;
   }
 
-  @Override
-  public List<BlockSet> selectBlockSetsByEntityId(String entityId) throws ProviderException {
+  List<BlockSet> getBlockSetsFromIds(List<String> ids) throws ProviderException {
     EntityRestriction hasMovingBlock;
     try {
       hasMovingBlock = rules.getEntityRestriction(BlockSet.NAME, "hasMovingBlock");
@@ -175,7 +180,6 @@ public class BlockProvider implements IBlockProvider {
       throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
     }
 
-    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Block.class);
     List<BlockSet> blockSets = new ArrayList<>();
     for (String id : ids) {
       BlockSet blockSet = new BlockSet();
@@ -188,41 +192,10 @@ public class BlockProvider implements IBlockProvider {
         result.setMovingBlocks(movingBlocks);
         blockSets.add(result);
       } catch (EngineException e) {
-        throw ProviderExceptions.UnableToGetObject(BlockSet.NAME + " for entityId = " + entityId, e);
-      }
-    }
-    blockSets.sort(Comparator.comparingInt(BlockSet::getOrder));
-    return blockSets;
-  }
-
-  @Override
-  public List<BlockSet> selectBlockSetsByEntityIdOnProperty(String entityId, EntityProperty onProperty)
-    throws ProviderException {
-    EntityRestriction hasMovingBlock;
-    try {
-      hasMovingBlock = rules.getEntityRestriction(BlockSet.NAME, "hasMovingBlock");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToRetrieveRules(BlockSet.NAME, e);
-    }
-
-    List<String> ids = dao.getAssociatedIdsOnPropertyForEntityId(entityId, onProperty, BlockSet.class);
-    List<BlockSet> blockSets = new ArrayList<>();
-    for (String id : ids) {
-      BlockSet blockSet = new BlockSet();
-      blockSet.setId(id);
-      try {
-        BlockSet result = generator.selectGameObject(blockSet).get(0);
-        List<Block> blocks = selectBlocksByEntityId(result.getId());
-        List<Block> movingBlocks = selectBlocksByEntityIdOnProperty(result.getId(), hasMovingBlock.getOnProperty());
-        result.setBlocks(blocks);
-        result.setMovingBlocks(movingBlocks);
-        blockSets.add(result);
-      } catch (EngineException e) {
-        throw ProviderExceptions.UnableToGetWord("entityId = " + entityId, e);
+        throw ProviderExceptions.UnableToGetWord("id = " + id, e);
       }
     }
     return blockSets;
   }
-
 
 }
