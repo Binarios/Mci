@@ -23,6 +23,7 @@ import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.implementations.ProviderExceptions;
 import com.aegean.icsd.mciobjects.images.beans.Image;
 import com.aegean.icsd.mciobjects.images.configuration.ImageConfiguration;
+import com.aegean.icsd.mciobjects.pieces.beans.Piece;
 import com.aegean.icsd.mciobjects.questions.beans.Question;
 import com.aegean.icsd.mciobjects.questions.configurations.QuestionConfiguration;
 import com.aegean.icsd.mciobjects.sounds.beans.Sound;
@@ -117,6 +118,20 @@ public class MciObjectsConfiguration {
     blockRules.put("hasBlock", hasBlock);
 
     return blockRules;
+  }
+
+  @Bean(name = "pieceRules")
+  public Map<String, EntityRestriction> getPieceRules() throws ProviderException {
+    Map<String, EntityRestriction> pieceRules = new HashMap<>();
+    EntityRestriction hasConnectingPiece;
+
+    try {
+      hasConnectingPiece = rules.getEntityRestriction(Piece.NAME, "hasConnectingPiece");
+    } catch (RulesException e) {
+      throw ProviderExceptions.UnableToRetrieveRules(Piece.NAME, e);
+    }
+    pieceRules.put("hasConnectingPiece", hasConnectingPiece);
+    return pieceRules;
   }
 
   @Bean(name = "initializerRules")
