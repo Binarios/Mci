@@ -4,11 +4,15 @@ import java.util.List;
 
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
+import com.aegean.icsd.mciobjects.images.beans.Image;
 import com.aegean.icsd.mciobjects.pieces.beans.Piece;
 
 public interface IPieceProvider {
   List<Piece> getPieces(int count) throws ProviderException;
+
   void connectPieces(Piece thisPiece, Piece otherPiece) throws ProviderException;
+
+  void setPieceImage(Piece piece, Image image) throws ProviderException;
 
   List<Piece> selectPiecesForEntityOnProperty(String entityId, EntityProperty oProperty) throws ProviderException;
 

@@ -119,6 +119,21 @@ public class ImageProvider implements IImageProvider {
   }
 
   @Override
+  public Image[][] getImageChunks(Image image, int rows, int cols) throws ProviderException {
+    Image[][] imageChunks = new ImageUtils().splitImage(image, rows, cols);
+    for (Image[] imageRow : imageChunks) {
+      for (Image value : imageRow) {
+        try {
+          generator.upsertGameObject(value);
+        } catch (EngineException e) {
+          throw ProviderExceptions.UnableToGetObject(Image.NAME, e);
+        }
+      }
+    }
+    return imageChunks;
+  }
+
+  @Override
   public List<Image> selectNewImagesForEntity(String entityName, int count) throws ProviderException {
     List<Image> images = new ArrayList<>();
     try {
