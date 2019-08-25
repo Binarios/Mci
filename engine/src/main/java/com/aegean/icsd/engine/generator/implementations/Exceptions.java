@@ -24,8 +24,9 @@ final class Exceptions {
     return new EngineException(CODE_NAME + "." + 5, String.format("Could not create an object of type: %s", type));
   }
 
-  static EngineException MissingMandatoryRelation(String type, String relationName) {
-    return new EngineException(CODE_NAME + "." + 7, String.format("Missing mandatory relation %s from object %s", relationName, type));
+  static EngineException FunctionalRelation(String type, String relationName) {
+    return new EngineException(CODE_NAME + "." + 7, String.format("Relation %s from object %s is marked as functional." +
+      "This means it can have at most one value", relationName, type));
   }
 
 }

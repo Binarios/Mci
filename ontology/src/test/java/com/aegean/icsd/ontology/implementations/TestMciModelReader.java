@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.ontology.AllValuesFromRestriction;
 import org.apache.jena.ontology.EnumeratedClass;
 import org.apache.jena.ontology.HasValueRestriction;
@@ -42,6 +43,7 @@ import com.aegean.icsd.ontology.beans.PropertySchema;
 import com.aegean.icsd.ontology.beans.RestrictionSchema;
 import com.aegean.icsd.ontology.queries.beans.InsertParam;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -141,7 +143,7 @@ public class TestMciModelReader {
   public void testGenerateEnumeratedDataTypeProperty() {
     EnumeratedClass enumMock = mock(EnumeratedClass.class);
     RDFList rdfListMock = mock(RDFList.class);
-
+    RDFDatatype datatypeMock = mock(RDFDatatype.class);
     String propertyMockName = "testPropName";
     String rangeMockName = "testEnum";
 
@@ -160,14 +162,17 @@ public class TestMciModelReader {
     given(itMock.hasNext()).willReturn(true, false, false);
     given(itMock.next()).willReturn(nodeMock);
     given(nodeMock.asLiteral()).willReturn(literalMock);
-    given(literalMock.getString()).willReturn(rangeMockName);
+    given(literalMock.toString()).willReturn(rangeMockName);
+    given(literalMock.getDatatypeURI()).willReturn("http://localhost#string");
 
     PropertySchema prop = model.getPropertySchema(ontPropertyMock);
 
     Assertions.assertNotNull(prop);
     Assertions.assertEquals(propertyMockName, prop.getName());
     Assertions.assertFalse(prop.isObjectProperty());
-    Assertions.assertEquals(rangeMockName, prop.getRange());
+    Assertions.assertEquals("string", prop.getRange());
+    Assertions.assertNotNull(prop.getEnumerations());
+    Assertions.assertEquals("testEnum", prop.getEnumerations().get(0));
   }
 
   @Test

@@ -40,6 +40,38 @@ public class Rules implements IRules {
     return getEntityRules(entityName);
   }
 
+  @Override
+  public EntityRules getEntityRules(String entityName) throws RulesException {
+    LOGGER.info(String.format("Retrieving rules for %s", entityName));
+
+    ClassSchema entitySchema;
+    try {
+      entitySchema = model.getClassSchema(entityName);
+    } catch (OntologyException e) {
+      throw RulesExceptions.CannotRetrieveClassSchema(entityName, e);
+    }
+
+    EntityRules rules = new EntityRules();
+    rules.setName(entityName);
+
+    List<EntityRestriction> restrictions = getEntityRestrictions(entitySchema);
+    rules.setRestrictions(restrictions);
+
+    List<EntityProperty> properties = getEntityProperties(entitySchema.getProperties());
+    rules.setProperties(properties);
+
+    return rules;
+  }
+
+  List<EntityProperty> getEntityProperties(List<PropertySchema> availableProperties) {
+    List<EntityProperty> properties = new ArrayList<>();
+    for (PropertySchema prop : availableProperties) {
+      EntityProperty entityProperty = getEntityProperty(prop);
+      properties.add(entityProperty);
+    }
+    return properties;
+  }
+
 
   @Override
   public EntityRestriction getEntityRestriction(String entityName, String restrictionName) throws RulesException {
@@ -109,6 +141,31 @@ public class Rules implements IRules {
     return er;
   }
 
+  @Override
+  public EntityProperty getProperty(String entityName, String propertyName) throws RulesException {
+    LOGGER.info(String.format("Retrieving property %s for %s", propertyName, entityName));
+
+    ClassSchema entitySchema;
+    try {
+      entitySchema = model.getClassSchema(entityName);
+    } catch (OntologyException e) {
+      throw RulesExceptions.CannotRetrieveClassSchema(entityName, e);
+    }
+
+    List<EntityProperty> properties = getEntityProperties(entitySchema.getProperties());
+
+    EntityProperty requestedProperty = properties.stream()
+      .filter(x -> propertyName.equals(x.getName()))
+      .findFirst()
+      .orElse(null);
+
+    if (requestedProperty == null) {
+      throw RulesExceptions.CannotFindProperty(propertyName, entityName);
+    }
+
+    return requestedProperty;
+  }
+
   EntityRestriction overrideRange(EntityRestriction er, EntityRestriction only) {
     if (only != null) {
       er.setDataRange(only.getDataRange());
@@ -132,37 +189,6 @@ public class Rules implements IRules {
     return toUse;
   }
 
-  @Override
-  public EntityRules getEntityRules(String entityName) throws RulesException {
-    LOGGER.info(String.format("Retrieving rules for %s", entityName));
-
-    ClassSchema entitySchema;
-    try {
-      entitySchema = model.getClassSchema(entityName);
-    } catch (OntologyException e) {
-      throw Exceptions.CannotRetrieveClassSchema(entityName, e);
-    }
-
-    EntityRules rules = new EntityRules();
-    rules.setName(entityName);
-
-    List<EntityRestriction> restrictions = getEntityRestrictions(entitySchema);
-    rules.setRestrictions(restrictions);
-
-    List<EntityProperty> properties = getEntityProperties(entitySchema.getProperties());
-    rules.setProperties(properties);
-
-    return rules;
-  }
-
-  List<EntityProperty> getEntityProperties(List<PropertySchema> availableProperties) {
-    List<EntityProperty> properties = new ArrayList<>();
-    for (PropertySchema prop : availableProperties) {
-      EntityProperty entityProperty = getEntityProperty(prop);
-      properties.add(entityProperty);
-    }
-    return properties;
-  }
 
   EntityProperty getEntityProperty(PropertySchema prop) {
     EntityProperty property = new EntityProperty();
@@ -170,6 +196,7 @@ public class Rules implements IRules {
     property.setParent(prop.getParent());
     property.setInverse(prop.getInverse());
     property.setRange(prop.getRange());
+    property.setEnumerations(prop.getEnumerations());
     property.setObjectProperty(prop.isObjectProperty());
     property.setIrreflexive(prop.isIrreflexive());
     property.setReflexive(prop.isReflexive());

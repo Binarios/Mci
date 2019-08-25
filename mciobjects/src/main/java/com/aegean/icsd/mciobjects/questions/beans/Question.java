@@ -57,4 +57,14 @@ public class Question extends BaseGameObject {
   public Boolean isTextQuestion() {
     return this.textQuestion;
   }
+
+  @Override
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  @Override
+  public String getId() {
+    return this.id;
+  }
 }

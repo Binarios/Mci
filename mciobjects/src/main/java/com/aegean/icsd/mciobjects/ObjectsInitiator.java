@@ -1,7 +1,7 @@
 package com.aegean.icsd.mciobjects;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
+import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
@@ -43,6 +44,9 @@ public class ObjectsInitiator {
   private QuestionConfiguration questionConfig;
 
   @Autowired
+  private Map<String, EntityRestriction> initializerRules;
+
+  @Autowired
   private IRules rules;
 
   @Autowired
@@ -61,21 +65,26 @@ public class ObjectsInitiator {
   private IImageProvider imageProvider;
 
   void setupObjects() throws ProviderException {
-    setupWords();
-    setupSounds();
-    setupImages();
-  }
-
-  void setupWords() throws ProviderException {
-    EntityRestriction synonymRes;
-    EntityRestriction antonymRes;
+    EntityRestriction synonymRes = initializerRules.get("synonymRes");
+    EntityRestriction antonymRes = initializerRules.get("antonymRes");
+    EntityRestriction soundSubjRes = initializerRules.get("soundSubjRes");
+    EntityRestriction imageSubjRes = initializerRules.get("imageSubjRes");
+    EntityRestriction imageTitleRes = initializerRules.get("imageTitleRes");
+    EntityRestriction hasPreviousImage = initializerRules.get("hasPreviousImage");
+    EntityRestriction hasAssociatedSound = initializerRules.get("hasAssociatedSound");
+    EntityProperty hasAssociatedImage;
     try {
-      synonymRes = rules.getEntityRestriction("SynonymWord", "hasSynonym");
-      antonymRes = rules.getEntityRestriction("AntonymWord", "hasAntonym");
+      hasAssociatedImage = rules.getProperty(Sound.NAME, "hasAssociatedImage");
     } catch (RulesException e) {
       throw ProviderExceptions.UnableToRetrieveRules("SynonymWord", e);
     }
 
+    setupWords(synonymRes, antonymRes);
+    setupSounds(soundSubjRes, hasAssociatedImage);
+    setupImages(imageSubjRes, imageTitleRes, hasPreviousImage, hasAssociatedSound);
+  }
+
+  void setupWords(EntityRestriction synonymRes, EntityRestriction antonymRes) throws ProviderException {
     List<String> lines = fileProvider.getLines(wordConfig.getLocation() + "/" + wordConfig.getFilename());
     for (String line : lines) {
       String[] fragments = line.split(wordConfig.getDelimiter());
@@ -105,16 +114,7 @@ public class ObjectsInitiator {
     }
   }
 
-  void setupSounds() throws ProviderException {
-
-    EntityRestriction soundSubjRes;
-    EntityRestriction hasAssociatedImageRes;
-    try {
-      soundSubjRes = rules.getEntityRestriction(Sound.NAME, "hasSubject");
-      hasAssociatedImageRes = rules.getEntityRestriction("SoundImage", "hasAssociatedImage");
-    } catch (RulesException e) {
-      throw ProviderExceptions.GenerationError(Sound.NAME, e);
-    }
+  void setupSounds(EntityRestriction soundSubjRes, EntityProperty hasAssociatedImage ) throws ProviderException {
 
     List<String> lines = fileProvider.getLines(soundConfig.getLocation() + "/" + soundConfig.getFilename());
     for (String line : lines) {
@@ -135,7 +135,7 @@ public class ObjectsInitiator {
           generator.upsertGameObject(image);
           sound.setImageAssociated(true);
           generator.upsertGameObject(sound);
-          generator.createObjRelation(sound.getId(), hasAssociatedImageRes.getOnProperty(), image.getId());
+          generator.createObjRelation(sound.getId(), hasAssociatedImage, image.getId());
         }
 
       } catch (EngineException e) {
@@ -144,23 +144,50 @@ public class ObjectsInitiator {
     }
   }
 
-  void setupImages() throws ProviderException {
-    List<String> lines = fileProvider.getLines(imageConfig.getLocation() + "/" + imageConfig.getFilename());
-    EntityRestriction imageSubjRes;
-    EntityRestriction imageTitleRes;
-    EntityRestriction hasPreviousImage;
-    EntityRestriction hasAssociatedSound;
-    try {
-      imageSubjRes = rules.getEntityRestriction(Image.NAME, "hasSubject");
-      imageTitleRes = rules.getEntityRestriction(Image.NAME, "hasTitle");
-      hasAssociatedSound = rules.getEntityRestriction("ImageSound", "hasAssociatedSound");
-      hasPreviousImage = rules.getEntityRestriction("OrderedImage", "hasPreviousImage");
-    } catch (RulesException e) {
-      throw ProviderExceptions.GenerationError(Image.NAME, e);
-    }
+  void setupImages(EntityRestriction imageSubjRes,
+                   EntityRestriction imageTitleRes,
+                   EntityRestriction hasPreviousImage,
+                   EntityRestriction hasAssociatedSound) throws ProviderException {
 
+    List<String> lines = fileProvider.getLines(imageConfig.getLocation() + "/" + imageConfig.getFilename());
     for (String line : lines) {
-      createImages(line, lines, imageSubjRes, imageTitleRes, hasPreviousImage, hasAssociatedSound);
+      Image criteria = new Image();
+      Image parentImage = null;
+
+      String[] currentFragments = line.split(imageConfig.getDelimiter());
+      String currentUrl = currentFragments[imageConfig.getUrlIndex()];
+      String currentTitle = currentFragments[imageConfig.getTitleIndex()];
+      String currentSubject = currentFragments[imageConfig.getSubjectIndex()];
+
+      if (currentFragments.length > imageConfig.getParentIndex()) {
+        String currentParentImage = currentFragments[imageConfig.getParentIndex()];
+        Image parentCriteria = new Image();
+        parentCriteria.setPath(currentParentImage);
+        parentImage = getOrUpsertGameObject(parentCriteria);
+      }
+
+      try {
+        criteria.setOrdered(parentImage != null && !StringUtils.isEmpty(parentImage.getId()));
+        criteria.setPath(currentUrl);
+        Image image = getOrUpsertGameObject(criteria);
+        Word titleWord = wordProvider.getWordWithValue(currentTitle);
+        Word subjectWord = wordProvider.getWordWithValue(currentSubject);
+        Sound sound = soundProvider.selectRandomSoundWithSubject(subjectWord);
+        generator.createObjRelation(image.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
+        generator.createObjRelation(image.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
+        if (image.isOrdered()) {
+          generator.createObjRelation(image.getId(), hasPreviousImage.getOnProperty(), parentImage.getId());
+        }
+        if (sound != null && !StringUtils.isEmpty(sound.getId())) {
+          image.setSoundAssociated(true);
+          generator.upsertGameObject(image);
+          sound.setImageAssociated(true);
+          generator.upsertGameObject(sound);
+          generator.createObjRelation(image.getId(), hasAssociatedSound.getOnProperty(), sound.getId());
+        }
+      } catch (EngineException e) {
+        throw ProviderExceptions.GenerationError(Image.NAME, e);
+      }
     }
   }
 
@@ -206,65 +233,6 @@ public class ObjectsInitiator {
       }
     }
   }
-
-  Image createImages(String currentLine, List<String> originalLines,
-                     EntityRestriction imageSubjRes,
-                     EntityRestriction imageTitleRes,
-                     EntityRestriction hasPreviousImage,
-                     EntityRestriction hasAssociatedSound) throws ProviderException {
-
-    List<String> lines = new ArrayList<>(originalLines);
-    lines.remove(currentLine);
-    Image criteria = new Image();
-    Image parentImage = null;
-
-    String[] currentFragments = currentLine.split(imageConfig.getDelimiter());
-    String currentUrl = currentFragments[imageConfig.getUrlIndex()];
-    String currentTitle = currentFragments[imageConfig.getTitleIndex()];
-    String currentSubject = currentFragments[imageConfig.getSubjectIndex()];
-
-    if (currentFragments.length > imageConfig.getParentIndex()) {
-      String currentParentImage = currentFragments[imageConfig.getParentIndex()];
-      String foundParentLine = lines.stream()
-        .filter(line -> {
-          String[] fragments = line.split(imageConfig.getDelimiter());
-          String url = fragments[imageConfig.getUrlIndex()];
-          return !StringUtils.isEmpty(url) && url.equals(currentParentImage);
-        })
-        .findFirst()
-        .orElse(null);
-
-      if (!StringUtils.isEmpty(foundParentLine)) {
-        parentImage = createImages(foundParentLine, originalLines, imageSubjRes, imageTitleRes,
-          hasPreviousImage, hasAssociatedSound);
-      }
-    }
-
-    try {
-      criteria.setOrdered(parentImage != null && !StringUtils.isEmpty(parentImage.getId()));
-      criteria.setPath(currentUrl);
-      Image image = getOrUpsertGameObject(criteria);
-      Word titleWord = wordProvider.getWordWithValue(currentTitle);
-      Word subjectWord = wordProvider.getWordWithValue(currentSubject);
-      Sound sound = soundProvider.selectRandomSoundWithSubject(subjectWord);
-      generator.createObjRelation(image.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
-      generator.createObjRelation(image.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
-      if (image.isOrdered()) {
-        generator.createObjRelation(image.getId(), hasPreviousImage.getOnProperty(), parentImage.getId());
-      }
-      if (sound != null && !StringUtils.isEmpty(sound.getId())) {
-        image.setSoundAssociated(true);
-        generator.upsertGameObject(image);
-        sound.setImageAssociated(true);
-        generator.upsertGameObject(sound);
-        generator.createObjRelation(image.getId(), hasAssociatedSound.getOnProperty(), sound.getId());
-      }
-      return image;
-    } catch (EngineException e) {
-      throw ProviderExceptions.GenerationError(Image.NAME, e);
-    }
-  }
-
 
   <T extends BaseGameObject> T getOrUpsertGameObject(T gameObject) throws ProviderException {
     try {

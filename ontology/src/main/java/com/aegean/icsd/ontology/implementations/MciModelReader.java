@@ -219,14 +219,19 @@ public class MciModelReader implements IMciModelReader {
     OntClass rangeClass = rangeResource.asClass();
     if (rangeClass.isEnumeratedClass()) {
       ListIterator<RDFNode> possibleValues = rangeClass.asEnumeratedClass().getOneOf().asJavaList().listIterator();
-      String possibleValue = "";
+      List<String> enumeratedValues = new ArrayList<>();
+      String type = null;
       while (possibleValues.hasNext()) {
-        possibleValue += possibleValues.next().asLiteral().getString();
-        if (possibleValues.hasNext()) {
-          possibleValue += ";";
+        Literal possibleValue = possibleValues.next().asLiteral();
+        if (!enumeratedValues.contains(possibleValue.toString())) {
+          enumeratedValues.add(possibleValue.toString());
         }
+        type = removeNamespacePrefix(possibleValue.getDatatypeURI());
       }
-      descriptor.setRange(possibleValue);
+      if (type != null) {
+        descriptor.setRange(type);
+      }
+      descriptor.setEnumerations(enumeratedValues);
     } else {
       descriptor.setRange(rangeClass.getLocalName());
     }
@@ -330,6 +335,15 @@ public class MciModelReader implements IMciModelReader {
 
   OntClass getOntClass(String className) {
     return this.model.getOntClass(ontologyProps.getNamespace() + className);
+  }
+
+  String removeNamespacePrefix (String uri) {
+    String[] fragments = uri.split("#");
+    if (fragments.length == 1) {
+      return uri;
+    }
+
+    return fragments[1];
   }
 
   @PostConstruct

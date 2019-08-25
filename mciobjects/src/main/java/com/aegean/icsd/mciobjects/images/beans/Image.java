@@ -22,10 +22,12 @@ public class Image extends BaseGameObject {
   @DataProperty("isSoundAssociated")
   private Boolean soundAssociated;
 
+  @Override
   public String getId() {
     return id;
   }
 
+  @Override
   public void setId(String id) {
     this.id = id;
   }

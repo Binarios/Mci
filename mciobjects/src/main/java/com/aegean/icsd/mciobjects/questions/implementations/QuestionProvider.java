@@ -3,6 +3,7 @@ package com.aegean.icsd.mciobjects.questions.implementations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +13,6 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.implementations.Generator;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
-import com.aegean.icsd.engine.rules.beans.RulesException;
-import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.daos.IObjectsDao;
 import com.aegean.icsd.mciobjects.common.implementations.ProviderExceptions;
@@ -31,7 +30,7 @@ import com.aegean.icsd.mciobjects.words.interfaces.IWordProvider;
 public class QuestionProvider implements IQuestionProvider {
 
   @Autowired
-  private IRules rules;
+  private Map<String, EntityRestriction> questionRules;
 
   @Autowired
   private IObjectFileProvider fileProvider;
@@ -53,12 +52,7 @@ public class QuestionProvider implements IQuestionProvider {
 
   @Override
   public List<QuestionData> getNewQuestionsFor(String entityName, int count, boolean isImageQuestion) throws ProviderException {
-    EntityRestriction hasCategoryRes;
-    try {
-      hasCategoryRes = rules.getEntityRestriction(Question.NAME, "hasCategory");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToRetrieveRules(Question.NAME, e);
-    }
+    EntityRestriction hasCategoryRes = questionRules.get("hasCategory");
     List<QuestionData> result = new ArrayList<>();
 
     List<String> lines = fileProvider.getLines(questionConfig.getLocation() + "/" + questionConfig.getFilename());
@@ -169,14 +163,8 @@ public class QuestionProvider implements IQuestionProvider {
     return question;
   }
 
-  void associateWithImage(Question question, String description) throws ProviderException, EngineException {
-    EntityRestriction hasImageRes;
-    try {
-      hasImageRes = rules.getEntityRestriction(Question.NAME, "hasImage");
-    } catch (RulesException e) {
-      throw ProviderExceptions.UnableToRetrieveRules(Question.NAME, e);
-    }
-
+  void associateWithImage(Question question, String description) throws EngineException {
+    EntityRestriction hasImageRes = questionRules.get("hasImage");
     if (question.isImageQuestion()) {
       Image imageDescription = new Image();
       imageDescription.setPath(description);

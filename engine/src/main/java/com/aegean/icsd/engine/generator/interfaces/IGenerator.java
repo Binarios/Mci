@@ -7,6 +7,7 @@ import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.generator.beans.BaseGame;
 import com.aegean.icsd.engine.generator.beans.BaseGameObject;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
+import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
 
 public interface IGenerator {

@@ -37,9 +37,6 @@ public class WordProvider implements IWordProvider {
   private IGenerator generator;
 
   @Autowired
-  private IRules rules;
-
-  @Autowired
   private IMciModelReader model;
 
   @Override
@@ -114,7 +111,7 @@ public class WordProvider implements IWordProvider {
       List<Word> results = generator.selectGameObject(word);
       return results.get(0);
     } catch (EngineException e) {
-      throw ProviderExceptions.UnableToGetWord("id = " + wordId, e);
+      throw ProviderExceptions.UnableToGetObject("id = " + wordId, e);
     }
   }
 
@@ -129,7 +126,7 @@ public class WordProvider implements IWordProvider {
         List<Word> results = generator.selectGameObject(word);
         words.add(results.get(0));
       } catch (EngineException e) {
-        throw ProviderExceptions.UnableToGetWord("entityId = " + entityId, e);
+        throw ProviderExceptions.UnableToGetObject("entityId = " + entityId, e);
       }
     }
     return words;
@@ -147,7 +144,7 @@ public class WordProvider implements IWordProvider {
         List<Word> results = generator.selectGameObject(word);
         words.add(results.get(0));
       } catch (EngineException e) {
-        throw ProviderExceptions.UnableToGetWord("entityId = " + entityId, e);
+        throw ProviderExceptions.UnableToGetObject("entityId = " + entityId, e);
       }
     }
     return words;

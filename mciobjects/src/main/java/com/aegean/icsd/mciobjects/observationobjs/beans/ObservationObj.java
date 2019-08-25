@@ -16,10 +16,12 @@ public class ObservationObj extends BaseGameObject {
   @DataProperty("hasTotalImages")
   private Integer nbOfImages;
 
+  @Override
   public String getId() {
     return id;
   }
 
+  @Override
   public void setId(String id) {
     this.id = id;
   }
