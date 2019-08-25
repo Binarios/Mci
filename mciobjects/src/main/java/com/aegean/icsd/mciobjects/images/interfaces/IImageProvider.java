@@ -15,6 +15,8 @@ public interface IImageProvider {
 
   List<Image> getNewOrderedImagesFor(String entityName, int cardinality) throws ProviderException;
 
+  Image[][] getImageChunks(Image image, int rows, int cols) throws ProviderException;
+
   Image selectImageByNode(String nodeName) throws ProviderException;
 
   List<Image> selectImagesByEntityId(String entityId) throws ProviderException;

@@ -6,7 +6,7 @@ import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 
 public class PuzzleResponse extends ServiceResponse<Puzzle> {
 
-  private List<String> pieces;
+  private List<PuzzlePiece> pieces;
 
   private String imageUrl;
 
@@ -22,11 +22,11 @@ public class PuzzleResponse extends ServiceResponse<Puzzle> {
     this.imageUrl = imageUrl;
   }
 
-  public List<String> getPieces() {
+  public List<PuzzlePiece> getPieces() {
     return pieces;
   }
 
-  public void setPieces(List<String> pieces) {
+  public void setPieces(List<PuzzlePiece> pieces) {
     this.pieces = pieces;
   }
 }

@@ -124,13 +124,16 @@ public class MciObjectsConfiguration {
   public Map<String, EntityRestriction> getPieceRules() throws ProviderException {
     Map<String, EntityRestriction> pieceRules = new HashMap<>();
     EntityRestriction hasConnectingPiece;
+    EntityRestriction hasImage;
 
     try {
       hasConnectingPiece = rules.getEntityRestriction(Piece.NAME, "hasConnectingPiece");
+      hasImage = rules.getEntityRestriction(Piece.NAME, "hasImage");
     } catch (RulesException e) {
       throw ProviderExceptions.UnableToRetrieveRules(Piece.NAME, e);
     }
     pieceRules.put("hasConnectingPiece", hasConnectingPiece);
+    pieceRules.put("hasImage", hasImage);
     return pieceRules;
   }
 

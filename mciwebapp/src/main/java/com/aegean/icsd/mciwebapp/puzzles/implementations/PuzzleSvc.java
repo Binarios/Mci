@@ -23,6 +23,7 @@ import com.aegean.icsd.mciwebapp.common.GameExceptions;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.implementations.AbstractGameSvc;
 import com.aegean.icsd.mciwebapp.puzzles.beans.Puzzle;
+import com.aegean.icsd.mciwebapp.puzzles.beans.PuzzlePiece;
 import com.aegean.icsd.mciwebapp.puzzles.beans.PuzzleResponse;
 import com.aegean.icsd.mciwebapp.puzzles.interfaces.IPuzzleSvc;
 
@@ -76,11 +77,13 @@ public class PuzzleSvc extends AbstractGameSvc<Puzzle, PuzzleResponse> implement
       throw GameExceptions.GenerationError(Puzzle.NAME, e);
     }
 
-    Image image;
+    Image[][] imagePieces;
+    Image concreteImage;
     List<Piece> pieces;
     int totalPieces = toCreate.getColumns() * toCreate.getRows();
     try {
-      image = imageProvider.getNewImagesFor(fullName, hasImage.getCardinality(), new Image()).get(0);
+      concreteImage = imageProvider.getNewImagesFor(fullName, hasImage.getCardinality(), new Image()).get(0);
+      imagePieces = imageProvider.getImageChunks(concreteImage, toCreate.getRows(), toCreate.getColumns());
       pieces = pieceProvider.getPieces(totalPieces);
     } catch (ProviderException e) {
       throw GameExceptions.GenerationError(Puzzle.NAME, e);
@@ -102,6 +105,8 @@ public class PuzzleSvc extends AbstractGameSvc<Puzzle, PuzzleResponse> implement
           interiorPieces.add(piece);
         }
         try {
+          Image pieceImage = imagePieces[row][col];
+          pieceProvider.setPieceImage(piece, pieceImage);
           if (col > 0) {
             pieceProvider.connectPieces(piece, pieceMap[row][col -1]);
           }
@@ -114,7 +119,8 @@ public class PuzzleSvc extends AbstractGameSvc<Puzzle, PuzzleResponse> implement
 
       }
     }
-    createObjRelation(toCreate, image, hasImage.getOnProperty());
+
+    createObjRelation(toCreate, concreteImage, hasImage.getOnProperty());
     createObjRelation(toCreate, cornerPieces, hasCornerPiece.getOnProperty());
     createObjRelation(toCreate, interiorPieces, hasInteriorPiece.getOnProperty());
     createObjRelation(toCreate, borderLinePieces, hasBorderLinePiece.getOnProperty());
@@ -222,7 +228,20 @@ public class PuzzleSvc extends AbstractGameSvc<Puzzle, PuzzleResponse> implement
     pieces.addAll(interiorBlocks);
     Collections.shuffle(pieces, new Random(System.currentTimeMillis()));
 
-    List<String> puzzlePieces = pieces.stream().map(Piece::getId).collect(Collectors.toList());
+    List<PuzzlePiece> puzzlePieces = new ArrayList<>();
+
+    try {
+      for (Piece piece : pieces) {
+        Image pieceImage =  imageProvider.selectImagesByEntityId(piece.getId()).get(0);
+        PuzzlePiece pp = new PuzzlePiece();
+        pp.setId(piece.getId());
+        pp.setImagePath(pieceImage.getPath());
+        puzzlePieces.add(pp);
+      }
+    } catch (ProviderException e) {
+      throw GameExceptions.UnableToSolve(Puzzle.NAME, e);
+    }
+
 
     Collections.shuffle(puzzlePieces, new Random(System.currentTimeMillis()));
     PuzzleResponse response = new PuzzleResponse(game);

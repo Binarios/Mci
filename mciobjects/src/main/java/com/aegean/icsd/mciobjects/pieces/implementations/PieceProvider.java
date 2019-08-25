@@ -14,6 +14,8 @@ import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.daos.IObjectsDao;
 import com.aegean.icsd.mciobjects.common.implementations.ProviderExceptions;
+import com.aegean.icsd.mciobjects.images.beans.Image;
+import com.aegean.icsd.mciobjects.images.interfaces.IImageProvider;
 import com.aegean.icsd.mciobjects.pieces.beans.Piece;
 import com.aegean.icsd.mciobjects.pieces.interfaces.IPieceProvider;
 
@@ -51,6 +53,16 @@ public class PieceProvider implements IPieceProvider {
     EntityRestriction hasConnectingPiece = pieceRules.get("hasConnectingPiece");
     try {
       generator.createObjRelation(thisPiece.getId(), hasConnectingPiece.getOnProperty(), otherPiece.getId());
+    } catch (EngineException e) {
+      throw ProviderExceptions.GenerationError(Piece.NAME, e);
+    }
+  }
+
+  @Override
+  public void setPieceImage(Piece piece, Image image) throws ProviderException {
+    EntityRestriction hasImage = pieceRules.get("hasImage");
+    try {
+      generator.createObjRelation(piece.getId(), hasImage.getOnProperty(), image.getId());
     } catch (EngineException e) {
       throw ProviderExceptions.GenerationError(Piece.NAME, e);
     }
