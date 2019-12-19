@@ -3,7 +3,7 @@ package com.aegean.icsd.mciwebapp.common.interfaces;
 import java.util.List;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGame;
 import com.aegean.icsd.mciwebapp.common.beans.MciException;
 import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 

@@ -2,7 +2,7 @@ package com.aegean.icsd.mciwebapp.memorycards.beans;
 
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGame;
 
 @Entity(MemoryCards.NAME)
 public class MemoryCards extends BaseGame {

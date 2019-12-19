@@ -1,11 +1,10 @@
-package com.aegean.icsd.engine.generator.beans;
+package com.aegean.icsd.engine.common.beans;
 
-import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.annotations.Key;
 
-public class BaseGame {
+public abstract class BaseGame {
   @Id
   @DataProperty("hasId")
   private String id;
@@ -25,7 +24,7 @@ public class BaseGame {
   @DataProperty("maxCompletionTime")
   private Long maxCompletionTime;
 
-  @DataProperty("isCompletedIn")
+  @DataProperty("hasCompletionTime")
   private Long completionTime;
 
   @DataProperty("completedDate")

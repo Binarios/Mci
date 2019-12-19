@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 
 public interface IGeneratorDao {
 

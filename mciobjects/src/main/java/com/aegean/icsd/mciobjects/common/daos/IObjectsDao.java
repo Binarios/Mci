@@ -2,7 +2,7 @@ package com.aegean.icsd.mciobjects.common.daos;
 
 import java.util.List;
 
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 

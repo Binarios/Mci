@@ -2,16 +2,16 @@ package com.aegean.icsd.engine.generator.implementations;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
 
-final class Exceptions {
+final class GeneratorExceptions {
   private static final String CODE_NAME = "GG";
 
-  private Exceptions () { }
+  private GeneratorExceptions() { }
 
   static EngineException CannotRetrieveRules(String entity, Throwable t) {
     return new EngineException(CODE_NAME + "." + 2, String.format("Unable to retrieve rules for entity: %s", entity), t);
   }
 
-  static EngineException CannotCreateObjectRelation(String domainId, String relationName, String rangeId, String reason) {
+  static EngineException CannotCreateRelation(String domainId, String relationName, String rangeId, String reason) {
     return new EngineException(CODE_NAME + "." + 3, String.format("There was an issue creating the object relation %s " +
       "between the domain with id %s and the range with id %s. More info: %s", relationName, domainId, rangeId, reason));
   }

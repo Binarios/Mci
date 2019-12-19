@@ -78,7 +78,7 @@ public class QuestionProvider implements IQuestionProvider {
           choiceWords.add(choiceWord);
         }
 
-        generator.createObjRelation(question.getId(), hasCategoryRes.getOnProperty(), categoryWord.getId());
+        generator.createObjRelation(question, categoryWord, hasCategoryRes.getOnProperty());
 
         QuestionData data = new QuestionData();
         data.setAnswer(answerWord);
@@ -174,7 +174,7 @@ public class QuestionProvider implements IQuestionProvider {
       } else {
         imageDescription = images.get(0);
       }
-      generator.createObjRelation(question.getId(), hasImageRes.getOnProperty(), imageDescription.getId());
+      generator.createObjRelation(question, imageDescription, hasImageRes.getOnProperty());
     }
   }
 }

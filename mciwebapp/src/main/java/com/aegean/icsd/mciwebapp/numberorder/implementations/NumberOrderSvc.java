@@ -55,7 +55,7 @@ public class NumberOrderSvc extends AbstractGameSvc<NumberOrder, NumberOrderResp
       }
       toCreate.setNumbers(numbers);
       try {
-        List<NumberOrder> results = generator.selectGameByCriteria(toCreate);
+        List<NumberOrder> results = generator.selectGame(toCreate);
         if (results.isEmpty()) {
           repeat = false;
         }

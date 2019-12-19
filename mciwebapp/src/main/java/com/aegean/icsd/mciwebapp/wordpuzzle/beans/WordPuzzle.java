@@ -2,7 +2,7 @@ package com.aegean.icsd.mciwebapp.wordpuzzle.beans;
 
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGame;
 
 @Entity(WordPuzzle.NAME)
 public class WordPuzzle extends BaseGame {

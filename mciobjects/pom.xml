@@ -13,7 +13,6 @@
   <packaging>jar</packaging>
 
   <properties>
-    <webapp.name>gameobjects</webapp.name>
   </properties>
 
   <dependencies>
@@ -67,7 +66,32 @@
   </dependencies>
 
   <build>
-    <finalName>${webapp.name}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.aegean.icsd.mciobjects.Main</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-jar-with-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
 

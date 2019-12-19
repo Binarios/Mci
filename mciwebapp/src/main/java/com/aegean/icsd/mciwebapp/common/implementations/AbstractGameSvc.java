@@ -12,8 +12,8 @@ import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
@@ -59,7 +59,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
     try {
       T criteria = gameClass.getDeclaredConstructor().newInstance();
       criteria.setPlayerName(playerName);
-      games = generator.selectGameByCriteria(criteria);
+      games = generator.selectGame(criteria);
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | EngineException e) {
       throw GameExceptions.FailedToRetrieveGames(gameClass.getSimpleName(), playerName, e);
     }
@@ -133,7 +133,7 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
       T criteria = gameClass.getDeclaredConstructor().newInstance();
       criteria.setId(id);
       criteria.setPlayerName(player);
-      List<T> results =  generator.selectGameByCriteria(criteria);
+      List<T> results =  generator.selectGame(criteria);
       if (results.size() != 1) {
         throw GameExceptions.UnableToRetrieveGame(gameName, id, player);
       }
@@ -195,9 +195,10 @@ public abstract class AbstractGameSvc <T extends BaseGame, R extends ServiceResp
     }
   }
 
-  protected <U extends BaseGameObject> void createObjRelation (T toCreate, U gameObj, EntityProperty onProperty) throws MciException {
+  protected <U extends BaseGameObject> void createObjRelation (T toCreate, U gameObj, EntityProperty onProperty)
+    throws MciException {
     try {
-      generator.createObjRelation(toCreate.getId(), onProperty, gameObj.getId());
+      generator.createObjRelation(toCreate, gameObj, onProperty);
     } catch (EngineException e) {
       throw GameExceptions.GenerationError(toCreate.getId(), e);
     }

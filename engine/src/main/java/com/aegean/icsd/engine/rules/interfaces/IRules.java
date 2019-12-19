@@ -1,5 +1,6 @@
 package com.aegean.icsd.engine.rules.interfaces;
 
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
@@ -11,6 +12,9 @@ public interface IRules {
   EntityRules getGameRules(String gameName, Difficulty difficulty) throws RulesException;
 
   EntityRules getEntityRules(String entityName)  throws RulesException;
+
+  <GAME_OBJECT extends BaseGameObject> EntityRestriction getEntityRestriction(Class<GAME_OBJECT> clazz, String restrictionName)
+    throws RulesException;
 
   EntityRestriction getEntityRestriction(String entityName, String restrictionName) throws RulesException;
 

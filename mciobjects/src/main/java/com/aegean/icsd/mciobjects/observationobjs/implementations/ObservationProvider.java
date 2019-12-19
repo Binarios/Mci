@@ -17,6 +17,7 @@ import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.daos.IObjectsDao;
 import com.aegean.icsd.mciobjects.common.implementations.ProviderExceptions;
+import com.aegean.icsd.mciobjects.images.beans.Image;
 import com.aegean.icsd.mciobjects.images.interfaces.IImageProvider;
 import com.aegean.icsd.mciobjects.observationobjs.beans.ObservationObj;
 import com.aegean.icsd.mciobjects.observationobjs.interfaces.IObservationProvider;
@@ -58,13 +59,21 @@ public class ObservationProvider implements IObservationProvider {
     List<String> imageIds = imageProvider.getImageIds();
     Collections.shuffle(imageIds, new Random(System.currentTimeMillis()));
     for (String imageId : imageIds) {
+      Image image = new Image();
+      image.setId(imageId);
+      try {
+        image = generator.selectGameObject(image).get(0);
+      } catch (EngineException e) {
+        throw ProviderExceptions.GenerationError(ObservationObj.NAME, e);
+      }
+
       List<String> associatedObsObjIds = dao.getIdAssociatedWithOtherOnProperty(imageId, imageRes.getOnProperty());
       if (associatedObsObjIds.isEmpty()) {
         toCreate = new ObservationObj();
         toCreate.setNbOfImages(imageTotalNb);
         try {
           generator.upsertGameObject(toCreate);
-          generator.createObjRelation(toCreate.getId(), imageRes.getOnProperty(), imageId);
+          generator.createObjRelation(toCreate, image, imageRes.getOnProperty());
           break;
         } catch (EngineException e) {
           throw ProviderExceptions.GenerationError(ObservationObj.NAME, e);
@@ -80,7 +89,7 @@ public class ObservationProvider implements IObservationProvider {
               toCreate = new ObservationObj();
               toCreate.setNbOfImages(imageTotalNb);
               generator.upsertGameObject(toCreate);
-              generator.createObjRelation(toCreate.getId(), imageRes.getOnProperty(), imageId);
+              generator.createObjRelation(toCreate, image, imageRes.getOnProperty());
             } else {
               toCreate = objs.get(0);
             }

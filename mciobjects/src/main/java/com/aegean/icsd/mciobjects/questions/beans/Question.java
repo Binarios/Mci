@@ -4,7 +4,7 @@ import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Id;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 
 @Entity(Question.NAME)
 public class Question extends BaseGameObject {

@@ -43,16 +43,16 @@ public class LogicalOrderSvc extends AbstractGameSvc<LogicalOrder, LogicalOrderR
   @Override
   protected void handleDataTypeRestrictions(String fullName, LogicalOrder toCreate) throws MciException {
     EntityRestriction hasStep;
-    EntityRestriction hasTotalColumns;
-    EntityRestriction hasTotalRows;
+    EntityRestriction hasSquareColumns;
+    EntityRestriction hasSquareRows;
     EntityRestriction hasTotalMovingBlocks;
     EntityRestriction hasMovement;
     EntityRestriction choices;
 
     try {
       hasStep = rules.getEntityRestriction(fullName, "hasStep");
-      hasTotalColumns = rules.getEntityRestriction(fullName, "hasTotalColumns");
-      hasTotalRows = rules.getEntityRestriction(fullName, "hasTotalRows");
+      hasSquareColumns = rules.getEntityRestriction(fullName, "hasSquareColumns");
+      hasSquareRows = rules.getEntityRestriction(fullName, "hasSquareRows");
       hasTotalMovingBlocks = rules.getEntityRestriction(fullName, "hasTotalMovingBlocks");
       hasMovement = rules.getEntityRestriction(fullName, "hasMovement");
       choices = rules.getEntityRestriction(fullName, "choices");
@@ -61,8 +61,8 @@ public class LogicalOrderSvc extends AbstractGameSvc<LogicalOrder, LogicalOrderR
     }
 
     Long step = generator.generateLongDataValue(hasStep.getDataRange());
-    Long rows = generator.generateLongDataValue(hasTotalRows.getDataRange());
-    Long columns = generator.generateLongDataValue(hasTotalColumns.getDataRange());
+    Long rows = generator.generateLongDataValue(hasSquareRows.getDataRange());
+    Long columns = generator.generateLongDataValue(hasSquareColumns.getDataRange());
     Long movingBlocks = generator.generateLongDataValue(hasTotalMovingBlocks.getDataRange());
     Long nbOfChoices = generator.generateLongDataValue(choices.getDataRange());
 
