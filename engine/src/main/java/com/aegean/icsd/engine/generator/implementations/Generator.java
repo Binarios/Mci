@@ -14,14 +14,12 @@ import com.aegean.icsd.engine.common.Utils;
 import com.aegean.icsd.engine.common.beans.Difficulty;
 import com.aegean.icsd.engine.common.beans.EngineException;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.dao.IGeneratorDao;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
-import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
-import com.aegean.icsd.engine.rules.beans.RestrictionType;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.beans.ValueRange;
 import com.aegean.icsd.engine.rules.beans.ValueRangeRestriction;
@@ -50,60 +48,51 @@ public class Generator implements IGenerator {
   private IMciModelReader model;
 
   @Override
-  public <T extends BaseGameObject> List<T> selectGameObject(T criteria) throws EngineException {
+  public <GAME_OBJECT extends BaseGameObject> List<GAME_OBJECT> selectGameObject(GAME_OBJECT criteria)
+    throws EngineException {
     Map<String, Object> relations = ano.getDataProperties(criteria);
-    return (List<T>) dao.selectGameObject(relations, criteria.getClass());
+    return (List<GAME_OBJECT>) dao.selectGameObject(relations, criteria.getClass());
   }
 
   @Override
-  public <T extends BaseGame> List<T> selectGameByCriteria(T criteria) throws EngineException {
+  public <GAME extends BaseGame> List<GAME> selectGame(GAME criteria) throws EngineException {
     Map<String, Object> relations = ano.getDataProperties(criteria);
-    return (List<T>) dao.selectGame(relations, criteria.getClass());
+    return (List<GAME>) dao.selectGame(relations, criteria.getClass());
   }
 
   @Override
-  public <T extends BaseGame> String upsertGame(T game) throws EngineException {
+  public <GAME extends BaseGame> String upsertGame(GAME game) throws EngineException {
     LOGGER.debug("Upserting new Game");
-    String id = ano.setEntityId(game);
-    String gameName = ano.getEntityValue(game.getClass());
-    String fullName = Utils.getFullGameName(gameName, game.getDifficulty());
-    return upsertObject(fullName, game);
+    String entity = ano.getEntityValue(game.getClass());
+    String fullName = Utils.getFullGameName(entity, game.getDifficulty());
+    return upsertObject(game, fullName);
   }
 
   @Override
-  public <T extends BaseGameObject> String upsertGameObject(T object) throws EngineException {
+  public <GAME_OBJECT extends BaseGameObject> String upsertGameObject(GAME_OBJECT object) throws EngineException {
     LOGGER.debug("Upserting new Object");
-    String name = ano.getEntityValue(object.getClass());
-    return upsertObject(name, object);
+    String entityName = ano.getEntityValue(object.getClass());
+    return upsertObject(object, entityName);
   }
 
   @Override
-  public boolean createObjRelation(String id, EntityProperty onProperty, String objId) throws EngineException {
-    LOGGER.info(String.format("Associating %s with %s through the relation %s ", id, objId, onProperty.getName()));
-    try {
-      if (onProperty.isMandatory() && StringUtils.isEmpty(objId)) {
-        throw Exceptions.CannotCreateObjectRelation(onProperty.getName(), id, objId,
-          "Property is marked as mandatory. Relation is missing");
-      }
+  public <GAME extends BaseGame, GAME_OBJECT extends BaseGameObject> boolean createObjRelation(
+    GAME thisGame,
+    GAME_OBJECT thatObj,
+    EntityProperty onProperty) throws EngineException {
 
-      if (onProperty.isIrreflexive() && id.equals(objId)) {
-        throw Exceptions.CannotCreateObjectRelation(onProperty.getName(), id, objId,
-          "Property is marked as irreflexive");
-      }
+    String entity = ano.getEntityValue(thisGame.getClass());
+    String fullName = Utils.getFullGameName(entity, thisGame.getDifficulty());
+    validateProperty(fullName, onProperty);
+    return createRelation(thisGame.getId(),  onProperty, thatObj.getId());
+  }
 
-      boolean success = dao.createObjRelation(id, onProperty.getName(), objId);
-      if (onProperty.isSymmetric()) {
-        LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getName()));
-        success &= dao.createObjRelation(objId, onProperty.getName(), id);
-      }
-      if (!StringUtils.isEmpty(onProperty.getInverse()) && !onProperty.isSymmetric()) {
-        LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getInverse()));
-        success &= dao.createObjRelation(objId, onProperty.getInverse(), id);
-      }
-      return success;
-    } catch (EngineException e) {
-      throw Exceptions.CannotCreateRelation(onProperty.getName(), id, e);
-    }
+  @Override
+  public <GAME_OBJECT extends BaseGameObject> boolean createObjRelation(GAME_OBJECT thisObj, GAME_OBJECT thatObj, EntityProperty onProperty)
+    throws EngineException {
+    String entity = ano.getEntityValue(thisObj.getClass());
+    validateProperty(entity, onProperty);
+    return createRelation(thisObj.getId(),  onProperty, thatObj.getId());
   }
 
   @Override
@@ -150,23 +139,48 @@ public class Generator implements IGenerator {
     return rangeValue;
   }
 
-  String upsertObject (String name, Object object) throws EngineException {
+  void validateProperty(String entity, EntityProperty property) throws EngineException {
+    EntityProperty thisObjProp;
+    try {
+      thisObjProp = rules.getProperty(entity, property.getName());
+    } catch (RulesException e) {
+      throw GeneratorExceptions.CannotRetrieveRules(entity, e);
+    }
+
+    if (thisObjProp == null) {
+      throw GeneratorExceptions.CannotCreateRelation("N/A", entity, "N/A",
+        String.format("Object of type %s doesn't have property with name %s",
+          entity, property.getName()));
+    }
+
+    if (!thisObjProp.getRange().equals(property.getRange())) {
+      throw GeneratorExceptions.CannotCreateRelation("N/A", entity, "N/A",
+        String.format("Property %s has range values of %s. Currently passed values of %s",
+          property.getName(), thisObjProp.getRange(), property.getRange()));
+    }
+
+  }
+
+  String upsertObject (Object object, String entityName) throws EngineException {
     String id = ano.setEntityId(object);
+    String name = ano.getEntityValue(object.getClass());
     LOGGER.info(String.format("Upserting new %s with id %s", name, id));
     Map<String, Object> relations = ano.getDataProperties(object);
+
     EntityRules er;
     try {
-      er = rules.getEntityRules(name);
+      er = rules.getEntityRules(entityName);
     } catch (RulesException e) {
-      throw  Exceptions.CannotRetrieveRules(name, e);
+      throw  GeneratorExceptions.CannotRetrieveRules(entityName, e);
     }
+
     List<EntityProperty> dataProperties = er.getProperties().stream()
       .filter(x -> !x.isObjectProperty())
       .collect(Collectors.toList());
 
     boolean success = dao.instantiateObject(id, er.getName());
     if (!success) {
-      throw Exceptions.CannotCreateObject(name);
+      throw GeneratorExceptions.CannotCreateObject(name);
     }
 
     for (EntityProperty property : dataProperties) {
@@ -176,7 +190,7 @@ public class Generator implements IGenerator {
         if (List.class.isAssignableFrom(rangeValue.getClass())) {
 
           if (property.isMandatory() && ((List)rangeValue).size() > 1) {
-            throw Exceptions.FunctionalRelation(name, property.getName());
+            throw GeneratorExceptions.FunctionalRelation(name, property.getName());
           }
 
           for (Object elem : (List) rangeValue) {
@@ -190,4 +204,31 @@ public class Generator implements IGenerator {
     return id;
   }
 
+  boolean createRelation(String id, EntityProperty onProperty, String objId) throws EngineException {
+    LOGGER.info(String.format("Associating %s with %s through the relation %s ", id, objId, onProperty.getName()));
+    try {
+      if (onProperty.isMandatory() && StringUtils.isEmpty(objId)) {
+        throw GeneratorExceptions.CannotCreateRelation(onProperty.getName(), id, objId,
+          "Property is marked as mandatory. Relation is missing");
+      }
+
+      if (onProperty.isIrreflexive() && id.equals(objId)) {
+        throw GeneratorExceptions.CannotCreateRelation(onProperty.getName(), id, objId,
+          "Property is marked as irreflexive");
+      }
+
+      boolean success = dao.createObjRelation(id, onProperty.getName(), objId);
+      if (onProperty.isSymmetric()) {
+        LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getName()));
+        success &= dao.createObjRelation(objId, onProperty.getName(), id);
+      }
+      if (!StringUtils.isEmpty(onProperty.getInverse()) && !onProperty.isSymmetric()) {
+        LOGGER.info(String.format("Associating %s with %s through the relation %s ", objId, id, onProperty.getInverse()));
+        success &= dao.createObjRelation(objId, onProperty.getInverse(), id);
+      }
+      return success;
+    } catch (EngineException e) {
+      throw GeneratorExceptions.CannotCreateRelation(onProperty.getName(), id, e);
+    }
+  }
 }

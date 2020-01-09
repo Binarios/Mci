@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aegean.icsd.engine.common.Utils;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 import com.aegean.icsd.engine.common.beans.Difficulty;
+import com.aegean.icsd.engine.common.beans.EngineException;
+import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.EntityRules;
@@ -33,6 +36,9 @@ public class Rules implements IRules {
 
   @Autowired
   private IMciModelReader model;
+
+  @Autowired
+  private IAnnotationReader ano;
 
   @Override
   public EntityRules getGameRules(String gameName, Difficulty difficulty) throws RulesException {
@@ -63,6 +69,21 @@ public class Rules implements IRules {
     return rules;
   }
 
+  @Override
+  public <GAME_OBJECT extends BaseGameObject> EntityRestriction getEntityRestriction(
+    Class<GAME_OBJECT> clazz,
+    String restrictionName) throws RulesException {
+
+    String entity;
+    try {
+      entity = ano.getEntityValue(clazz);
+    } catch (EngineException e) {
+      throw RulesExceptions.CannotFindEntityName(clazz.getSimpleName());
+    }
+
+    return getEntityRestriction(entity, restrictionName);
+  }
+
   List<EntityProperty> getEntityProperties(List<PropertySchema> availableProperties) {
     List<EntityProperty> properties = new ArrayList<>();
     for (PropertySchema prop : availableProperties) {
@@ -71,7 +92,6 @@ public class Rules implements IRules {
     }
     return properties;
   }
-
 
   @Override
   public EntityRestriction getEntityRestriction(String entityName, String restrictionName) throws RulesException {
@@ -120,8 +140,10 @@ public class Rules implements IRules {
     } else if (min != null || max != null) {
       er = calculateMinMax(min, max);
       er = overrideRange(er, only);
-    } else {
+    } else if (some != null) {
       er = some;
+    } else {
+      er = only;
     }
 
     if (er != null && er.getOnProperty() != null) {

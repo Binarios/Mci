@@ -18,6 +18,7 @@ import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
 import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
+import com.aegean.icsd.mciobjects.blocks.beans.Block;
 import com.aegean.icsd.mciobjects.blocks.beans.BlockSet;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.implementations.ProviderExceptions;
@@ -46,7 +47,6 @@ public class MciObjectsConfiguration {
 
   @Autowired
   private IRules rules;
-
 
   @Bean(name = "imageRules")
   public Map<String, EntityRestriction> getImageRules() throws ProviderException {
@@ -105,6 +105,7 @@ public class MciObjectsConfiguration {
     EntityRestriction hasMovingBlock;
     EntityRestriction hasPreviousBlockSet;
     EntityRestriction hasBlock;
+
     try {
       hasMovingBlock = rules.getEntityRestriction(BlockSet.NAME, "hasMovingBlock");
       hasPreviousBlockSet = rules.getEntityRestriction(BlockSet.NAME, "hasPreviousBlockSet");
@@ -116,7 +117,6 @@ public class MciObjectsConfiguration {
     blockRules.put("hasMovingBlock", hasMovingBlock);
     blockRules.put("hasPreviousBlockSet", hasPreviousBlockSet);
     blockRules.put("hasBlock", hasBlock);
-
     return blockRules;
   }
 

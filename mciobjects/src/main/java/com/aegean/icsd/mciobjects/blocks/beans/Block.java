@@ -3,7 +3,7 @@ package com.aegean.icsd.mciobjects.blocks.beans;
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Key;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 
 @Entity(Block.NAME)
 public class Block extends BaseGameObject {

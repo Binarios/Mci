@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 import com.aegean.icsd.engine.generator.interfaces.IGenerator;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.engine.rules.beans.EntityRestriction;
@@ -126,7 +126,7 @@ public class ObjectsInitiator {
         criteria.setPath(url);
         Sound sound = getOrUpsertGameObject(criteria);
         Word subjectWord = wordProvider.getWordWithValue(subject);
-        generator.createObjRelation(sound.getId(), soundSubjRes.getOnProperty(), subjectWord.getId());
+        generator.createObjRelation(sound, subjectWord, soundSubjRes.getOnProperty());
 
         Image image = imageProvider.selectRandomImageWithSubject(subjectWord);
 
@@ -135,7 +135,7 @@ public class ObjectsInitiator {
           generator.upsertGameObject(image);
           sound.setImageAssociated(true);
           generator.upsertGameObject(sound);
-          generator.createObjRelation(sound.getId(), hasAssociatedImage, image.getId());
+          generator.createObjRelation(sound, image, hasAssociatedImage);
         }
 
       } catch (EngineException e) {
@@ -173,17 +173,17 @@ public class ObjectsInitiator {
         Word titleWord = wordProvider.getWordWithValue(currentTitle);
         Word subjectWord = wordProvider.getWordWithValue(currentSubject);
         Sound sound = soundProvider.selectRandomSoundWithSubject(subjectWord);
-        generator.createObjRelation(image.getId(), imageTitleRes.getOnProperty(), titleWord.getId());
-        generator.createObjRelation(image.getId(), imageSubjRes.getOnProperty(), subjectWord.getId());
+        generator.createObjRelation(image, titleWord, imageTitleRes.getOnProperty());
+        generator.createObjRelation(image, subjectWord, imageSubjRes.getOnProperty());
         if (image.isOrdered()) {
-          generator.createObjRelation(image.getId(), hasPreviousImage.getOnProperty(), parentImage.getId());
+          generator.createObjRelation(image, parentImage, hasPreviousImage.getOnProperty());
         }
         if (sound != null && !StringUtils.isEmpty(sound.getId())) {
           image.setSoundAssociated(true);
           generator.upsertGameObject(image);
           sound.setImageAssociated(true);
           generator.upsertGameObject(sound);
-          generator.createObjRelation(image.getId(), hasAssociatedSound.getOnProperty(), sound.getId());
+          generator.createObjRelation(image, sound, hasAssociatedSound.getOnProperty());
         }
       } catch (EngineException e) {
         throw ProviderExceptions.GenerationError(Image.NAME, e);
@@ -201,7 +201,7 @@ public class ObjectsInitiator {
       getOrUpsertGameObject(antonymWord);
       if (antonymWord.getId() != null) {
         try {
-          generator.createObjRelation(value.getId(), antonymRes.getOnProperty(), antonymWord.getId());
+          generator.createObjRelation(value, antonymWord, antonymRes.getOnProperty());
           if (value.isAntonym() == null || !value.isAntonym()) {
             value.setAntonym(true);
             generator.upsertGameObject(value);
@@ -222,7 +222,7 @@ public class ObjectsInitiator {
       synonymWord = getOrUpsertGameObject(synonymWord);
       if (synonymWord.getId() != null) {
         try {
-          generator.createObjRelation(value.getId(), synonymRes.getOnProperty(), synonymWord.getId());
+          generator.createObjRelation(value, synonymWord, synonymRes.getOnProperty());
           if (value.isSynonym() == null || !value.isSynonym()) {
             value.setSynonym(true);
             generator.upsertGameObject(value);

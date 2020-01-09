@@ -52,7 +52,7 @@ public class PieceProvider implements IPieceProvider {
   public void connectPieces(Piece thisPiece, Piece otherPiece) throws ProviderException {
     EntityRestriction hasConnectingPiece = pieceRules.get("hasConnectingPiece");
     try {
-      generator.createObjRelation(thisPiece.getId(), hasConnectingPiece.getOnProperty(), otherPiece.getId());
+      generator.createObjRelation(thisPiece, otherPiece, hasConnectingPiece.getOnProperty());
     } catch (EngineException e) {
       throw ProviderExceptions.GenerationError(Piece.NAME, e);
     }
@@ -62,7 +62,7 @@ public class PieceProvider implements IPieceProvider {
   public void setPieceImage(Piece piece, Image image) throws ProviderException {
     EntityRestriction hasImage = pieceRules.get("hasImage");
     try {
-      generator.createObjRelation(piece.getId(), hasImage.getOnProperty(), image.getId());
+      generator.createObjRelation(piece, image, hasImage.getOnProperty());
     } catch (EngineException e) {
       throw ProviderExceptions.GenerationError(Piece.NAME, e);
     }

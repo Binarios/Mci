@@ -130,29 +130,6 @@ public class AnnotationReader implements IAnnotationReader {
         } else {
           invokeFieldSetter(field, object, parseValue(fieldClass, value));
         }
-//        if (Integer.class.isAssignableFrom(fieldClass)) {
-//          invokeFieldSetter(field, object, Integer.parseInt(value.toString()));
-//        }
-//        if (Long.class.isAssignableFrom(fieldClass)) {
-//          invokeFieldSetter(field, object, Long.parseLong(value.toString()));
-//        }
-//        if (String.class.isAssignableFrom(fieldClass)) {
-//          if (value == null) {
-//            invokeFieldSetter(field, object, (Object) null);
-//          } else {
-//            invokeFieldSetter(field, object, value.toString());
-//          }
-//        }
-//        if (Enum.class.isAssignableFrom(fieldClass)) {
-//          invokeFieldSetter(field, object, Enum.valueOf((Class<Enum>)fieldClass, value.toString().toUpperCase(Locale.ENGLISH)));
-//        }
-//        if (Boolean.class.isAssignableFrom(fieldClass)) {
-//          if (value == null) {
-//            invokeFieldSetter(field, object, (Object)null);
-//          } else {
-//            invokeFieldSetter(field, object, Boolean.valueOf(value.toString()));
-//          }
-//        }
         break;
       }
     }

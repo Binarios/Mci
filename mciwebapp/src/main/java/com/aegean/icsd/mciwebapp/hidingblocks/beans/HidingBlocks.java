@@ -2,16 +2,16 @@ package com.aegean.icsd.mciwebapp.hidingblocks.beans;
 
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGame;
 
 @Entity(HidingBlocks.NAME)
 public class HidingBlocks extends BaseGame {
   public static final String NAME = "HidingBlocks";
 
-  @DataProperty("hasTotalRows")
+  @DataProperty("hasSquareRows")
   private Integer rows;
 
-  @DataProperty("hasTotalColumns")
+  @DataProperty("hasSquareColumns")
   private Integer columns;
 
 

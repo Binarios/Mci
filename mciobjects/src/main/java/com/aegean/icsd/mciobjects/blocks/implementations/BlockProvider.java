@@ -1,5 +1,6 @@
 package com.aegean.icsd.mciobjects.blocks.implementations;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -16,6 +17,7 @@ import com.aegean.icsd.engine.rules.beans.RulesException;
 import com.aegean.icsd.engine.rules.interfaces.IRules;
 import com.aegean.icsd.mciobjects.blocks.beans.Block;
 import com.aegean.icsd.mciobjects.blocks.beans.BlockSet;
+import com.aegean.icsd.mciobjects.blocks.beans.NumberBlock;
 import com.aegean.icsd.mciobjects.blocks.interfaces.IBlockProvider;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.common.daos.IObjectsDao;
@@ -23,6 +25,9 @@ import com.aegean.icsd.mciobjects.common.implementations.ProviderExceptions;
 
 @Service
 public class BlockProvider implements IBlockProvider {
+
+  @Autowired
+  private IRules rules;
 
   @Autowired
   private IObjectsDao dao;
@@ -35,14 +40,25 @@ public class BlockProvider implements IBlockProvider {
 
   @Override
   public List<Block> getBlocks(int nbRows, int nbCols) throws ProviderException {
-    List<Block> blocks = new ArrayList<>();
+    return getBlocks(nbRows, nbCols, Block.class);
+  }
+
+  @Override
+  public <T extends Block> List<T> getBlocks(int nbRows, int nbCols, Class<T> blockType) throws ProviderException {
+    List<T> blocks = new ArrayList<>();
     for (int row = 0; row < nbRows; row ++) {
       for (int col = 0; col < nbCols; col ++) {
-        Block block = new Block();
+        T block;
+        try {
+          block = blockType.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+          throw ProviderExceptions.GenerationError(Block.NAME, e);
+        }
+
         block.setRow(row);
         block.setColumn(col);
         try {
-          List<Block> results = generator.selectGameObject(block);
+          List<T> results = generator.selectGameObject(block);
           if (results.isEmpty()) {
             generator.upsertGameObject(block);
           } else {
@@ -52,7 +68,6 @@ public class BlockProvider implements IBlockProvider {
         } catch (EngineException e) {
           throw ProviderExceptions.GenerationError(Block.NAME, e);
         }
-
       }
     }
 
@@ -74,7 +89,7 @@ public class BlockProvider implements IBlockProvider {
       try {
         generator.upsertGameObject(set);
         for (Block block : blocks) {
-          generator.createObjRelation(set.getId(), hasBlock.getOnProperty(), block.getId());
+          generator.createObjRelation(set, block, hasBlock.getOnProperty());
         }
         set.setBlocks(blocks);
         blockSets.add(set);
@@ -92,7 +107,7 @@ public class BlockProvider implements IBlockProvider {
       blockSets.sort(Comparator.comparingInt(BlockSet::getOrder));
       generator.upsertGameObject(blockSets.get(0));
       for (int i = 1; i < blockSets.size(); i++) {
-        generator.createObjRelation(blockSets.get(i).getId(), hasPreviousBlockSet.getOnProperty(), blockSets.get(i - 1).getId());
+        generator.createObjRelation(blockSets.get(i), blockSets.get(i - 1), hasPreviousBlockSet.getOnProperty());
         generator.upsertGameObject(blockSets.get(i));
       }
     } catch (EngineException e) {
@@ -106,12 +121,31 @@ public class BlockProvider implements IBlockProvider {
 
     for (Block block : toUpdate) {
       try {
-        generator.createObjRelation(blockSet.getId(), hasMovingBlock.getOnProperty(), block.getId());
+        generator.createObjRelation(blockSet, block, hasMovingBlock.getOnProperty());
       } catch (EngineException e) {
         throw ProviderExceptions.GenerationError(BlockSet.NAME, e);
       }
     }
+  }
 
+  @Override
+  public <T extends Block> void connect(T thisBlock, T thatBlock) throws ProviderException {
+    EntityRestriction hasConnectingBlock;
+    try {
+      hasConnectingBlock = rules.getEntityRestriction(thisBlock.getClass(), "hasConnectingBlock");
+      generator.createObjRelation(thisBlock, thatBlock, hasConnectingBlock.getOnProperty());
+    } catch (EngineException | RulesException e) {
+      throw ProviderExceptions.GenerationError(Block.NAME, e);
+    }
+  }
+
+  @Override
+  public <BLOCK extends Block> void createBlock(BLOCK block) throws ProviderException {
+    try {
+      generator.upsertGameObject(block);
+    } catch (EngineException e) {
+      throw ProviderExceptions.GenerationError(Block.NAME, e);
+    }
   }
 
   @Override
@@ -125,12 +159,6 @@ public class BlockProvider implements IBlockProvider {
     throws ProviderException {
     List<String> ids = dao.getAssociatedIdsOnPropertyForEntityId(entityId, onProperty, Block.class);
     return getBlocksFromIds(ids);
-  }
-
-  @Override
-  public List<BlockSet> selectBlockSetsByEntityId(String entityId) throws ProviderException {
-    List<String> ids = dao.getAssociatedObjectsOfEntityId(entityId, Block.class);
-    return getBlockSetsFromIds(ids);
   }
 
   @Override

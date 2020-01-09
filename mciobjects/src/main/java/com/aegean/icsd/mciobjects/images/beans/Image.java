@@ -3,7 +3,7 @@ package com.aegean.icsd.mciobjects.images.beans;
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Id;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 
 @Entity(Image.NAME)
 public class Image extends BaseGameObject {

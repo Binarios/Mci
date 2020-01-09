@@ -2,7 +2,7 @@ package com.aegean.icsd.mciwebapp.logicalorder.beans;
 
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGame;
 
 @Entity(LogicalOrder.NAME)
 public class LogicalOrder extends BaseGame {
@@ -11,10 +11,10 @@ public class LogicalOrder extends BaseGame {
   @DataProperty("hasStep")
   private Integer step;
 
-  @DataProperty("hasTotalColumns")
+  @DataProperty("hasSquareColumns")
   private Integer columns;
 
-  @DataProperty("hasTotalRows")
+  @DataProperty("hasSquareRows")
   private Integer rows;
 
   @DataProperty("hasTotalMovingBlocks")

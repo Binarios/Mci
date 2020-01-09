@@ -36,18 +36,18 @@ public class HidingBlocksSvc extends AbstractGameSvc<HidingBlocks, HidingBlocksR
 
   @Override
   protected void handleDataTypeRestrictions(String fullName, HidingBlocks toCreate) throws MciException {
-    EntityRestriction hasTotalRows;
-    EntityRestriction hasTotalColumns;
+    EntityRestriction hasSquareRows;
+    EntityRestriction hasSquareColumns;
 
     try {
-      hasTotalRows = rules.getEntityRestriction(fullName, "hasTotalRows");
-      hasTotalColumns = rules.getEntityRestriction(fullName, "hasTotalColumns");
+      hasSquareRows = rules.getEntityRestriction(fullName, "hasSquareRows");
+      hasSquareColumns = rules.getEntityRestriction(fullName, "hasSquareColumns");
     } catch (RulesException e) {
       throw GameExceptions.GenerationError(HidingBlocks.NAME, e);
     }
 
-    Integer height = Integer.parseInt(hasTotalRows.getDataRange().getRanges().get(0).getValue());
-    Integer width = Integer.parseInt(hasTotalColumns.getDataRange().getRanges().get(0).getValue());
+    Integer height = Integer.parseInt(hasSquareRows.getDataRange().getRanges().get(0).getValue());
+    Integer width = Integer.parseInt(hasSquareColumns.getDataRange().getRanges().get(0).getValue());
 
     toCreate.setRows(height);
     toCreate.setColumns(width);

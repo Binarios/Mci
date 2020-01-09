@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 import com.aegean.icsd.engine.common.beans.Difficulty;
-import com.aegean.icsd.engine.generator.beans.BaseGame;
+import com.aegean.icsd.engine.common.beans.BaseGame;
 import com.aegean.icsd.mciwebapp.common.beans.ServiceResponse;
 
 public final class FilterResponse {

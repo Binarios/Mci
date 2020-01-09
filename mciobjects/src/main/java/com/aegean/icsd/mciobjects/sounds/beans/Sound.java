@@ -3,7 +3,7 @@ package com.aegean.icsd.mciobjects.sounds.beans;
 import com.aegean.icsd.engine.core.annotations.DataProperty;
 import com.aegean.icsd.engine.core.annotations.Entity;
 import com.aegean.icsd.engine.core.annotations.Id;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 
 @Entity(Sound.NAME)
 public class Sound extends BaseGameObject {

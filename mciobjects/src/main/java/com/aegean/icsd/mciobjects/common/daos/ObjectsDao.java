@@ -9,9 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.aegean.icsd.engine.common.beans.EngineException;
-import com.aegean.icsd.engine.core.annotations.Id;
 import com.aegean.icsd.engine.core.interfaces.IAnnotationReader;
-import com.aegean.icsd.engine.generator.beans.BaseGameObject;
+import com.aegean.icsd.engine.common.beans.BaseGameObject;
 import com.aegean.icsd.engine.rules.beans.EntityProperty;
 import com.aegean.icsd.mciobjects.common.beans.ProviderException;
 import com.aegean.icsd.mciobjects.words.beans.Word;
