@@ -60,3 +60,6 @@ build/
 .vscode/
 
 objects
+images.csv
+sounds.csv
+words.csv
