@@ -3,49 +3,50 @@
 [![Build Status](https://travis-ci.com/Binarios/Mci.svg?branch=master)](https://travis-ci.com/Binarios/Mci)
 [![Code Grade](https://www.code-inspector.com/project/145/status/svg)](https://www.code-inspector.com/project/145/status/svg) 
 
-
-MCI is a web app based on Java that generates automatically games using an Ontology.
-
-### Tech
+---
+## Tech
 * [Opend Jdk 12]
 * [Spring]
 * [Apache Jena]
 * [Openllet]
 
-### Installation
-MCI requires [Opend Jdk 12] .
+---
+## Maven Projects
 
-Git clone the project:
-```sh
-git clone https://github.com/Binarios/Mci.git
-```
-Also clone the dependent repository:
-```sh
-git clone https://github.com/Binarios/MciOntology.git
-```
-The directory should look like this:
-```bash
-|-parent
-|-------/Mci
-|-------/MciOntology
-```
+### [ontology](./ontology)
+Περιέχει το maven artifact το οποίο χειρίζεται την εκτέλεση ερωτημάτων σε έναν *Apache Fuseki* server. Περισσότερες λεπτομέρειες στο [README](./ontology/README.md)
 
-Once cloned you can run the following command at the root of the project:
+### [engine](./engine)
+Περιέχει το maven artifact το οποίο αποτελεί την μηχανή της δημιουργίας των SPARQL ερωτημάτων, της δημιουργίας/ανάγνωσης των κανόνων της οντολογίας. Τέλος παρέχει ένα abstraction layer για την δημιουργία/ανάγνωση game αντικειμένων και game objects. Περισσότερες λεπτομέρειες στο [README](./engine/README.md)
 
-```sh
-mvn clean install
-```
+### [mciobjects](./mciobjects)
+Περιέχει το maven artifact το οποίο χειρίζεται την δημιουργία και την ανάγνωση μόνο των game objects. Περισσότερες λεπτομέρειες στο [README](./engine/README.md)
 
-which will install all the dependencies, build the project, trigger the tests and install on the local repo
+### [mciwebapp](./mciwebapp)
+Περιέχει το maven webapp artifact. Το project αυτό περιέχει τους REST Controllers για την δημιουργία και την ανάγνωση παιγνίων. Περισσότερες λεπτομέρειες στο [README](./mciwebapp/README.md)
 
-### Todos
 
- - Write MORE Tests
+## Topology
+Η παρακάτω εικόνα δείχνει τα dependencies μεταξύ των projects
+![topology](resources/projects.png)
 
-License
-----
+---
+## Eγκατάσταση
+Για την εγκατάσταση της εφαρμογής ακολουθούνται τα βήματα των παρακάτω οδηγών εγκατάστασης:
 
-[Apache License 2.0]
+1. [Tomcat](docs/tomcatSetup.md)
+2. [Apache Fuseki](docs/fusekiSetup.md)
+3. [Οντολογία](docs/ontologyInstall.md)
+4. [Αντικείμενα Οντολογίας](mciobjects/README.md)
+5. [Εφαρμογή MCI](mciwebapp/README.md)
+
+---
+### NOTE
+Η εφαρμογή MCI απαιτεί [Opend Jdk 12] .
+
+---
+
+# [Apache License 2.0]
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 

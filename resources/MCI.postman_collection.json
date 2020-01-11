@@ -1,0 +1,2112 @@
+{
+	"info": {
+		"_postman_id": "235f7923-989c-43e9-9cbd-2e4ac2a94698",
+		"name": "MCI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Observations",
+			"item": [
+				{
+					"name": "games",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/observations",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"observations"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/observations/Observation_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"observations",
+								"Observation_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/observations",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"observations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : {\n            \"bird\":11,\n            \"donkey\":0,\n            \"cat\":1\n\t}\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/observations/Observation_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"observations",
+								"Observation_EASY_Postman_1"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "WordPuzzle",
+			"item": [
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\" : \"medium\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/wordPuzzle",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"wordPuzzle"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/wordPuzzle",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"wordPuzzle"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/wordPuzzle/WordPuzzle_MEDIUM_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"wordPuzzle",
+								"WordPuzzle_MEDIUM_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" :\"short\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/wordPuzzle/WordPuzzle_MEDIUM_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"wordPuzzle",
+								"WordPuzzle_MEDIUM_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Synonyms",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/synonyms",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"synonyms"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"medium\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/synonyms",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"synonyms"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/synonyms/Synonyms_MEDIUM_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"synonyms",
+								"Synonyms_MEDIUM_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" :\"fine\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/synonyms/Synonyms_MEDIUM_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"synonyms",
+								"Synonyms_MEDIUM_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Antonyms",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/antonyms",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"antonyms"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"medium\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/antonyms",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"antonyms"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/antonyms/Antonyms_MEDIUM_Postman_3",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"antonyms",
+								"Antonyms_MEDIUM_Postman_3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" :\"bad\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/antonyms/Antonyms_MEDIUM_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"antonyms",
+								"Antonyms_MEDIUM_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Recall",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/recall",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"recall"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/recall",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"recall"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/recall/Recall_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"recall",
+								"Recall_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : 9105\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/recall/Recall_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"recall",
+								"Recall_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "NumberOrder",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/numberOrder",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"numberOrder"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/numberOrder",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"numberOrder"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/numberOrder/NumberOrder_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"numberOrder",
+								"NumberOrder_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : [\n\t\t{\n\t\t\t\"order\": 3,\n\t\t\t\"number\": 644\n\t\t}, {\n\t\t\t\"order\": 4,\n\t\t\t\"number\": 814\n\t\t}, {\n\t\t\t\"order\": 1,\n\t\t\t\"number\": 399\n\t\t}, {\n\t\t\t\"order\": 2,\n\t\t\t\"number\": 488\n\t\t}\n\t]\n}\n"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/numberOrder/NumberOrder_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"numberOrder",
+								"NumberOrder_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "MemoryCards",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/memoryCards",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"memoryCards"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/memoryCards",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"memoryCards"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/memoryCards/MemoryCards_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"memoryCards",
+								"MemoryCards_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" :[\n {\n                \"id\": \"Image_d959937c903d4e408b4d11af5f3a0671\",\n                \"path\": \"D:\\\\WorkBench\\\\Diplomatiki\\\\mci\\\\objects\\\\images\\\\1.jpg\"\n            },\n            {\n                \"id\": \"Image_29a5cf426f5c4522a35b6fe727cb8dd8\",\n                \"path\": \"D:\\\\WorkBench\\\\Diplomatiki\\\\mci\\\\objects\\\\images\\\\2.jpg\"\n            },\n            {\n                \"id\": \"Image_f1a13f44a9964359b957841c925d243f\",\n                \"path\": \"D:\\\\WorkBench\\\\Diplomatiki\\\\mci\\\\objects\\\\images\\\\3.jpg\"\n            }\n        ]\n}\n"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/memoryCards/MemoryCards_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"memoryCards",
+								"MemoryCards_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "ChronologicalOrder",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/chronologicalOrders",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"chronologicalOrders"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/chronologicalOrders",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"chronologicalOrders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/chronologicalOrders/ChronologicalOrder_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"chronologicalOrders",
+								"ChronologicalOrder_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : [\n\t\t{\n\t\t\t\"start\": true,\n\t\t\t\"order\": 1,\n\t\t\t\"id\": \"Image_4963f034920e49b698b253c591130776\"\n\t\t}, {\n\t\t\t\"start\": false,\n\t\t\t\"order\": 2,\n\t\t\t\"id\": \"Image_0eb129a8940f4edba5fd5aaa8eaf5090\"\n\t\t}, {\n\t\t\t\"start\": false,\n\t\t\t\"order\": 3,\n\t\t\t\"id\": \"Image_30e1d215af794799b95f1d2705af1fa4\"\n\t\t}\n\t\t]\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/chronologicalOrders/ChronologicalOrder_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"chronologicalOrders",
+								"ChronologicalOrder_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "FindTheSound",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/findTheSounds",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"findTheSounds"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/findTheSounds",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"findTheSounds"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/findTheSounds/FindTheSound_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"findTheSounds",
+								"FindTheSound_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : {\n\t\t\"soundId\": \"Sound_9ab9ee71f8e0473b959b7027a77f548c\",\n\t\t\"imageId\": \"Image_cf11cd2b5fc5469c9c8095567550f9dc\"\n\t\n\t}\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/findTheSounds/FindTheSound_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"findTheSounds",
+								"FindTheSound_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Questions",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/questions",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"questions"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/questions",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"questions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/questions/Questions_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"questions",
+								"Questions_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : \"Larisa\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/questions/Questions_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"questions",
+								"Questions_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "HidingBlocks",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/hidingBlocks",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"hidingBlocks"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/hidingBlocks",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"hidingBlocks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/hidingBlocks/HidingBlocks_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"hidingBlocks",
+								"HidingBlocks_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : [ {\n                \"id\": \"Block_0_0\",\n                \"row\": 0,\n                \"col\": 0,\n                \"hide\": true\n            },\n            {\n                \"id\": \"Block_0_1\",\n                \"row\": 0,\n                \"col\": 1,\n                \"hide\": true\n            }]\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/hidingBlocks/HidingBlocks_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"hidingBlocks",
+								"HidingBlocks_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "LogicalOrder",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/logicalOrder",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"logicalOrder"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/logicalOrder",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"logicalOrder"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/logicalOrder/LogicalOrder_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"logicalOrder",
+								"LogicalOrder_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : [{\n\t\t\t\"id\" : \"BlockSet_b1f63eb07ebe4c25b5074884ae44a4b5\",\n\t\t\t\"order\": 2\n\t\t}]\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/logicalOrder/LogicalOrder_EASY_Postman_1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"logicalOrder",
+								"LogicalOrder_EASY_Postman_1"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Puzzle",
+			"item": [
+				{
+					"name": "getGames",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/puzzles",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"puzzles"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createGame",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"difficulty\": \"easy\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/puzzles",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"puzzles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getGame",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"type": "text",
+								"value": "Postman"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/puzzles/Puzzle_EASY_Postman_4",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"puzzles",
+								"Puzzle_EASY_Postman_4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "solve",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "X-INFO-PLAYER",
+								"value": "Postman",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"completionTime\": 18000,\n\t\"solution\" : {\n\t\t\t\"Piece_4528bcee6deb4ef6ade2c8e46d5b9079\" : [\n\t\t\t\t\"Piece_d6c9dee57a1043ba93528f380a12bda7\",\n\t\t\t\t\"Piece_0a4a3d41a6714044875a531129eb2371\"\n\t\t\t ],\n\t\t\t\"Piece_80cbd1b2f9094ffd9665d0f93bde3fe4\" : [\n\t\t\t\t\"Piece_d6c9dee57a1043ba93528f380a12bda7\",\n\t\t\t\t\"Piece_329e56af5e3a4de9954e59735423cf65\"\n\t\t\t ],\n\t\t\t\"Piece_0a4a3d41a6714044875a531129eb2371\" : [\n\t\t\t\t\"Piece_4528bcee6deb4ef6ade2c8e46d5b9079\",\n\t\t\t\t\"Piece_88d92067eb314ceeb9771b76004e44dc\"\n\t\t\t ],\n\t\t\t\"Piece_329e56af5e3a4de9954e59735423cf65\" : [\n\t\t\t\t\"Piece_80cbd1b2f9094ffd9665d0f93bde3fe4\",\n\t\t\t\t\"Piece_88d92067eb314ceeb9771b76004e44dc\"\n\t\t\t ],\n\t\t\t \"Piece_d6c9dee57a1043ba93528f380a12bda7\" : [\n\t\t\t\t\"Piece_4528bcee6deb4ef6ade2c8e46d5b9079\",\n\t\t\t\t\"Piece_80cbd1b2f9094ffd9665d0f93bde3fe4\",\n\t\t\t\t\"Piece_88d92067eb314ceeb9771b76004e44dc\"\n\t\t\t ],\n\t\t\t \"Piece_88d92067eb314ceeb9771b76004e44dc\" : [\n\t\t\t\t\"Piece_d6c9dee57a1043ba93528f380a12bda7\",\n\t\t\t\t\"Piece_0a4a3d41a6714044875a531129eb2371\",\n\t\t\t\t\"Piece_329e56af5e3a4de9954e59735423cf65\"\n\t\t\t ]\n\t\t}\n}"
+						},
+						"url": {
+							"raw": "https://localhost:8443/mci/puzzles/Puzzle_EASY_Postman_4",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "8443",
+							"path": [
+								"mci",
+								"puzzles",
+								"Puzzle_EASY_Postman_4"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a393bdb4-944c-4b84-9ad2-520c31f8ef7c",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "ad202c18-81ed-4805-9284-8d33561b7b85",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}
