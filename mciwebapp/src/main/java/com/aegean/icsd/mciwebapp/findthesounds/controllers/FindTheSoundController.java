@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.memorycards.beans.MemoryCardsRequest;
 import com.aegean.icsd.mciwebapp.memorycards.beans.MemoryCardsResponse;
 
 /**
- * https://localhost:8443/mci/findTheSounds
+ * https://localhost:8443/mci/api/findTheSounds
  */
 @RestController
-@RequestMapping("findTheSounds")
+@RequestMapping("api/findTheSounds")
 public class FindTheSoundController {
 
   private static final Logger LOGGER = LogManager.getLogger(FindTheSoundController.class);

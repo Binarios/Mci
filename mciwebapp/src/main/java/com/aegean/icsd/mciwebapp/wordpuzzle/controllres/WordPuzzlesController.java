@@ -29,10 +29,10 @@ import com.aegean.icsd.mciwebapp.wordpuzzle.beans.WorldPuzzleRequest;
 import com.aegean.icsd.mciwebapp.wordpuzzle.interfaces.IWordPuzzleSvc;
 
 /**
- * https://localhost:8443/mci/wordPuzzle
+ * https://localhost:8443/mci/api/wordPuzzle
  */
 @RestController
-@RequestMapping("wordPuzzle")
+@RequestMapping("api/wordPuzzle")
 public class WordPuzzlesController {
 
   private static final Logger LOGGER = LogManager.getLogger(WordPuzzlesController.class);

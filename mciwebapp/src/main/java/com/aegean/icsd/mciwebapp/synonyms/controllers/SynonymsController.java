@@ -30,10 +30,10 @@ import com.aegean.icsd.mciwebapp.synonyms.beans.Synonyms;
 import com.aegean.icsd.mciwebapp.synonyms.interfaces.ISynonymsSvc;
 
 /**
- * https://localhost:8443/mci/synonyms
+ * https://localhost:8443/mci/api/synonyms
  */
 @RestController
-@RequestMapping("synonyms")
+@RequestMapping("api/synonyms")
 public class SynonymsController {
 
   private static final Logger LOGGER = LogManager.getLogger(SynonymsController.class);

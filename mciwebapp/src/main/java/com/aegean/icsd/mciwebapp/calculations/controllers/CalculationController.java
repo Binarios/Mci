@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.hidingblocks.beans.HidingBlocksRequest;
 import com.aegean.icsd.mciwebapp.hidingblocks.beans.HidingBlocksResponse;
 
 /**
- * https://localhost:8443/mci/calculations
+ * https://localhost:8443/mci/api/calculations
  */
 @RestController
-@RequestMapping("calculations")
+@RequestMapping("api/calculations")
 public class CalculationController {
 
   private static final Logger LOGGER = LogManager.getLogger(CalculationController.class);

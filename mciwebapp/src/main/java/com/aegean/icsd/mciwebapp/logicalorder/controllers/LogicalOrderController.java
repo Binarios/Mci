@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.logicalorder.beans.LogicalOrderResponse;
 import com.aegean.icsd.mciwebapp.logicalorder.interfaces.ILogicalOrderSvc;
 
 /**
- * https://localhost:8443/mci/logicalOrder
+ * https://localhost:8443/mci/api/logicalOrder
  */
 @RestController
-@RequestMapping("logicalOrder")
+@RequestMapping("api/logicalOrder")
 public class LogicalOrderController {
 
   private static final Logger LOGGER = LogManager.getLogger(LogicalOrderController.class);

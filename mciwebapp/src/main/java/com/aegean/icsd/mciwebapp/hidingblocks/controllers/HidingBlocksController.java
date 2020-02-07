@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.memorycards.beans.MemoryCardsRequest;
 import com.aegean.icsd.mciwebapp.memorycards.beans.MemoryCardsResponse;
 
 /**
- * https://localhost:8443/mci/hidingBlocks
+ * https://localhost:8443/mci/api/hidingBlocks
  */
 @RestController
-@RequestMapping("hidingBlocks")
+@RequestMapping("api/hidingBlocks")
 public class HidingBlocksController {
 
   private static final Logger LOGGER = LogManager.getLogger(HidingBlocksController.class);

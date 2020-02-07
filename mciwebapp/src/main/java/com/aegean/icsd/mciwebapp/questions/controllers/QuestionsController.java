@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.questions.beans.QuestionsResponse;
 import com.aegean.icsd.mciwebapp.questions.interfaces.IQuestionsSvc;
 
 /**
- * https://localhost:8443/mci/questions
+ * https://localhost:8443/mci/api/questions
  */
 @RestController
-@RequestMapping("questions")
+@RequestMapping("api/questions")
 public class QuestionsController {
 
   private static final Logger LOGGER = LogManager.getLogger(QuestionsController.class);

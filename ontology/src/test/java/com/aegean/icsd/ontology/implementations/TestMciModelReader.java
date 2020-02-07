@@ -33,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.aegean.icsd.ontology.beans.CardinalitySchema;
 import com.aegean.icsd.ontology.beans.ClassSchema;
@@ -47,6 +48,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @Execution(ExecutionMode.CONCURRENT)
@@ -86,9 +88,11 @@ public class TestMciModelReader {
   @BeforeEach
   public void setup() {
     given(ds.getOntologyName()).willReturn("games");
-    given(ds.getDatasetLocation()).willReturn("../../dataset");
-    given(ds.getOntologyLocation()).willReturn("../../MciOntology/games.owl");
-    given(ds.getOntologyType()).willReturn("ttl");
+//    given(ds.getDatasetLocation()).willReturn("../../dataset");
+//    given(ds.getOntologyLocation()).willReturn("../../MciOntology/games.owl");
+    given(ds.getOntologyLocation()).willReturn("http://localhost:3030/mci/ontology/games.owl");
+//    given(ds.getOntologyType()).willReturn("ttl");
+    given(ds.getOntologyType()).willReturn("TURTLE");
     given(ds.getNamespace()).willReturn("http://www.semanticweb.org/iigou/diplomatiki/ontologies/Games#");
     given(ds.getPrefix()).willReturn("mci");
   }
@@ -437,8 +441,8 @@ public class TestMciModelReader {
   @Disabled("Exploring the Jena API")
   public void test() throws OntologyException {
     model.setupModel();
-    String className = "Number";
-    model.getClassSchema(className);
+    List<String> res = model.getClassChildren("Game");
+    Assertions.assertNotNull(res);
   }
 
   private PropertySchema generateDataProperty (String name, String className) {

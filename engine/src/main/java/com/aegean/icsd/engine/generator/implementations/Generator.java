@@ -153,10 +153,11 @@ public class Generator implements IGenerator {
           entity, property.getName()));
     }
 
-    if (!thisObjProp.getRange().equals(property.getRange())) {
+    if (!thisObjProp.getRange().equals(property.getRange()) &&
+      !model.isSubclassOf(property.getRange(), thisObjProp.getRange())) {
       throw GeneratorExceptions.CannotCreateRelation("N/A", entity, "N/A",
         String.format("Property %s has range values of %s. Currently passed values of %s",
-          property.getName(), thisObjProp.getRange(), property.getRange()));
+          thisObjProp.getName(), thisObjProp.getRange(), property.getRange()));
     }
 
   }

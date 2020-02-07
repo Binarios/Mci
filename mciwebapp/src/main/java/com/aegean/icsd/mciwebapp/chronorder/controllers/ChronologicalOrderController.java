@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.recall.beans.RecallRequest;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallResponse;
 
 /**
- * https://localhost:8443/mci/chronologicalOrders
+ * https://localhost:8443/mci/api/chronologicalOrders
  */
 @RestController
-@RequestMapping("chronologicalOrders")
+@RequestMapping("api/chronologicalOrders")
 public class ChronologicalOrderController {
 
   private static final Logger LOGGER = LogManager.getLogger(ChronologicalOrderController.class);
