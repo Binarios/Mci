@@ -32,7 +32,7 @@ import com.aegean.icsd.mciwebapp.numberorder.beans.NumberOrderRequest;
 import com.aegean.icsd.mciwebapp.numberorder.beans.NumberOrderResponse;
 
 /**
- * https://localhost:8443/mci/memoryCards
+ * https://localhost:8443/mci/api/memoryCards
  */
 @RestController
 @RequestMapping("memoryCards")

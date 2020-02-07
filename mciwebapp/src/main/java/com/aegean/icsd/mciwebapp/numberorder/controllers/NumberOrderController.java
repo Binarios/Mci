@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.recall.beans.RecallRequest;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallResponse;
 
 /**
- * https://localhost:8443/mci/numberOrder
+ * https://localhost:8443/mci/api/numberOrder
  */
 @RestController
-@RequestMapping("numberOrder")
+@RequestMapping("api/numberOrder")
 public class NumberOrderController {
 
   private static final Logger LOGGER = LogManager.getLogger(NumberOrderController.class);

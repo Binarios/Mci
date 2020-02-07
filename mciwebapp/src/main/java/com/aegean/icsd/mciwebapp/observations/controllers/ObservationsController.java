@@ -29,7 +29,7 @@ import com.aegean.icsd.mciwebapp.observations.beans.ObservationResponse;
 import com.aegean.icsd.mciwebapp.observations.interfaces.IObservationSvc;
 
 /**
- * https://localhost:8443/mci/observations
+ * https://localhost:8443/mci/api/observations
  */
 @RestController
 @RequestMapping("observations")

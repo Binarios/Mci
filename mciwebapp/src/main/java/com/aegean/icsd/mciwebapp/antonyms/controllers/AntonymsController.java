@@ -31,10 +31,10 @@ import com.aegean.icsd.mciwebapp.synonyms.beans.SynonymRequest;
 import com.aegean.icsd.mciwebapp.synonyms.beans.SynonymResponse;
 
 /**
- * https://localhost:8443/mci/antonyms
+ * https://localhost:8443/mci/api/antonyms
  */
 @RestController
-@RequestMapping("antonyms")
+@RequestMapping("api/antonyms")
 public class AntonymsController {
 
   private static final Logger LOGGER = LogManager.getLogger(AntonymsController.class);

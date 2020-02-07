@@ -24,6 +24,7 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -64,6 +65,26 @@ public class MciModelReader implements IMciModelReader {
     result.setRestrictions(restrictions);
     result.setEqualityRestrictions(equalityRestrictions);
     return result;
+  }
+
+  @Override
+  public List<String> getClassChildren(String className) {
+    LOGGER.info(String.format("Reading subclasses of class %s", className));
+    OntClass entity = getOntClass(className);
+    ExtendedIterator<OntClass> it = entity.listSubClasses(true);
+    List<String> subClasses = new ArrayList<>();
+    while(it.hasNext()) {
+      subClasses.add(it.next().getLocalName());
+    }
+    return subClasses;
+  }
+
+  @Override
+  public boolean isSubclassOf(String subclassName, String className) {
+    LOGGER.info(String.format("Checking if %s is subclass of %s", subclassName, className));
+    OntClass classEntity = getOntClass(className);
+    OntClass subclassEntity = getOntClass(subclassName);
+    return classEntity.hasSubClass(subclassEntity);
   }
 
   @Override

@@ -31,10 +31,10 @@ import com.aegean.icsd.mciwebapp.recall.beans.RecallResponse;
 import com.aegean.icsd.mciwebapp.recall.interfaces.IRecallSvc;
 
 /**
- * https://localhost:8443/mci/recall
+ * https://localhost:8443/mci/api/recall
  */
 @RestController
-@RequestMapping("recall")
+@RequestMapping("api/recall")
 public class RecallController {
 
   private static final Logger LOGGER = LogManager.getLogger(RecallController.class);

@@ -32,10 +32,10 @@ import com.aegean.icsd.mciwebapp.recall.beans.RecallRequest;
 import com.aegean.icsd.mciwebapp.recall.beans.RecallResponse;
 
 /**
- * https://localhost:8443/mci/puzzles
+ * https://localhost:8443/mci/api/puzzles
  */
 @RestController
-@RequestMapping("puzzles")
+@RequestMapping("api/puzzles")
 public class PuzzleController {
 
   private static final Logger LOGGER = LogManager.getLogger(PuzzleController.class);
