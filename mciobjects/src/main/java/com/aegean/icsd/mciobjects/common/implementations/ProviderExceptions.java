@@ -39,4 +39,7 @@ public final class ProviderExceptions {
     return new ProviderException(CODE_NAME + "." + 7, String.format("Unable to get object with the associated criteria: %s", message));
   }
 
+  public static ProviderException UnableToSetupTrustManager(String path, Throwable t) {
+    return new ProviderException(CODE_NAME + "." + 8, String.format("Unable to setup trust manager for path: %s", path), t);
+  }
 }
