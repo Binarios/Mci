@@ -1,16 +1,26 @@
 package com.aegean.icsd.mciobjects.images.implementations;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 
 import org.apache.log4j.Logger;
 
@@ -37,7 +47,7 @@ class ImageUtils {
   String downloadImage(Image image) throws ProviderException {
 
     String imageName = getImageName(image);
-    try (InputStream in = new URL(image.getPath()).openStream()) {
+    try (InputStream in = getTrustedUrl(image.getPath()).openStream()) {
 
       String localPath = ROOT_PATH + "/" + imageName;
       LOGGER.info(String.format("Downloading image %s at %s ", image.getId(), localPath));
@@ -49,11 +59,11 @@ class ImageUtils {
       Files.copy(in, Paths.get(localName), StandardCopyOption.REPLACE_EXISTING);
       return localName;
     } catch (IOException e) {
-      throw ProviderExceptions.UnableToGetObject(Image.NAME,e);
+      throw ProviderExceptions.UnableToGetObject(Image.NAME, e);
     }
   }
 
-  BufferedImage readImageFromPath (String path) throws ProviderException {
+  BufferedImage readImageFromPath(String path) throws ProviderException {
     File file = new File(path);
     FileInputStream fis;
     BufferedImage bufferedImage;
@@ -77,9 +87,9 @@ class ImageUtils {
         bufferedImages[x][y] = new BufferedImage(chunkWidth, chunkHeight, image.getType());
         Graphics2D gr = bufferedImages[x][y].createGraphics();
         gr.drawImage(image, 0, 0, chunkWidth, chunkHeight,
-          chunkWidth * y, chunkHeight * x,
-          chunkWidth * y + chunkWidth, chunkHeight * x + chunkHeight,
-          null);
+                chunkWidth * y, chunkHeight * x,
+                chunkWidth * y + chunkWidth, chunkHeight * x + chunkHeight,
+                null);
         gr.dispose();
       }
     }
@@ -88,17 +98,17 @@ class ImageUtils {
   }
 
   Image[][] writeBufferedImages(Image image, BufferedImage[][] images, int rows, int cols)
-    throws ProviderException {
+          throws ProviderException {
     Image[][] splits = new Image[rows][cols];
 
     String imageName = getImageName(image);
     String extension = getImageExtension(image);
     String chunkFolderPath = ROOT_PATH + "/" + imageName;
 
-    for(int row = 0; row < rows; row++) {
+    for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
         String chunkName = imageName + "_" + row + "_" + col + "." + extension;
-        String chunkPath = chunkFolderPath +  "/" + chunkName;
+        String chunkPath = chunkFolderPath + "/" + chunkName;
 
         writeBufferedImage(chunkPath, extension, images[row][col]);
 
@@ -135,5 +145,47 @@ class ImageUtils {
     String path = image.getPath();
     String[] fragments = path.split("/");
     return fragments[fragments.length - 1];
+  }
+
+  URL getTrustedUrl(String url) throws MalformedURLException, ProviderException {
+    TrustManager[] trustAllCerts = getTrustManager();
+
+    SSLContext sc = null;
+    try {
+      sc = SSLContext.getInstance("SSL");
+      sc.init(null, trustAllCerts, new java.security.SecureRandom());
+    } catch (NoSuchAlgorithmException | KeyManagementException e) {
+      throw ProviderExceptions.UnableToSetupTrustManager(url,e);
+    }
+
+    HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+    // Create all-trusting host name verifier
+    HostnameVerifier allHostsValid = getHostnameVerifier();
+    // Install the all-trusting host verifier
+    HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+    return new URL(url);
+  }
+
+  HostnameVerifier getHostnameVerifier() {
+    return new HostnameVerifier() {
+      public boolean verify(String hostname, SSLSession session) {
+        return true;
+      }
+    };
+  }
+
+  TrustManager[] getTrustManager() {
+    return new TrustManager[]{new X509TrustManager() {
+      public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+        return null;
+      }
+      public void checkClientTrusted(X509Certificate[] certs, String authType) {
+      }
+
+      public void checkServerTrusted(X509Certificate[] certs, String authType) {
+      }
+    }};
   }
 }
